@@ -1,0 +1,237 @@
+<!doctype html><html><head><meta charset="utf8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Credits — DSO Empire Simulator</title>
+<meta name="description" content="Credits for DSO Empire Simulator, a dumb little game about dental DSOs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eaf4ff; --surface:#ffffff; --surface-2:#f2f9ff; --ink:#20264d; --ink-soft:#5c6690;
+    --accent:#1fbf83; --on-accent:#062419; --accent-2:#ff7a59; --on-accent-2:#2c0f06;
+    --gold:#ffb100; --on-gold:#3a2400; --line:#cfe1f7; --hard-shadow:#20264d; --radius:20px;
+    --r-epic:#b15cf0; color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#181433; --surface:#241f4a; --surface-2:#2c2758; --ink:#f2eeff; --ink-soft:#b6b0e0;
+      --accent:#3fe0a5; --on-accent:#062419; --accent-2:#ff9270; --on-accent-2:#2c0f06;
+      --gold:#ffcb4d; --on-gold:#3a2400; --line:#3d3670; --hard-shadow:#0d0b21; --r-epic:#cf9cf7;
+      color-scheme:dark;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 'Nunito',sans-serif;
+    padding:env(safe-area-inset-top,0px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);}
+  .wrap{max-width:640px; margin:0 auto; padding-top:28px;}
+  h1{font-family:'Fredoka',sans-serif; font-size:1.7rem; margin:0 0 4px; text-align:center;}
+  .sub{text-align:center; color:var(--ink-soft); font-weight:700; margin:0 0 26px;}
+  .card{background:var(--surface); border:3px solid var(--ink); border-radius:var(--radius);
+    box-shadow:5px 5px 0 var(--hard-shadow); padding:20px 22px; margin-bottom:18px;}
+  .card h2{font-family:'Fredoka',sans-serif; font-size:1.1rem; margin:0 0 10px;}
+  .role{display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px dashed var(--line); font-size:0.94rem;}
+  .role:last-child{border-bottom:none;}
+  .role .who{font-weight:800;}
+  .role .what{color:var(--ink-soft); text-align:right;}
+  .pete-name{cursor:pointer; user-select:none; border-bottom:2px dotted var(--accent-2); transition:transform 0.1s ease;}
+  .pete-name:hover{transform:translateY(-1px);}
+  .links-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:520px){ .links-grid{grid-template-columns:1fr;} }
+  .link-card{display:block; background:var(--surface-2); border:2.5px solid var(--ink); border-radius:14px;
+    padding:12px 14px; text-decoration:none; color:var(--ink); box-shadow:3px 3px 0 var(--hard-shadow);
+    transition:transform 0.1s ease;}
+  .link-card:hover{transform:translateY(-2px);}
+  .link-card .lc-name{font-family:'Fredoka',sans-serif; font-weight:600; font-size:0.98rem; display:block;}
+  .link-card .lc-desc{font-size:0.82rem; color:var(--ink-soft); display:block; margin-top:3px;}
+  .link-card .lc-url{font-size:0.74rem; color:var(--accent); display:block; margin-top:5px; font-weight:800;}
+  .egg-zone{text-align:center; padding:18px 10px 6px;}
+  .egg-tooth{font-size:2.4rem; cursor:pointer; display:inline-block; user-select:none; transition:transform 0.15s ease;}
+  .egg-tooth:hover{transform:scale(1.1) rotate(-6deg);}
+  .egg-hint{font-size:0.78rem; color:var(--ink-soft); margin-top:6px;}
+  .egg-found-badge{display:none; font-size:0.78rem; font-weight:800; color:var(--accent); margin-top:4px;}
+  .egg-found-badge.show{display:block;}
+  .egg-reveal{max-height:0; overflow:hidden; transition:max-height 0.5s ease; text-align:left;}
+  .egg-reveal.open{max-height:400px;}
+  .egg-reveal-inner{background:var(--surface-2); border:2.5px dashed var(--accent-2); border-radius:14px;
+    padding:16px 18px; margin-top:16px; font-size:0.92rem;}
+  .egg-reveal-inner h3{font-family:'Fredoka',sans-serif; margin:0 0 8px; font-size:1rem; color:var(--accent-2);}
+  @keyframes eggPop{0%{transform:scale(0.7) rotate(0);} 40%{transform:scale(1.15) rotate(-8deg);} 100%{transform:scale(1) rotate(0);}}
+  .egg-pop{animation:eggPop 0.5s ease;}
+  .back-row{text-align:center; margin-top:22px;}
+  .back-link{font-family:'Fredoka',sans-serif; font-weight:600; font-size:0.9rem; color:var(--ink); text-decoration:none;
+    border:2.5px solid var(--ink); border-radius:999px; padding:9px 20px; background:var(--surface);
+    box-shadow:3px 3px 0 var(--hard-shadow); display:inline-block;}
+  .fine-print{text-align:center; color:var(--ink-soft); font-size:0.72rem; margin-top:20px;}
+</style>
+</head><body>
+<div class="wrap">
+  <h1>🦷 DSO Empire Simulator</h1>
+  <p class="sub">Credits &amp; Corporate Disclosures</p>
+
+  <div class="card">
+    <h2>Executive Leadership</h2>
+    <div class="role"><span class="who">Founder, Chairman &amp; Chief Rollup Officer</span>
+      <span class="what"><span class="pete-name" id="pete-name" title="click me">GoodTimePete</span></span></div>
+    <div class="role"><span class="who">Vision, Jokes, and Questionable Business Instincts</span><span class="what">GoodTimePete</span></div>
+    <div class="role"><span class="who">Head of Engineering (AI Copilot)</span><span class="what">Claude, Anthropic</span></div>
+    <div class="role"><span class="who">Head of Nothing In Particular</span><span class="what">the office coffee machine (still broken)</span></div>
+    <div class="role"><span class="who">Chief Compliance Officer</span><span class="what">a stack of forms nobody reads</span></div>
+    <div class="role"><span class="who">Regional VP, Synergy</span><span class="what">TBD after next round</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Board of Advisors</h2>
+    <div class="role"><span class="who">Every dentist who ever said "I should franchise this"</span><span class="what">honorary</span></div>
+    <div class="role"><span class="who">Every hygienist keeping the whole operation running</span><span class="what">actually essential</span></div>
+    <div class="role"><span class="who">Private equity, conceptually</span><span class="what">just vibes</span></div>
+    <div class="role"><span class="who">The dental drill</span><span class="what">reserved for one (1) achievement, see below</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Special Thanks</h2>
+    <p style="margin:0 0 8px;">To everyone in the dental industry actually doing the work this game gently makes fun of — the DSO operators, practice owners, office managers, and hygienists who keep real chairs full while this one just makes numbers go up.</p>
+    <p style="margin:0;">No real practices were rolled up, no real EBITDA was adjusted, and no real drills were used in the making of this game. Well — one was. You know the one.</p>
+  </div>
+
+  <div class="card">
+    <h2>Explore the Empire</h2>
+    <p style="margin:0 0 14px; color:var(--ink-soft); font-size:0.86rem;">GoodTimePete's actual, real, non-satirical corner of the internet:</p>
+    <div class="links-grid">
+      <a class="link-card" href="https://dentalstrategyinstitute.com" target="_blank" rel="noopener">
+        <span class="lc-name">Dental Strategy Institute</span>
+        <span class="lc-desc">Books, playbooks &amp; strategy for the dental industry — the real DSI this game is named after.</span>
+        <span class="lc-url">dentalstrategyinstitute.com</span>
+      </a>
+      <a class="link-card" href="https://dentalassetiq.com" target="_blank" rel="noopener">
+        <span class="lc-name">DentalAssetIQ</span>
+        <span class="lc-desc">Tools and calculators for figuring out what a practice is actually worth. No 9.0× multiples required.</span>
+        <span class="lc-url">dentalassetiq.com</span>
+      </a>
+      <a class="link-card" href="https://dentalquotecheck.com" target="_blank" rel="noopener">
+        <span class="lc-name">Dental Quote Check</span>
+        <span class="lc-desc">A real tool for a real question: is this quote fair? Zero acquisition diligence gags included.</span>
+        <span class="lc-url">dentalquotecheck.com</span>
+      </a>
+      <a class="link-card" href="https://tailcue.com" target="_blank" rel="noopener">
+        <span class="lc-name">Tailcue</span>
+        <span class="lc-desc">Another one of GoodTimePete's projects, for the four-legged side of the household.</span>
+        <span class="lc-url">tailcue.com</span>
+      </a>
+      <a class="link-card" href="https://crossconnecthub.com" target="_blank" rel="noopener">
+        <span class="lc-name">Cross Connect Hub</span>
+        <span class="lc-desc">Yet another corner of the empire. Ask GoodTimePete about it directly — he'll light up.</span>
+        <span class="lc-url">crossconnecthub.com</span>
+      </a>
+      <a class="link-card" href="https://lakelureinsider.com" target="_blank" rel="noopener">
+        <span class="lc-name">Lake Lure Insider</span>
+        <span class="lc-desc">Proof that GoodTimePete has interests beyond EBITDA. Local flavor, zero acquisitions.</span>
+        <span class="lc-url">lakelureinsider.com</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="card egg-zone">
+    <h2 style="margin-bottom:2px;">A Word From Legal</h2>
+    <p style="color:var(--ink-soft); font-size:0.85rem; margin:0 0 4px;">(this tooth is not legal counsel, but it has opinions)</p>
+    <div class="egg-tooth" id="egg-tooth" role="button" tabindex="0" aria-label="A curious-looking tooth">🦷</div>
+    <p class="egg-hint" id="egg-hint">it's just sitting there. weird.</p>
+    <p class="egg-found-badge" id="egg-found-badge">✓ Secret filing located.</p>
+    <div class="egg-reveal" id="egg-reveal">
+      <div class="egg-reveal-inner">
+        <h3>CONFIDENTIAL — INVESTOR MEMO (DRAFT 14, FINAL, FINAL v2)</h3>
+        <p>To Whom It May Concern (probably nobody, this is a video game):</p>
+        <p>This game began as a slide in an internal deck that got a little out of hand. GoodTimePete wanted a fun way to explain what actually happens inside a dental DSO roll-up — the acquisitions, the "synergies," the EBITDA adjustments that are 60% real and 40% aspirational — without putting anyone to sleep with an actual slide deck.</p>
+        <p>So instead: a satirical idle game about your dental empire, built by an AI, for an audience of dentists, hygienists, DSO operators, and anyone who has ever sat through a private-equity pitch and thought "this would make a weirdly good game."</p>
+        <p>If you found this, congratulations — you now know more about this game's origin story than 99% of the people clicking "BILL A PATIENT." Go forth and adjust some EBITDA.</p>
+        <p style="text-align:right; margin-bottom:0;">— GoodTimePete, probably from a golf cart</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="back-row">
+    <a class="back-link" href="/">← Back to the Empire</a>
+  </div>
+  <p class="fine-print">DSO Empire Simulator is satire. Any resemblance to a real dental support organization, living or acquired, is purely coincidental (and honestly, a little bit the point).</p>
+</div>
+
+<script>
+(function(){
+  var EGG_KEY = "dso-empire-simulator-credits-egg-found-v1";
+  var tooth = document.getElementById("egg-tooth");
+  var reveal = document.getElementById("egg-reveal");
+  var hint = document.getElementById("egg-hint");
+  var badge = document.getElementById("egg-found-badge");
+  var petsCount = 0;
+  var petTimer = null;
+  var NEEDED = 7;
+
+  function markFound(){
+    try { localStorage.setItem(EGG_KEY, "1"); } catch(e){}
+    badge.classList.add("show");
+    hint.style.display = "none";
+  }
+  function alreadyFound(){
+    try { return localStorage.getItem(EGG_KEY) === "1"; } catch(e){ return false; }
+  }
+  if (alreadyFound()) markFound();
+
+  function chime(){
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach(function(freq, i){
+        var t = ctx.currentTime + i * 0.09;
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.4);
+      });
+    } catch(e){ /* audio not available — the egg still works, just quietly */ }
+  }
+
+  function reveal_egg(){
+    reveal.classList.add("open");
+    tooth.classList.add("egg-pop");
+    chime();
+    markFound();
+    hint.textContent = "there it is.";
+    hint.style.display = "block";
+    setTimeout(function(){ tooth.classList.remove("egg-pop"); }, 550);
+  }
+
+  function poke(){
+    petsCount++;
+    tooth.classList.remove("egg-pop"); void tooth.offsetWidth; tooth.classList.add("egg-pop");
+    if (petTimer) clearTimeout(petTimer);
+    petTimer = setTimeout(function(){ petsCount = 0; }, 1600);
+    if (petsCount >= NEEDED){
+      reveal_egg();
+      petsCount = 0;
+    } else if (petsCount >= 3) {
+      hint.style.display = "block";
+      hint.textContent = "keep going...";
+    }
+  }
+  tooth.addEventListener("click", poke);
+  tooth.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); poke(); } });
+
+  var pete = document.getElementById("pete-name");
+  var peteClicks = 0;
+  pete.addEventListener("click", function(){
+    peteClicks++;
+    if (peteClicks === 3) {
+      pete.textContent = "GoodTimePete™";
+    } else if (peteClicks === 6) {
+      pete.textContent = "GoodTimePete (Legally Distinct From Bad Time Pete)";
+    } else if (peteClicks >= 9) {
+      pete.textContent = "GoodTimePete";
+      peteClicks = 0;
+    }
+  });
+})();
+</script>
+</body></html>
