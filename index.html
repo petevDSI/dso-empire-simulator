@@ -278,6 +278,39 @@
   .tab-btn .tab-btn-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent-2); margin-left:6px; vertical-align:middle;}
   .tab-content[hidden]{display:none;}
   body.mini-mode .tab-bar, body.mini-mode .tab-content{display:none;}
+
+  /* ---------- leaderboard ---------- */
+  .lb-name-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
+  .lb-name-row label{font-size:0.85rem; opacity:0.8;}
+  .lb-name-row input{
+    font-family:'Fredoka', sans-serif; padding:7px 10px; border:2px solid var(--ink); border-radius:8px;
+    background:var(--surface); color:var(--ink); min-width:160px;
+  }
+  .lb-name-row button, .lb-refresh-btn{
+    font-family:'Fredoka', sans-serif; font-weight:600; cursor:pointer; padding:7px 14px;
+    border:2px solid var(--ink); border-radius:8px; background:var(--accent-2); color:#fff;
+  }
+  .lb-name-status{font-size:0.82rem; opacity:0.75;}
+  .lb-cat-bar{display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 14px;}
+  .lb-cat-btn{
+    font-family:'Fredoka', sans-serif; font-weight:600; font-size:0.85rem; cursor:pointer;
+    padding:7px 14px; border:2px solid var(--ink); border-radius:999px; background:var(--surface);
+    color:var(--ink);
+  }
+  .lb-cat-btn.active{background:var(--accent); color:#fff;}
+  .lb-your-rank{font-size:0.9rem; font-weight:600; margin:0 0 10px;}
+  .lb-list{margin-bottom:8px;}
+  .lb-row{
+    display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:1px solid var(--hard-shadow);
+    font-size:0.92rem;
+  }
+  .lb-row.lb-row-me{background:rgba(255,209,102,0.25); border-radius:6px;}
+  .lb-row .lb-rank{width:2.2em; font-weight:700; opacity:0.7; flex-shrink:0;}
+  .lb-row .lb-name{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lb-row .lb-value{font-weight:700; flex-shrink:0;}
+  .lb-status{opacity:0.75; font-size:0.9rem;}
+  .lb-refresh-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;}
+  .lb-note{font-size:0.78rem; opacity:0.65;}
   .panel, .side-card{
     background:var(--surface); border:3px solid var(--ink); border-radius:var(--radius);
     padding:16px; box-shadow:5px 5px 0 var(--hard-shadow);
@@ -870,6 +903,7 @@
     <button class="tab-btn" type="button" data-tab="exit" role="tab" aria-selected="false">Exit Strategy</button>
     <button class="tab-btn" type="button" data-tab="collection" role="tab" aria-selected="false">Collection</button>
     <button class="tab-btn" type="button" data-tab="story" role="tab" aria-selected="false">Story</button>
+    <button class="tab-btn" type="button" data-tab="leaderboard" role="tab" aria-selected="false">Leaderboard</button>
   </div>
 
   <div class="tab-content" id="tab-content-ops" data-tab-content="ops">
@@ -993,6 +1027,27 @@
       <h2 id="episodes-heading">Season 1: The Startup &mdash; Episode Guide</h2>
       <p class="panel-sub" id="episodes-sub">Unlocks as your enterprise value climbs. Spoilers stay hidden until you get there. Every season you complete stays in the guide for good.</p>
       <div class="rows" id="episode-rows"></div>
+    </section>
+  </div>
+
+  <div class="tab-content" id="tab-content-leaderboard" data-tab-content="leaderboard" hidden>
+    <section class="panel" id="panel-leaderboard">
+      <h2>Leaderboard</h2>
+      <p class="panel-sub">Bragging rights across every player, ranked three ways. Your stats submit automatically at each Exit and IPO &mdash; no account, just a name.</p>
+      <div class="lb-name-row">
+        <label for="lb-name-input">Show up on the board as:</label>
+        <input id="lb-name-input" type="text" maxlength="24" autocomplete="off" placeholder="Anonymous DSO">
+        <button id="lb-name-save" type="button">Save</button>
+        <span class="lb-name-status" id="lb-name-status"></span>
+      </div>
+      <div class="lb-cat-bar" id="lb-cat-bar" role="tablist" aria-label="Leaderboard category">
+        <button class="lb-cat-btn active" type="button" data-lb-cat="networth" role="tab" aria-selected="true">Net Worth</button>
+        <button class="lb-cat-btn" type="button" data-lb-cat="fastest" role="tab" aria-selected="false">Fastest Exit</button>
+        <button class="lb-cat-btn" type="button" data-lb-cat="ipo" role="tab" aria-selected="false">IPO Shares</button>
+      </div>
+      <p class="lb-your-rank" id="lb-your-rank"></p>
+      <div class="lb-list" id="lb-list"><p class="lb-status" id="lb-status">Loading&hellip;</p></div>
+      <p class="lb-refresh-row"><button id="lb-refresh-btn" type="button" class="lb-refresh-btn">Refresh</button> <span class="lb-note">Scores are lightly sanity-checked server-side (elapsed time, plausible jumps) &mdash; this is a fun leaderboard for a satire game, not a tamper-proof one.</span></p>
     </section>
   </div>
 
@@ -2168,7 +2223,8 @@
    "ebitda-adjusted-stat","ebitda-actual-stat","ebitda-adjust-btn",
    "desk-drop","desk-grid","desk-exchange","panel-auto","auto-sub","auto-body","panel-bench","bench-body",
    "news","news-bar","news-track","news-more","news-log","news-list",
-   "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit"
+   "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit",
+   "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn"
   ].forEach(function(id){ el[id] = document.getElementById(id); });
 
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3532,6 +3588,7 @@
     state = fresh;
     sfxExitFanfare();
     musicPlayReprise();
+    submitLeaderboardEvent("exit", {netWorth: fresh.netWorth});
     unlockEpisode(finaleEp);
     renderStaff(); renderUpgrades(); renderEpisodes(); renderAchievements(); renderDesk(); renderSeasonCheckpoints();
     checkEpisodes();
@@ -3667,6 +3724,7 @@
     ipoSig = "";
     sfxExitFanfare();
     musicPlayReprise();
+    submitLeaderboardEvent("ipo", {netWorth: fresh.netWorth, ipoShares: fresh.ipoShares});
     unlockEpisode(finaleEp);
     renderStaff(); renderUpgrades(); renderEpisodes(); renderAchievements(); renderDesk(); renderSeasonCheckpoints();
     checkEpisodes();
@@ -4097,7 +4155,7 @@
   function loadActiveTabPref(){
     try {
       var v = localStorage.getItem(TAB_KEY);
-      return (v === "ops" || v === "exit" || v === "collection" || v === "story") ? v : "ops";
+      return (v === "ops" || v === "exit" || v === "collection" || v === "story" || v === "leaderboard") ? v : "ops";
     } catch(e){ return "ops"; }
   }
   function saveActiveTabPref(t){
@@ -4114,6 +4172,7 @@
     document.querySelectorAll(".tab-content").forEach(function(panel){
       panel.hidden = panel.getAttribute("data-tab-content") !== name;
     });
+    if (name === "leaderboard") refreshLeaderboard();
   }
   function initTabs(){
     ACTIVE_TAB = loadActiveTabPref();
@@ -4121,6 +4180,163 @@
     document.querySelectorAll(".tab-btn").forEach(function(btn){
       btn.addEventListener("click", function(){ switchTab(btn.getAttribute("data-tab")); });
     });
+  }
+
+  /* ---------- leaderboard ----------
+     Global, cross-player leaderboard backed by a small Postgres schema on
+     Supabase (project unrelated to this game — an existing free-tier project
+     Pete OK'd reusing, with everything namespaced under a dso_ prefix and
+     locked behind SECURITY DEFINER functions, so the anon key below can only
+     ever call dso_submit_event / dso_get_leaderboard / dso_get_player_rank —
+     it can't read or write any table directly, on this game's data or
+     anything else living in that project).
+     All three anti-cheat properties (elapsed time, monotonic stats, plausible-
+     jump bounds) are enforced server-side in those functions, not here — the
+     client only ever reports what happened; the server decides what counts. */
+  var LB_URL = "https://difrryshoyxcdydbtjjt.supabase.co/rest/v1/rpc/";
+  var LB_ANON_KEY = "sb_publishable_2gMhDP_eqxrWHyd0pglVvg_rcT1iLMj";
+  var LB_PLAYER_ID_KEY = "dso-empire-simulator-player-id-v1";
+  var LB_NAME_KEY = "dso-empire-simulator-player-name-v1";
+  var LB_CAT_KEY = "dso-empire-simulator-lb-category-v1";
+  var LB_CATS = ["networth","fastest","ipo"];
+  var lbCategory = "networth";
+  var lbCache = {}; // category -> {rows, rankInfo, fetchedAt}
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function lbGetPlayerId(){
+    try {
+      var id = localStorage.getItem(LB_PLAYER_ID_KEY);
+      if (id) return id;
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : lbFallbackUuid();
+      localStorage.setItem(LB_PLAYER_ID_KEY, id);
+      return id;
+    } catch(e){ return lbFallbackUuid(); }
+  }
+  function lbFallbackUuid(){
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){
+      var r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+  function lbGetName(){
+    try { return localStorage.getItem(LB_NAME_KEY) || ""; } catch(e){ return ""; }
+  }
+  function lbSetName(n){
+    try { localStorage.setItem(LB_NAME_KEY, n); } catch(e){}
+  }
+  function lbDisplayName(){
+    var n = lbGetName();
+    if (n) return n;
+    if (state && state.flagshipAsked && flagshipName()) return flagshipName();
+    return "Anonymous DSO";
+  }
+  function lbLoadCatPref(){
+    try {
+      var v = localStorage.getItem(LB_CAT_KEY);
+      return LB_CATS.indexOf(v) >= 0 ? v : "networth";
+    } catch(e){ return "networth"; }
+  }
+  function lbCall(fn, body){
+    return fetch(LB_URL + fn, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": LB_ANON_KEY,
+        "Authorization": "Bearer " + LB_ANON_KEY
+      },
+      body: JSON.stringify(body)
+    }).then(function(r){
+      if (!r.ok) throw new Error("leaderboard http " + r.status);
+      return r.json();
+    });
+  }
+  // Fire-and-forget: called right at Exit / IPO. Never blocks or interrupts
+  // gameplay — a slow or failed network call just means the event doesn't
+  // land on the board this time.
+  function submitLeaderboardEvent(eventType, payload){
+    try {
+      lbCall("dso_submit_event", {
+        p_player_id: lbGetPlayerId(),
+        p_name: lbDisplayName(),
+        p_event_type: eventType,
+        p_net_worth: (typeof payload.netWorth === "number") ? payload.netWorth : null,
+        p_ipo_shares: (typeof payload.ipoShares === "number") ? payload.ipoShares : null
+      }).then(function(){
+        // if the player's looking at the board right now, quietly refresh it
+        if (ACTIVE_TAB === "leaderboard") refreshLeaderboard(true);
+      }).catch(function(){ /* offline / blocked — silently skip, save/game flow is unaffected */ });
+    } catch(e){ /* never let a leaderboard hiccup touch the game itself */ }
+  }
+  function lbFmtValue(cat, value){
+    if (value === null || value === undefined) return "—";
+    if (cat === "fastest") return formatDuration(Math.round(value / 1000));
+    if (cat === "ipo") return String(value) + (value === 1 ? " share" : " shares");
+    return fmt(value);
+  }
+  function lbRenderRows(cat, rows){
+    if (!rows || !rows.length){
+      el["lb-list"].innerHTML = '<p class="lb-status">Nobody’s on this board yet — be the first.</p>';
+      return;
+    }
+    el["lb-list"].innerHTML = rows.map(function(row){
+      return '<div class="lb-row">' +
+        '<span class="lb-rank">#' + row.rank + '</span>' +
+        '<span class="lb-name">' + escapeHtml(row.display_name) + '</span>' +
+        '<span class="lb-value">' + lbFmtValue(cat, row.value) + '</span>' +
+      '</div>';
+    }).join("");
+  }
+  function lbRenderYourRank(cat, rankInfo){
+    if (!rankInfo || rankInfo.rank === null || rankInfo.rank === undefined){
+      el["lb-your-rank"].textContent = "You're not on this board yet — it fills in the first time you " + (cat === "fastest" ? "exit" : cat === "ipo" ? "go public" : "exit or go public") + ".";
+      return;
+    }
+    el["lb-your-rank"].textContent = "You: #" + rankInfo.rank + " of " + rankInfo.total + " — " + lbFmtValue(cat, rankInfo.value);
+  }
+  function refreshLeaderboard(quiet){
+    var cat = lbCategory;
+    if (!quiet) el["lb-list"].innerHTML = '<p class="lb-status" id="lb-status">Loading&hellip;</p>';
+    var myId = lbGetPlayerId();
+    Promise.all([
+      lbCall("dso_get_leaderboard", {p_category: cat, p_limit: 50}),
+      lbCall("dso_get_player_rank", {p_player_id: myId, p_category: cat})
+    ]).then(function(results){
+      lbRenderRows(cat, results[0]);
+      lbRenderYourRank(cat, results[1]);
+    }).catch(function(){
+      el["lb-list"].innerHTML = '<p class="lb-status">Couldn’t reach the leaderboard right now — try Refresh in a moment.</p>';
+      el["lb-your-rank"].textContent = "";
+    });
+  }
+  function initLeaderboard(){
+    lbCategory = lbLoadCatPref();
+    if (el["lb-name-input"]) el["lb-name-input"].value = lbGetName();
+    document.querySelectorAll(".lb-cat-btn").forEach(function(btn){
+      var active = btn.getAttribute("data-lb-cat") === lbCategory;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+      btn.addEventListener("click", function(){
+        lbCategory = btn.getAttribute("data-lb-cat");
+        try { localStorage.setItem(LB_CAT_KEY, lbCategory); } catch(e){}
+        document.querySelectorAll(".lb-cat-btn").forEach(function(b){
+          var a = b === btn;
+          b.classList.toggle("active", a);
+          b.setAttribute("aria-selected", a ? "true" : "false");
+        });
+        refreshLeaderboard();
+      });
+    });
+    if (el["lb-name-save"]) el["lb-name-save"].addEventListener("click", function(){
+      var v = (el["lb-name-input"].value || "").trim().slice(0, 24);
+      lbSetName(v);
+      el["lb-name-status"].textContent = "Saved — shows on your next Exit or IPO.";
+      setTimeout(function(){ if (el["lb-name-status"]) el["lb-name-status"].textContent = ""; }, 3000);
+    });
+    if (el["lb-refresh-btn"]) el["lb-refresh-btn"].addEventListener("click", function(){ refreshLeaderboard(); });
   }
 
   /* ---------- splash / title screen ---------- */
@@ -4723,6 +4939,7 @@
     if (panel && panel.scrollIntoView) panel.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block:"start"});
   });
   initTabs();
+  initLeaderboard();
   if (el["splash-dismiss"]) el["splash-dismiss"].addEventListener("click", closeSplash);
   if (el["splash-reopen"]) el["splash-reopen"].addEventListener("click", openSplash);
   if (el["ebitda-adjust-btn"]) el["ebitda-adjust-btn"].addEventListener("click", handleEbitdaAdjustClick);
