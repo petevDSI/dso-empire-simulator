@@ -4234,6 +4234,35 @@
     if (state && state.flagshipAsked && flagshipName()) return flagshipName();
     return "Anonymous DSO";
   }
+  // Client-side mirror of the server-side dso_contains_profanity() check, for
+  // instant feedback only — the server check is the real, unbypassable gate
+  // (this one just saves the player a round trip before finding out their
+  // name got swapped to "Anonymous DSO"). Same two-pass design: longer words
+  // are matched as a substring after stripping spaces/punctuation and undoing
+  // simple leetspeak (catches "f u c k", "sh1t"); short/ambiguous words like
+  // "ass" are matched only as a whole separate word so "Associates Inc" and
+  // "Assess My Practice" — real phrases in this game — are never flagged.
+  var LB_SUBSTR_BLOCKLIST = ["fuck","shit","bitch","cunt","nigger","nigga","faggot","whore","slut",
+    "retard","rape","pussy","cock","twat","wank","jizz","cocksuck","motherfuck",
+    "dickhead","asshole","bastard","chink","spic","kike","tranny","dyke","paki"];
+  var LB_WORD_BLOCKLIST = ["ass","fag","cum","tit","sex","dick","cock","hoe","fap"];
+  function lbLeetNormalize(s){
+    var map = {"0":"o","1":"i","3":"e","4":"a","5":"s","$":"s","@":"a","!":"i","7":"t"};
+    return s.replace(/[01345$@!7]/g, function(c){ return map[c]; });
+  }
+  function lbContainsProfanity(name){
+    if (!name) return false;
+    var leet = lbLeetNormalize(name.toLowerCase());
+    var squashed = leet.replace(/[^a-z]/g, "");
+    for (var i = 0; i < LB_SUBSTR_BLOCKLIST.length; i++){
+      if (squashed.indexOf(LB_SUBSTR_BLOCKLIST[i]) !== -1) return true;
+    }
+    var words = leet.replace(/[^a-z]+/g, " ").trim().split(/\s+/);
+    for (var j = 0; j < words.length; j++){
+      if (LB_WORD_BLOCKLIST.indexOf(words[j]) !== -1) return true;
+    }
+    return false;
+  }
   function lbLoadCatPref(){
     try {
       var v = localStorage.getItem(LB_CAT_KEY);
@@ -4332,6 +4361,10 @@
     });
     if (el["lb-name-save"]) el["lb-name-save"].addEventListener("click", function(){
       var v = (el["lb-name-input"].value || "").trim().slice(0, 24);
+      if (v && lbContainsProfanity(v)){
+        el["lb-name-status"].textContent = "That name isn't allowed — try another.";
+        return;
+      }
       lbSetName(v);
       el["lb-name-status"].textContent = "Saved — shows on your next Exit or IPO.";
       setTimeout(function(){ if (el["lb-name-status"]) el["lb-name-status"].textContent = ""; }, 3000);
