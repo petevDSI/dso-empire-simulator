@@ -244,6 +244,9 @@
   .ticker-label{font-size:0.62rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-soft); font-weight:700;}
   .ticker-value{font-size:1.02rem; font-weight:800; color:var(--ink);}
   .ticker-item.highlight .ticker-value{color:var(--accent-2); font-weight:900;}
+  .ticker-item-info{cursor:pointer;}
+  .ticker-item-info:hover .ticker-label, .ticker-item-info:focus-visible .ticker-label{text-decoration:underline;}
+  .ev-explain-link{background:none; border:none; padding:0; margin-left:2px; font:inherit; font-weight:800; color:var(--accent-2); text-decoration:underline; cursor:pointer;}
 
   /* ---------- office memo (sticky note) ---------- */
   .memo{
@@ -264,6 +267,26 @@
   .memo-eyebrow{font-family:'Fredoka', sans-serif; font-weight:600; font-size:0.66rem; letter-spacing:0.06em; flex:0 0 auto;}
   .memo-day{font-weight:800; flex:0 0 auto;}
   .memo-text{flex:1 1 240px; font-weight:600;}
+
+  /* ---------- v56: getting-started tutorial banner ---------- */
+  .tutorial-banner{
+    position:relative; display:flex; align-items:center; gap:12px; padding:10px 14px;
+    background:var(--accent-2); color:var(--on-accent-2); border:3px solid var(--ink); border-radius:14px;
+    box-shadow:4px 4px 0 var(--hard-shadow);
+  }
+  .tutorial-banner-mascot{width:40px; height:40px; border-radius:50%; border:2.5px solid var(--ink); background:var(--surface); flex:0 0 auto; object-fit:cover;}
+  .tutorial-banner-body{flex:1 1 auto; min-width:0;}
+  .tutorial-banner-eyebrow{display:block; font-family:'Fredoka', sans-serif; font-weight:700; font-size:0.6rem; letter-spacing:0.06em; text-transform:uppercase; opacity:0.85;}
+  .tutorial-banner-text{margin:2px 0 0; font-size:0.82rem; font-weight:700; line-height:1.35;}
+  .tutorial-skip{flex:0 0 auto; background:transparent; border:1.5px solid currentColor; color:inherit; border-radius:999px; padding:5px 10px; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.66rem; cursor:pointer;}
+  .tutorial-highlight{outline:3px solid var(--accent-2); outline-offset:3px; animation:tutorialPulse 1.4s ease-in-out infinite; border-radius:10px;}
+  @keyframes tutorialPulse{0%,100%{outline-color:var(--accent-2);} 50%{outline-color:var(--gold);}}
+  @media (prefers-reduced-motion: reduce){ .tutorial-highlight{animation:none;} }
+  .tutorial-choice-options{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
+  .tutorial-choice-btn{display:flex; flex-direction:column; gap:3px; align-items:flex-start; text-align:left; padding:12px 14px; border:2.5px solid var(--ink); border-radius:14px; background:var(--surface-2); cursor:pointer; font-family:'Nunito',sans-serif; width:100%;}
+  .tutorial-choice-btn:hover{background:var(--surface);}
+  .tutorial-choice-btn strong{font-family:'Fredoka', sans-serif; font-size:0.9rem; color:var(--ink);}
+  .tutorial-choice-btn span{font-size:0.76rem; color:var(--ink-soft); font-weight:600;}
 
   /* ---------- click zone ---------- */
   .click-zone{display:flex; flex-direction:column; align-items:center; gap:10px; padding-block:6px 2px; position:relative;}
@@ -478,6 +501,9 @@
       repeating-linear-gradient(-45deg, color-mix(in srgb, var(--accent-2) 8%, transparent) 0px, color-mix(in srgb, var(--accent-2) 8%, transparent) 1.5px, transparent 1.5px, transparent 15px);
   }
   .panel-sub{margin:4px 0 14px; font-size:0.8rem; color:var(--ink-soft); font-weight:700;}
+  .dso-health-readout{margin:-6px 0 14px; font-size:0.74rem; font-weight:800; color:var(--ink-soft); padding:6px 10px; border:2px solid var(--ink); border-radius:10px; background:var(--surface-2);}
+  .dso-health-readout.dso-health-good{color:var(--accent-2); border-color:var(--accent-2);}
+  .dso-health-readout.dso-health-bad{color:var(--danger, #c0392b); border-color:var(--danger, #c0392b);}
   .rows{display:flex; flex-direction:column; gap:10px;}
 
   .bonus-group{border:2.5px solid var(--ink); border-radius:14px; background:var(--surface-2); padding:10px 12px;}
@@ -989,7 +1015,7 @@
   .modal-overlay[hidden]{display:none;}
   .modal{background:var(--surface); border:3px solid var(--ink); border-radius:var(--radius); box-shadow:6px 6px 0 var(--hard-shadow); padding:22px; max-width:400px; width:100%;}
   .modal h3{font-family:'Fredoka', sans-serif; font-size:1.1rem; margin-bottom:8px;}
-  .modal p{font-size:0.86rem; color:var(--ink-soft); line-height:1.45; margin:0 0 18px; font-weight:600;}
+  .modal p{font-size:0.86rem; color:var(--ink-soft); line-height:1.45; margin:0 0 18px; font-weight:600; white-space:pre-line;}
   .modal-actions{display:flex; gap:10px; justify-content:flex-end;}
   .btn-ghost, .btn-primary{padding:10px 18px; border-radius:12px; border:2.5px solid var(--ink); font-family:'Nunito', sans-serif; font-size:0.82rem; font-weight:800; cursor:pointer; box-shadow:3px 3px 0 var(--hard-shadow); transition:transform 0.08s ease, box-shadow 0.08s ease;}
   .btn-ghost{background:var(--surface-2); color:var(--ink);}
@@ -1264,7 +1290,7 @@
       <div class="ticker-item"><span class="ticker-label">Multiple</span><span class="ticker-value num" id="stat-multiple">6.0×</span></div>
       <div class="ticker-item"><span class="ticker-label">Streak</span><span class="ticker-value num" id="stat-streak">1d</span></div>
       <div class="ticker-item"><span class="ticker-label">Net Worth</span><span class="ticker-value num" id="stat-networth">$0.00</span></div>
-      <div class="ticker-item highlight"><span class="ticker-label">Enterprise Value</span><span class="ticker-value num" id="stat-ev">$0.00</span></div>
+      <div class="ticker-item highlight ticker-item-info" id="ev-info-btn" role="button" tabindex="0" title="How is Enterprise Value calculated?"><span class="ticker-label">Enterprise Value <span aria-hidden="true">&#9432;</span></span><span class="ticker-value num" id="stat-ev">$0.00</span></div>
     </div>
     <button id="sfx-toggle" class="mini-toggle" type="button" title="Toggle sound effects">&#128266; Sound on</button>
     <button id="music-toggle" class="mini-toggle" type="button" title="Toggle background music">&#127925; Music on</button>
@@ -1313,6 +1339,15 @@
     <span class="boost-chip warn" id="chip-supply-debuff">📦 BACKORDERED <span class="boost-timer" id="chip-supply-debuff-timer"></span></span>
   </div>
 
+  <div class="tutorial-banner" id="tutorial-banner" hidden>
+    <img class="tutorial-banner-mascot" src="data:image/png;base64,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" alt="" aria-hidden="true">
+    <div class="tutorial-banner-body">
+      <span class="tutorial-banner-eyebrow">GETTING STARTED</span>
+      <p class="tutorial-banner-text" id="tutorial-banner-text"></p>
+    </div>
+    <button class="tutorial-skip" id="tutorial-skip" type="button">Skip tutorial</button>
+  </div>
+
   <div class="memo">
     <span class="memo-eyebrow">OFFICE MEMO</span>
     <span class="memo-day" id="memo-day">—</span>
@@ -1359,6 +1394,7 @@
       <div class="side-card wide" id="panel-board">
         <h2>Board Room<span class="panel-alert-dot" id="board-alert-dot" hidden aria-label="A decision is waiting"></span></h2>
         <p class="panel-sub" id="board-sub">Cash on hand unlocks capital-allocation decisions. Each option has a different cost, payoff and catch &mdash; and there's no right answer, only the kind of DSO you're building.</p>
+        <p class="dso-health-readout" id="dso-health-readout"></p>
         <div id="board-body"></div>
       </div>
 
@@ -1367,7 +1403,12 @@
         <p class="panel-sub">Sit through a message from today's "sponsor" for a surprise reward &mdash; usually a boost, sometimes cash, a desk card, or a small permanent bump.</p>
         <button id="sponsor-btn" class="sponsor-btn" type="button">Watch Sponsor Message (Mystery Reward)</button>
         <div class="sponsor-progress" id="sponsor-progress"><div class="sponsor-progress-bar" id="sponsor-progress-bar"></div></div>
-        <p class="sponsor-note">[Pete: wired up for Google Ad Manager (H5 Games Ads) rewarded video &mdash; see AD_CONFIG near the top of the script. It's off (enabled:false) until your H5 Games Ads application is approved and you've created a Rewarded ad unit; flip it on and drop in the ad unit path GAM gives you. Until then, and any time a real ad fails to load, this button automatically falls back to the simulated "watch something, get a boost" version so it never breaks &mdash; the reward logic underneath is identical either way.]</p>
+        <!-- Dev note: wired up for Google Ad Manager (H5 Games Ads) rewarded video — see AD_CONFIG
+             near the top of the script. It's off (enabled:false) until the H5 Games Ads application
+             is approved and a Rewarded ad unit exists; flip it on and drop in the ad unit path GAM
+             gives you. Until then, and any time a real ad fails to load, this button automatically
+             falls back to the simulated "watch something, get a boost" version so it never breaks —
+             the reward logic underneath is identical either way. Deliberately not shown to players. -->
       </div>
 
       <div class="side-card" id="panel-supply">
@@ -1391,7 +1432,9 @@
           <button type="submit">Redeem</button>
         </form>
         <p class="redeem-status" id="redeem-status"></p>
-        <p class="redeem-hint">Demo codes for this prototype: <code>BENCHMARK25</code> and <code>PLAYBOOK10</code>. [Pete: swap these for real codes tied to your newsletter / Benchmark Index / licensing funnel, and add the real link here.]</p>
+        <p class="redeem-hint">Try it now with <code>BENCHMARK25</code> or <code>PLAYBOOK10</code> &mdash; codes like these drop in Dental Strategy Institute newsletters and resources.</p>
+        <!-- Dev note: swap these demo codes for real codes tied to the newsletter / Benchmark
+             Index / licensing funnel, and add the real link here when that's ready. -->
       </div>
     </section>
   </div>
@@ -1400,7 +1443,7 @@
     <section class="side-row">
       <div class="side-card" id="panel-exit">
         <h2>The Exit</h2>
-        <p class="panel-sub">Cash out at <strong class="num" id="exit-target-sub">$10.00M</strong> enterprise value for a permanent bonus on your next company. Each season's target climbs a bit from the last. You also personally pocket <strong class="num">8%</strong> of the sale price, forever &mdash; that's your lifetime net worth, untouched by resets.</p>
+        <p class="panel-sub">Cash out at <strong class="num" id="exit-target-sub">$10.00M</strong> enterprise value for a permanent bonus on your next company. Each season's target climbs a bit from the last. You also personally pocket <strong class="num">8%</strong> of the sale price, forever &mdash; that's your lifetime net worth, untouched by resets. Enterprise Value tracks all-time revenue you've actually billed and collected, times your multiple &mdash; not the cash sitting in your account, so hiring and spending never lower it. <button type="button" class="ev-explain-link" id="ev-explain-link">How is this calculated?</button></p>
         <div class="exit-progress">
           <div class="exit-progress-bar" id="exit-progress-bar"></div>
           <button type="button" class="exit-checkpoint" data-idx="0" style="left:20%" disabled aria-label="Milestone reward locked">🎁</button>
@@ -1554,6 +1597,25 @@
     <div class="acq-stats" id="acq-stats"></div>
     <p class="gift-desc" id="acq-quote"></p>
     <button id="acq-dismiss" class="btn-primary splash-btn" type="button">Close the Deal &rarr;</button>
+  </div>
+</div>
+
+<div class="gift-overlay" id="tutorial-choice-overlay" hidden>
+  <div class="gift-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-choice-title">
+    <img class="mascot-peek" src="data:image/png;base64,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" alt="" aria-hidden="true">
+    <div class="gift-icon" aria-hidden="true">🤔</div>
+    <h2 id="tutorial-choice-title">Automate or Grow?</h2>
+    <p class="gift-desc">Dana&rsquo;s cash is piling up nicely. This is a real decision — basically the whole game in miniature.</p>
+    <div class="tutorial-choice-options">
+      <button class="tutorial-choice-btn" id="tutorial-choice-automate" type="button">
+        <strong>Automate Dana &mdash; free</strong>
+        <span>Unlocks her auto-collect Initiative right now, no cost. One less thing to click, forever.</span>
+      </button>
+      <button class="tutorial-choice-btn" id="tutorial-choice-grow" type="button">
+        <strong>Take $750 cash instead</strong>
+        <span>Bank it and hire faster early on. Dana keeps piling up cash you&rsquo;ll need to collect by hand.</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -2221,7 +2283,11 @@
       seasonCheckpointsReady:[false,false,false,false],
       exitReadyFired:false,
       ebitdaAdjustTotal:0,
-      ebitdaAdjustClicks:0
+      ebitdaAdjustClicks:0,
+      tutorialStep:0,
+      tutorialChoice:"",
+      clinicalQuality:70,
+      integrationStrain:0
     };
   }
 
@@ -2454,6 +2520,13 @@
     if (patch.spendGlobalPct !== undefined) state.spendGlobalPct = patch.spendGlobalPct;
     if (key === "hold") state.spendPowder = Math.min(2, (state.spendPowder || 0) + 1);
     else state.spendPowder = 0;
+    // v56: Board Room decisions move Clinical Quality / Integration Strain too, not just cash flow.
+    // Open a New Practice = fast growth, more moving parts to run (+strain). Optimize Your Best
+    // Tier = doubling down on what already works well (+quality). Centralize a Service = shared
+    // systems that streamline operations (-strain). Bank the Cash = status quo, no change.
+    if (key === "new") state.integrationStrain = clampHealth((state.integrationStrain || 0) + 4);
+    else if (key === "opt") state.clinicalQuality = clampHealth((state.clinicalQuality === undefined ? 70 : state.clinicalQuality) + 4);
+    else if (key === "cen") state.integrationStrain = clampHealth((state.integrationStrain || 0) - 5);
     state.spendSeason[key] = (state.spendSeason[key] || 0) + 1;
     state.spendLife[key] = (state.spendLife[key] || 0) + 1;
     state.spendIdx = idx + 1;
@@ -2515,10 +2588,23 @@
     body.innerHTML = html;
     updateLockProgress();
   }
+  function updateDsoHealthReadout(){
+    if (!el["dso-health-readout"] || !state) return;
+    var q = clampHealth(state.clinicalQuality === undefined ? 70 : state.clinicalQuality);
+    var strain = clampHealth(state.integrationStrain || 0);
+    var mult = dsoHealthMult(state);
+    var pct = Math.round((mult - 1) * 100);
+    var sign = pct > 0 ? "+" : "";
+    el["dso-health-readout"].textContent =
+      "Clinical Quality " + Math.round(q) + "/100  ·  Integration Strain " + Math.round(strain) + "/100  →  " +
+      sign + pct + "% on everything you earn.";
+    el["dso-health-readout"].className = "dso-health-readout" + (pct > 0 ? " dso-health-good" : pct < 0 ? " dso-health-bad" : "");
+  }
   function updateBoard(){
     var panel = document.getElementById("panel-board");
     if (!panel || !state || !state.staff) return;
     ensureSpend();
+    updateDsoHealthReadout();
     var T = boardThresholds();
     var idx = state.spendIdx;
     if (idx < T.length && !state.spendOpen && state.revenue >= T[idx]) state.spendOpen = true;
@@ -2746,7 +2832,18 @@
     m += (s.streakBonusPct || 0);
     m += (s.supplyBonusPct || 0);
     m += (s.spendGlobalPct || 0);
-    return m * serialMult(s) * lpMult(s) * ipoMult(s) * achievementMult(s) * deskMult(s) * activeBoostMult(s) * (1 + comboGlobal(s)) * holidayMult();
+    return m * serialMult(s) * lpMult(s) * ipoMult(s) * achievementMult(s) * deskMult(s) * activeBoostMult(s) * (1 + comboGlobal(s)) * holidayMult() * dsoHealthMult(s);
+  }
+  // v56: "Turn DSO tradeoffs into mechanics" (Pete's playtest item 3) — early choices (Acquisitions,
+  // Board Room decisions) now visibly move two competing measures, Clinical Quality and Integration
+  // Strain, and their net effect multiplies straight into every dollar the DSO earns. Both are
+  // clamped 0-100; 70/0 is the starting balance so a brand-new company is exactly neutral (1.0x).
+  function clampHealth(n){ return Math.max(0, Math.min(100, n)); }
+  function dsoHealthMult(s){
+    var q = clampHealth(s.clinicalQuality === undefined ? 70 : s.clinicalQuality);
+    var strain = clampHealth(s.integrationStrain || 0);
+    var m = 1 + (q - 70) * 0.003 - strain * 0.003;
+    return Math.max(0.5, Math.min(1.3, m));
   }
   function serialMult(s){ return 1 + 0.1 * (s.prestigePoints || 0); }
   function lpMult(s){ return 1 + LP_MULT_PER_POINT * (s.lpPoints || 0); }
@@ -2788,6 +2885,116 @@
     return total;
   }
   function computeEV(s){ return s.lifetimeRevenue * computeMultiple(s); }
+  function evBreakdownText(){
+    var lifetime = state.lifetimeRevenue || 0;
+    var mult = computeMultiple(state);
+    var ev = computeEV(state);
+    var ebitda = computeEbitda(state);
+    return "Enterprise Value = Lifetime Revenue × Multiple.\n\n" +
+      "Lifetime Revenue billed & collected so far: " + fmt(lifetime) + "\n" +
+      "Multiple: " + mult.toFixed(1) + "×\n" +
+      "= " + fmt(ev) + " Enterprise Value\n\n" +
+      "Lifetime Revenue only grows when cash is actually billed or collected — hiring, buying " +
+      "Initiatives, and every other purchase spends cash but never lowers Lifetime Revenue, so your " +
+      "cash on hand and your Enterprise Value move independently.\n\n" +
+      "HOW TO GROW EBITDA/SEC (right now: " + fmt(ebitda) + "/s)\n" +
+      "• Hire more staff — every role adds straight to it, and higher tiers add a lot more per hire.\n" +
+      "• Buy Initiatives — several also automate a role's collection so nothing sits idle.\n" +
+      "• Unlock Milestones by owning more of a role, complete Desk Sets, earn Trophy Case achievements, " +
+      "and pick up Bench managers — all stack as permanent multipliers (see the Bonuses tab for the full breakdown).\n" +
+      "• Board Room decisions, Supply Orders and Sponsor Bonuses add further boosts, some temporary, some permanent.\n" +
+      "• Keep DSO Health balanced — Clinical Quality and Integration Strain (see the Board Room panel) net " +
+      "straight into this multiplier, so growing fast without oversight can quietly cost you more than it earns.\n\n" +
+      "HOW TO GROW THE MULTIPLE (right now: " + mult.toFixed(1) + "×)\n" +
+      "• Two Initiatives add it permanently: Centralize Billing (+1.5×, needs 2 complete Desk Sets) and " +
+      "Pass a Compliance Audit (+1.5×, needs 3 complete Desk Sets).\n" +
+      "• After you go public, the Analyst Coverage IPO perk adds +0.5× per rank purchased.";
+  }
+
+  /* ---------- v56: guided first-actions tutorial ----------
+     Pete's playtest note: collecting felt like a tap before the player had much to decide, and
+     asked for an explicit tutorial moment for the game's opening actions, using a mascot as the
+     "talking head." This walks a genuinely new player (never clicked, never hired) through Bill a
+     Patient -> hiring Dana -> collecting her cash, then ends on a real branching choice between
+     automating her collection for free or banking $750 cash instead — a small, concrete version of
+     the "automate vs. grow" tension the whole game is built around. Returning players (anyone with
+     existing clicks, hires, or a save) never see it: startTutorial() checks for a genuinely fresh
+     game before doing anything. */
+  var TUTORIAL_TEXT = {
+    1: "Welcome to DSO Empire Simulator. Tap Bill a Patient below to bring in your first bit of cash.",
+    2: "Nice — that's billing revenue landing straight in cash. Real growth comes from staff. Hire Dana Whitfield, RDH below in The Roster.",
+    3: "Dana's fees pile up until you collect them. Give her Collect button a click when it lights up."
+  };
+  function tutorialActive(){ return (state.tutorialStep || 0) > 0 && state.tutorialStep < 4; }
+  function startTutorial(){
+    if (!state || state.tutorialStep) return;
+    if ((state.totalClicks || 0) > 0 || (state.staff.chair || 0) > 0){ state.tutorialStep = 5; return; }
+    state.tutorialStep = 1;
+    saveGame();
+    renderTutorialStep();
+  }
+  function clearTutorialHighlights(){
+    document.querySelectorAll(".tutorial-highlight").forEach(function(n){ n.classList.remove("tutorial-highlight"); });
+  }
+  function highlightTutorialTarget(sel){
+    var t = document.querySelector(sel);
+    if (t) t.classList.add("tutorial-highlight");
+  }
+  function renderTutorialStep(){
+    if (!el["tutorial-banner"]) return;
+    clearTutorialHighlights();
+    var step = state.tutorialStep;
+    if (step === 1 || step === 2 || step === 3){
+      el["tutorial-banner"].hidden = false;
+      el["tutorial-banner-text"].textContent = TUTORIAL_TEXT[step];
+      highlightTutorialTarget(step === 1 ? "#click-btn" : step === 2 ? '[data-gen="chair"]' : '[data-collect="chair"]');
+    } else {
+      el["tutorial-banner"].hidden = true;
+    }
+  }
+  function advanceTutorial(fromStep){
+    if (state.tutorialStep !== fromStep) return;
+    clearTutorialHighlights();
+    if (fromStep === 3){
+      el["tutorial-banner"].hidden = true;
+      state.tutorialStep = 4;
+      saveGame();
+      if (el["tutorial-choice-overlay"]) el["tutorial-choice-overlay"].hidden = false;
+      return;
+    }
+    state.tutorialStep = fromStep + 1;
+    saveGame();
+    renderTutorialStep();
+  }
+  function skipTutorial(){
+    clearTutorialHighlights();
+    if (el["tutorial-banner"]) el["tutorial-banner"].hidden = true;
+    if (el["tutorial-choice-overlay"]) el["tutorial-choice-overlay"].hidden = true;
+    state.tutorialStep = 5;
+    saveGame();
+  }
+  function resolveTutorialChoice(choice){
+    if (el["tutorial-choice-overlay"]) el["tutorial-choice-overlay"].hidden = true;
+    state.tutorialChoice = choice;
+    state.tutorialStep = 5;
+    if (choice === "automate"){
+      if (!state.upgrades.manager){
+        state.upgrades.manager = true;
+        var swept = state.pending.chair || 0;
+        state.pending.chair = 0;
+        showToast("AUTOMATED", "Dana Whitfield's revenue now collects itself, free of charge — the tutorial's on us.");
+      }
+      renderUpgrades();
+    } else {
+      state.revenue += 750;
+      state.lifetimeRevenue += 750;
+      showToast("CASH INJECTION", "+$750.00 banked. Dana still needs a manual Collect for now.");
+    }
+    renderStaff();
+    updateStats();
+    updateAffordability();
+    saveGame();
+  }
   function clickValue(s){ return BASE_CLICK * globalMult(s); }
   function effectiveCostGrowth(s){
     return COST_GROWTH + Math.min(s.seasonsCompleted || 0, SEASON_COST_GROWTH_STEP_CAP) * SEASON_COST_GROWTH_STEP;
@@ -2925,7 +3132,9 @@
    "news","news-bar","news-track","news-more","news-log","news-list",
    "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit",
    "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn",
-   "bonus-global-rows","bonus-roster-rows","ms-progress-badge"
+   "bonus-global-rows","bonus-roster-rows","ms-progress-badge","ev-info-btn","ev-explain-link",
+   "tutorial-banner","tutorial-banner-text","tutorial-skip","tutorial-choice-overlay","tutorial-choice-automate","tutorial-choice-grow",
+   "dso-health-readout"
   ].forEach(function(id){ el[id] = document.getElementById(id); });
 
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3041,6 +3250,7 @@
       el["staff-rows"].appendChild(row);
     });
     updateLockProgress();
+    if (tutorialActive()) renderTutorialStep();
   }
 
   function renderUpgrades(){
@@ -3512,7 +3722,8 @@
       {label:"Desk Collection", val: deskMult(s) - 1},
       {label:"Active temporary boosts", val: activeBoostMult(s) - 1},
       {label:"Synergy Combos (global)", val: comboGlobal(s)},
-      {label:"Seasonal / Holiday Event", val: holidayMult() - 1}
+      {label:"Seasonal / Holiday Event", val: holidayMult() - 1},
+      {label:"DSO Health (Quality vs. Strain)", val: dsoHealthMult(s) - 1}
     ];
 
     var totalMult = globalMult(s);
@@ -4457,6 +4668,15 @@
   el["modal-cancel"].addEventListener("click", closeModal);
   el["modal-overlay"].addEventListener("click", function(e){ if (e.target === el["modal-overlay"]) closeModal(); });
   el["modal-confirm"].addEventListener("click", function(){ var fn = pendingConfirm; closeModal(); if (fn) fn(); });
+  function openEvBreakdown(){ openModal("Enterprise Value, explained", evBreakdownText(), "Got it", null, true); }
+  if (el["ev-info-btn"]){
+    el["ev-info-btn"].addEventListener("click", openEvBreakdown);
+    el["ev-info-btn"].addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openEvBreakdown(); } });
+  }
+  if (el["ev-explain-link"]) el["ev-explain-link"].addEventListener("click", openEvBreakdown);
+  if (el["tutorial-skip"]) el["tutorial-skip"].addEventListener("click", skipTutorial);
+  if (el["tutorial-choice-automate"]) el["tutorial-choice-automate"].addEventListener("click", function(){ resolveTutorialChoice("automate"); });
+  if (el["tutorial-choice-grow"]) el["tutorial-choice-grow"].addEventListener("click", function(){ resolveTutorialChoice("grow"); });
 
   /* ---------- milestones modal: click "Milestones X/Y" (or any role's milestone block) to see
      the full ladder for every role at once — achieved ones lit up, outstanding ones greyed out
@@ -4582,6 +4802,7 @@
     spawnFloat(val, e);
     sfxStamp();
     checkEpisodes();
+    if (state.tutorialStep === 1 && state.totalClicks === 1) advanceTutorial(1);
   }
 
   function spawnFloat(val, e){
@@ -4739,6 +4960,7 @@
     var newMgr = rollManager(id);
     renderStaff();
     checkEpisodes();
+    if (id === "chair" && owned === 0 && state.tutorialStep === 2) advanceTutorial(2);
     if (newMgr){
       renderBench();
       var bonusPct = Math.round(MANAGER_BONUS_BY_RARITY[newMgr.rarity] * 100);
@@ -4748,6 +4970,11 @@
       var reveal = rollAcquisitionReveal();
       var tag = tagAcquisitions(n);
       reveal.region = tag.region; reveal.pms = tag.pms; reveal.regionCount = state.acqTags.region[tag.region];
+      // v56: every bolt-on acquisition is a real tradeoff, not just a price tag \u2014 it grows the
+      // DSO fast but each one adds Integration Strain (new systems, new culture to absorb) and
+      // chips at Clinical Quality (less oversight per location), both feeding dsoHealthMult().
+      state.integrationStrain = clampHealth((state.integrationStrain || 0) + 3 * n);
+      state.clinicalQuality = clampHealth((state.clinicalQuality === undefined ? 70 : state.clinicalQuality) - 1 * n);
       updateStats();
       if (auto) pushNews("ACQUISITION (AUTO)", reveal.name + " \u2014 " + (reveal.region || "") + ", " + (reveal.pms || "") + ".");
       else showAcquisitionReveal(reveal, n);
@@ -4822,6 +5049,7 @@
     updatePending();
     updateStats();
     checkEpisodes();
+    if (id === "chair" && state.tutorialStep === 3) advanceTutorial(3);
     saveGame();
   }
 
@@ -5873,6 +6101,7 @@
     if (!el["splash-overlay"]) return;
     el["splash-overlay"].hidden = true;
     saveSplashSeen();
+    startTutorial();
   }
 
   /* ---------- boot logo intro (a short flash/spin of the mark, plays once per page load) ---------- */
