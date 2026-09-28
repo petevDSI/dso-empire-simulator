@@ -240,18 +240,19 @@
   /* ---------- click zone ---------- */
   .click-zone{display:flex; flex-direction:column; align-items:center; gap:10px; padding-block:6px 2px; position:relative;}
   .stamp-btn{
-    width:168px; height:168px; border-radius:50%;
-    border:4px solid var(--ink); background:var(--accent); color:var(--on-accent);
-    font-family:'Fredoka', sans-serif; font-weight:700; font-size:1.05rem; letter-spacing:0.02em; line-height:1.2;
-    box-shadow:6px 6px 0 var(--hard-shadow); cursor:pointer;
-    transition:transform 0.1s ease, box-shadow 0.1s ease;
+    width:180px; height:179px; border-radius:50%;
+    border:none; background:transparent; background-image:url('assets/button/bill-idle.png');
+    background-size:contain; background-repeat:no-repeat; background-position:center;
+    cursor:pointer;
+    transition:transform 0.08s ease;
     user-select:none; -webkit-user-select:none;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    display:block; padding:0;
   }
-  .stamp-btn .mascot-lg{width:60px; height:60px;}
-  .stamp-btn:hover{transform:translate(-2px,-2px); box-shadow:8px 8px 0 var(--hard-shadow);}
-  .stamp-btn:active{transform:translate(4px,4px) rotate(-2deg); box-shadow:2px 2px 0 var(--hard-shadow);}
-  .stamp-btn:focus-visible{outline:3px solid var(--accent-2); outline-offset:4px;}
+  .stamp-btn:hover{transform:translateY(-2px) scale(1.02);}
+  .stamp-btn:active, .stamp-btn.is-pressed{
+    transform:scale(0.96); background-image:url('assets/button/bill-pressed.png');
+  }
+  .stamp-btn:focus-visible{outline:3px solid var(--accent-2); outline-offset:4px; border-radius:50%;}
   .click-hint, .exit-topbar-label, .panel-intro{text-shadow:0 0 6px var(--bg), 0 0 6px var(--bg), 0 0 12px var(--bg);}
   .click-hint{margin:0; font-size:0.8rem; font-weight:800; color:var(--ink-soft);}
   .float-layer{position:absolute; inset:0; pointer-events:none; overflow:visible; z-index:5;}
@@ -925,8 +926,7 @@
   body.mini-mode .boost-banner{gap:5px;}
   body.mini-mode .boost-chip{font-size:0.62rem; padding:4px 9px;}
   body.mini-mode .click-zone{padding-block:2px 0; gap:6px;}
-  body.mini-mode .stamp-btn{width:72px; height:72px; font-size:0.56rem; gap:1px; border-width:3px; box-shadow:3px 3px 0 var(--hard-shadow);}
-  body.mini-mode .mascot-lg{width:34px; height:34px;}
+  body.mini-mode .stamp-btn{width:76px; height:76px;}
   body.mini-mode .click-hint{font-size:0.68rem;}
   body.mini-mode .coffee-run{width:36px; height:36px; font-size:1rem;}
   body.mini-mode .desk-drop{width:36px; height:36px; font-size:1rem;}
@@ -1038,10 +1038,7 @@
   </div>
 
   <section class="click-zone" id="click-zone">
-    <button id="click-btn" class="stamp-btn" type="button">
-      <svg class="mascot-lg" viewBox="0 0 100 118" aria-hidden="true"><use href="#mascot"/></svg>
-      <span>BILL A PATIENT</span>
-    </button>
+    <button id="click-btn" class="stamp-btn" type="button" aria-label="Bill a patient"></button>
     <p class="click-hint num" id="click-hint">+$2.00 per click</p>
     <div class="float-layer" id="float-layer" aria-hidden="true"></div>
     <button id="coffee-run" class="coffee-run" type="button" hidden aria-label="Coffee run bonus">☕</button>
