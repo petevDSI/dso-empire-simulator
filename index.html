@@ -460,18 +460,18 @@
     background-size:contain; background-repeat:no-repeat; pointer-events:none;
   }
 
-  /* ---------- v69: plaque prestige-tier filters (placeholder for tiers 2-9, see PLAQUE_TIERS in JS) ----------
-     Tier 1 (wood, season 0) is the unmodified base art already in the rule above. Tiers 2-9
-     apply a progressively warmer/richer filter over that same wood.png until each tier's own
-     illustrated art is cropped from a reference sheet and swapped in (drop the filter then). */
-  body.plaque-tier-1 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.15) brightness(1.05) contrast(1.02); }
-  body.plaque-tier-2 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.22) brightness(1.08) hue-rotate(-3deg) contrast(1.04); }
-  body.plaque-tier-3 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.28) brightness(1.1) hue-rotate(2deg) contrast(1.05); }
-  body.plaque-tier-4 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.34) brightness(1.12) hue-rotate(6deg) contrast(1.06); }
-  body.plaque-tier-5 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.4) brightness(1.15) hue-rotate(10deg) contrast(1.08); }
-  body.plaque-tier-6 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.48) brightness(1.18) hue-rotate(15deg) contrast(1.1); }
-  body.plaque-tier-7 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.58) brightness(1.23) hue-rotate(20deg) contrast(1.12) drop-shadow(0 0 3px rgba(255,210,110,0.35)); }
-  body.plaque-tier-8 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.78) brightness(1.32) hue-rotate(27deg) contrast(1.16) drop-shadow(0 0 6px rgba(255,215,80,0.6)); }
+  /* ---------- v71: plaque prestige-tier real art (Pete's 9-option reference sheet, cropped) ----------
+     Tier 0 (wood, season 0) is the unmodified base art already in the rule above. Tiers 1-8 swap
+     in Pete's own illustrated plaque art, ranked plainest-to-fanciest per his instructions, one
+     background-image per tier -- no filters needed now that real per-tier art exists. */
+  body.plaque-tier-1 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-1.webp'); }
+  body.plaque-tier-2 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-2.webp'); }
+  body.plaque-tier-3 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-3.webp'); }
+  body.plaque-tier-4 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-4.webp'); }
+  body.plaque-tier-5 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-5.webp'); }
+  body.plaque-tier-6 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-6.webp'); }
+  body.plaque-tier-7 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-7.webp'); filter:drop-shadow(0 0 3px rgba(255,210,110,0.35)); }
+  body.plaque-tier-8 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-8.webp'); filter:drop-shadow(0 0 6px rgba(255,215,80,0.6)); }
 
   /* ---------- v53: mascot appearances beyond the splash/header (Pete's request) ---------- */
   .mascot-peek{
@@ -4646,15 +4646,15 @@
   };
   var FORGE_ORDER = ["uncommon", "rare", "epic"];
 
-  /* ---------- v69: panel-plaque prestige progression (cosmetic only, no bonus) ----------
+  /* ---------- v69/v71: panel-plaque prestige progression (cosmetic only, no bonus) ----------
      The wood-plank header plaque (v49) now upgrades through 9 styles as the player racks up
      lifetime Seasons Completed (state.seasonsCompleted, permanent, never resets across Exit/
      Fund Raise/IPO). Pete ranked the original 9-option reference sheet from plainest to
-     fanciest; only the wood art (assets/plaques/wood.png) was ever saved to disk, so tiers 2-9
-     are a CSS-filter placeholder on that same image (progressively warmer/richer) until the
-     other 8 crops exist -- see PLAQUE_TIER_CSS below and claude/handoff.md Open Items. Swapping
-     in real art later is a per-tier change (new background-image + drop the filter), no
-     structural changes needed. Purely cosmetic: no multiplier, no gameplay effect anywhere. */
+     fanciest; v69 shipped tiers 1-8 as a CSS-filter placeholder over the wood art since only
+     that one crop existed on disk yet. v71: Pete supplied the actual 9-option reference sheet,
+     cropped into assets/plaques/tier-1.webp..tier-8.webp, wired in as real per-tier
+     background-images (see the CSS rules right after the v49 base plaque rule). Purely
+     cosmetic: no multiplier, no gameplay effect anywhere. */
   var PLAQUE_TIERS = [
     { season: 0,  name: "Wood Plank" },
     { season: 10, name: "Metal Plate" },
