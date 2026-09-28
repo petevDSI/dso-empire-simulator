@@ -3391,6 +3391,18 @@
   el["flagship-edit"].addEventListener("click", function(){ openFlagshipDialog(true); });
 
   var toastTimer = null;
+  /* Exit / Fund Raise / IPO all reset the board while the player is usually scrolled
+     down at the bottom of the page (the Exit panel) — without this they're left staring
+     at a freshly-zeroed panel with no obvious way back to "BILL A PATIENT" for the new
+     season. Scroll them back to the top so the reset is impossible to miss. */
+  function scrollToNewSeason(){
+    try {
+      window.scrollTo({top: 0, left: 0, behavior: reduceMotion ? "auto" : "smooth"});
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+  }
+
   function showToast(eyebrow, text){
     pushNews(eyebrow, text);
     el["achv-toast-eyebrow"].textContent = eyebrow;
@@ -3759,6 +3771,7 @@
     updateSupplyUI();
     updateStreakUI();
     saveGame();
+    scrollToNewSeason();
     showToast("EXIT COMPLETE", "+" + gain + " Serial Entrepreneur point" + (gain === 1 ? "" : "s") + ". You pocketed " + fmt(personalCut) + " personally — lifetime net worth now " + fmt(fresh.netWorth) + ".");
   }
 
@@ -3811,6 +3824,7 @@
     updateSupplyUI();
     updateStreakUI();
     saveGame();
+    scrollToNewSeason();
     showToast("NEW FUND RAISED", "+" + gain + " LP Track Record pts — permanent bonus now +" + Math.round((lpMult(state) - 1) * 100) + "%.");
   }
 
@@ -3895,6 +3909,7 @@
     updateSupplyUI();
     updateStreakUI();
     saveGame();
+    scrollToNewSeason();
     showToast("THE BELL RINGS \u2014 YOU'RE PUBLIC", "+" + gain + " IPO share" + (gain === 1 ? "" : "s") + ". Every earning is now \u00d7" + ipoMult(state).toFixed(1) + " from your shares alone.");
   }
 
