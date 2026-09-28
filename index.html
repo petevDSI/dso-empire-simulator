@@ -479,6 +479,26 @@
   .hire-max-toggle:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
   .hire-max-toggle.active{background:var(--accent); color:var(--on-accent);}
 
+  /* ---------- holiday events (rare, calendar-driven promo banner) ---------- */
+  .holiday-banner{
+    display:none; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:12px 18px; margin-bottom:2px;
+    border:3px solid var(--ink); border-radius:14px;
+    background:linear-gradient(135deg, var(--accent-2), var(--gold));
+    box-shadow:4px 4px 0 var(--hard-shadow);
+    color:#2c0f06;
+  }
+  .holiday-banner.active{display:flex;}
+  .holiday-banner .holiday-emoji{font-size:1.9rem; flex:0 0 auto; line-height:1;}
+  .holiday-banner .holiday-body{flex:1 1 220px; min-width:0;}
+  .holiday-banner .holiday-name{font-family:'Fredoka', sans-serif; font-weight:700; font-size:1rem; display:block;}
+  .holiday-banner .holiday-blurb{font-family:'Nunito', sans-serif; font-weight:700; font-size:0.78rem; display:block; margin-top:1px; opacity:0.92;}
+  .holiday-banner .holiday-bonus{
+    flex:0 0 auto; font-family:'Nunito', sans-serif; font-weight:900; font-size:0.8rem;
+    padding:6px 13px; border-radius:999px; background:rgba(255,255,255,0.4); border:2px solid rgba(44,15,6,0.35);
+    white-space:nowrap;
+  }
+
   /* ---------- boost banner ---------- */
   .boost-banner{display:flex; gap:8px; flex-wrap:wrap;}
   .boost-chip{
@@ -817,7 +837,7 @@
     min-height:0; height:auto; max-height:min(78vh, 560px); overflow-y:auto; gap:10px;
     padding:12px; border:3px solid var(--ink); border-radius:18px; box-shadow:6px 6px 0 var(--hard-shadow); background:var(--bg);
   }
-  body.mini-mode .memo, body.mini-mode .board, body.mini-mode #panel-episodes, body.mini-mode .side-row, body.mini-mode .footer{display:none;}
+  body.mini-mode .memo, body.mini-mode .board, body.mini-mode #panel-episodes, body.mini-mode .side-row, body.mini-mode .footer, body.mini-mode .holiday-banner{display:none;}
   body.mini-mode .splash-overlay{display:none;}
   body.mini-mode .gift-overlay{display:none;}
   body.mini-mode .mini-collect-list{display:flex;}
@@ -922,6 +942,15 @@
       <button type="button" class="exit-ready-sign" id="exit-ready-sign" hidden title="Enterprise value target reached — jump to the Exit panel">&#128682; EXIT READY &#128682;</button>
     </div>
   </header>
+
+  <div class="holiday-banner" id="holiday-banner">
+    <span class="holiday-emoji" id="holiday-emoji">🎉</span>
+    <span class="holiday-body">
+      <span class="holiday-name" id="holiday-name"></span>
+      <span class="holiday-blurb" id="holiday-blurb"></span>
+    </span>
+    <span class="holiday-bonus" id="holiday-bonus"></span>
+  </div>
 
   <div class="boost-banner" id="boost-banner">
     <span class="boost-chip" id="chip-frenzy">⚡ FRENZY 3× <span class="boost-timer" id="chip-frenzy-timer"></span></span>
@@ -2132,7 +2161,7 @@
     m += (s.streakBonusPct || 0);
     m += (s.supplyBonusPct || 0);
     m += (s.spendGlobalPct || 0);
-    return m * serialMult(s) * lpMult(s) * ipoMult(s) * achievementMult(s) * deskMult(s) * activeBoostMult(s) * (1 + comboGlobal(s));
+    return m * serialMult(s) * lpMult(s) * ipoMult(s) * achievementMult(s) * deskMult(s) * activeBoostMult(s) * (1 + comboGlobal(s)) * holidayMult();
   }
   function serialMult(s){ return 1 + 0.1 * (s.prestigePoints || 0); }
   function lpMult(s){ return 1 + LP_MULT_PER_POINT * (s.lpPoints || 0); }
@@ -2286,6 +2315,7 @@
    "achievement-rows","mascot-secret","chip-frenzy-timer","chip-sponsor-timer",
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
+   "holiday-banner","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
    "stat-networth","exit-networth",
    "splash-overlay","splash-dismiss","splash-reopen",
    "gift-overlay","gift-icon","gift-title","gift-desc","gift-dismiss","gift-cards-row",
@@ -4270,8 +4300,89 @@
     saveGame();
   }
 
+  /* ---------- holiday events (config-driven, no code changes needed for a new window) ----------
+     Each entry is a real-calendar or dental-satire "holiday" window, rare by design (a handful a
+     year) so it stays a genuine occasion rather than background noise. Dates are "MM-DD" (no
+     year), so an entry repeats automatically every year — add a new entry for a one-off instead
+     of editing an old one. Windows are deliberately generous (a week-plus) so nobody is ever
+     punished for missing one by being briefly away, and nothing here is exclusive forever: a
+     missed window simply comes back next year (see the handoff doc's "Design fit" notes).
+     LIMITATION: this simple version assumes start <= end within the same calendar year — a window
+     spanning Dec 31 -> Jan 1 needs to be written as two entries (e.g. "12-26".."12-31" and
+     "01-01".."01-03") rather than one wrapping range. Shipping it this way now avoids adding
+     cross-year-boundary logic before it's actually needed. */
+  var HOLIDAY_EVENTS = [
+    {
+      id: "year-end-distribution",
+      name: "Year-End Distribution",
+      emoji: "🎁",
+      start: "12-15",
+      end: "12-31",
+      bonusPct: 0.12,
+      blurb: "Company-wide bonus season. Nobody's quite sure where the money comes from."
+    }
+  ];
+  // Turns "MM-DD" plus a year into a real Date at local midnight.
+  function holidayDateInYear(mmdd, year){
+    var parts = mmdd.split("-");
+    return new Date(year, parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
+  }
+  // Returns the currently-active holiday event object, or null. Pure date math — no state, no
+  // server round-trip, nothing to keep in sync; it's simply true or false at any given moment.
+  function activeHolidayEvent(){
+    var now = new Date();
+    var year = now.getFullYear();
+    for (var i = 0; i < HOLIDAY_EVENTS.length; i++){
+      var ev = HOLIDAY_EVENTS[i];
+      var start = holidayDateInYear(ev.start, year);
+      var end = holidayDateInYear(ev.end, year);
+      end.setHours(23, 59, 59, 999);
+      if (now >= start && now <= end) return ev;
+    }
+    return null;
+  }
+  // The event's global production bonus, folded into globalMult() below. A flat, modest company-
+  // wide multiplier while the window is open — same scale as the existing Board Room/Sponsor
+  // bonuses, not a rebalance of the economy.
+  function holidayMult(){
+    var ev = activeHolidayEvent();
+    return ev ? (1 + ev.bonusPct) : 1;
+  }
+  // Announces a newly-active event on the news ticker once per player per year it's seen (not
+  // every reload) — a per-browser localStorage flag, separate from the game save, so resetting a
+  // save doesn't cause a re-announcement spam and a fresh player still gets greeted once.
+  var HOLIDAY_ANNOUNCED_KEY = "dso-empire-simulator-holiday-announced-v1";
+  function loadHolidayAnnounced(){
+    try { return JSON.parse(localStorage.getItem(HOLIDAY_ANNOUNCED_KEY) || "{}"); } catch(e){ return {}; }
+  }
+  function saveHolidayAnnounced(obj){
+    try { localStorage.setItem(HOLIDAY_ANNOUNCED_KEY, JSON.stringify(obj)); } catch(e){}
+  }
+  function updateHolidayBanner(){
+    var banner = el["holiday-banner"];
+    if (!banner) return;
+    var ev = activeHolidayEvent();
+    if (!ev){
+      banner.classList.remove("active");
+      return;
+    }
+    banner.classList.add("active");
+    if (el["holiday-emoji"]) el["holiday-emoji"].textContent = ev.emoji;
+    if (el["holiday-name"]) el["holiday-name"].textContent = ev.name;
+    if (el["holiday-blurb"]) el["holiday-blurb"].textContent = ev.blurb;
+    if (el["holiday-bonus"]) el["holiday-bonus"].textContent = "+" + Math.round(ev.bonusPct * 100) + "% company-wide";
+    var announced = loadHolidayAnnounced();
+    var key = ev.id + "-" + new Date().getFullYear();
+    if (!announced[key]){
+      announced[key] = true;
+      saveHolidayAnnounced(announced);
+      pushNews(ev.emoji + " " + ev.name.toUpperCase(), "is here — +" + Math.round(ev.bonusPct * 100) + "% company-wide through the window.");
+    }
+  }
+
   /* ---------- boost banner ---------- */
   function updateBoostBanner(){
+    updateHolidayBanner();
     var now = Date.now();
     var frenzyOn = state.frenzyUntil && now < state.frenzyUntil;
     var sponsorOn = state.sponsorBoostUntil && now < state.sponsorBoostUntil;
