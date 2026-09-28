@@ -166,6 +166,10 @@
   .xchg-info{flex:1; min-width:0; font-size:0.78rem; font-weight:700; line-height:1.3;}
   .xchg-info small{display:block; color:var(--ink-soft); font-weight:600;}
   .xchg-tag{display:inline-block; font-size:0.62rem; font-weight:800; padding:1px 6px; border-radius:6px; border:1.5px solid var(--ink); background:var(--gold); color:var(--on-gold); margin-left:4px;}
+  .xchg-skip{flex:none; width:26px; height:26px; border-radius:50%; border:2px solid var(--ink); background:var(--surface-2); color:var(--ink-soft); font-size:0.85rem; font-weight:800; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;}
+  .xchg-skip:hover{background:var(--danger); color:var(--on-danger); border-color:var(--ink);}
+  .xchg-pending{justify-content:center; opacity:0.7; border-style:dashed;}
+  .xchg-pending .xchg-info{flex:none; font-weight:600;}
   .auto-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:8px; background:var(--surface);}
   .auto-row.off{opacity:.55;}
   .auto-row select{font:700 0.78rem 'Nunito',sans-serif; padding:5px 6px; border:2px solid var(--ink); border-radius:8px; background:var(--surface-2); color:var(--ink); max-width:100%;}
@@ -250,16 +254,18 @@
   .stamp-btn:focus-visible{outline:3px solid var(--accent-2); outline-offset:4px;}
   .click-hint, .exit-topbar-label, .panel-intro{text-shadow:0 0 6px var(--bg), 0 0 6px var(--bg), 0 0 12px var(--bg);}
   .click-hint{margin:0; font-size:0.8rem; font-weight:800; color:var(--ink-soft);}
-  .float-layer{position:absolute; inset:0; pointer-events:none; overflow:visible;}
+  .float-layer{position:absolute; inset:0; pointer-events:none; overflow:visible; z-index:5;}
   .float-num{
-    position:absolute; left:50%; top:30%; transform:translate(-50%, 0) scale(0.6);
-    font-family:'Fredoka', sans-serif; font-weight:700; color:var(--accent-2); font-size:1.1rem;
-    animation:floatUp 0.9s cubic-bezier(.2,.8,.3,1.3) forwards; white-space:nowrap;
+    position:absolute; left:50%; top:30%; transform:translate(-50%, -50%) scale(0.6);
+    font-family:'Fredoka', sans-serif; font-weight:800; font-size:1.3rem; white-space:nowrap;
+    color:var(--on-gold); background:var(--gold); border:2.5px solid var(--ink); border-radius:999px;
+    padding:2px 12px; box-shadow:2px 2px 0 var(--hard-shadow);
+    animation:floatUp 0.95s cubic-bezier(.2,.8,.3,1.3) forwards;
   }
   @keyframes floatUp{
-    0%{opacity:1; transform:translate(-50%, 0) scale(0.5);}
-    30%{transform:translate(-50%, -10px) scale(1.15);}
-    100%{opacity:0; transform:translate(-50%, -54px) scale(1);}
+    0%{opacity:1; transform:translate(-50%, -50%) scale(0.5);}
+    25%{opacity:1; transform:translate(-50%, calc(-50% - 18px)) scale(1.2);}
+    100%{opacity:0; transform:translate(-50%, calc(-50% - 70px)) scale(1.05);}
   }
 
   /* ---------- panels / board ---------- */
@@ -1657,6 +1663,7 @@
       netWorth:0,
       desksUnlocked:[],
       desksCounts:{},
+      xchgSlots:[],
       seasonCheckpointsClaimed:[false,false,false,false],
       seasonCheckpointsReady:[false,false,false,false],
       exitReadyFired:false,
@@ -3009,33 +3016,86 @@
     });
     return best;
   }
-  function tradeTargets(){
+  var XCHG_SLOTS = 3;
+  var XCHG_REFILL_MS = 8 * 60 * 1000; // how long a dismissed offer's slot stays empty before a new random one rolls in
+  var XCHG_WILDCARD_CHANCE = 0.35; // chance an offer ignores "what you need" entirely and is just a random eligible card
+  function tradeCardNeedScore(c){
+    var set = deskSetOf(c);
     var owned = state.desksUnlocked || [];
-    var cand = allDeskCards().filter(function(c){ return owned.indexOf(c.id) === -1 && TRADE_RATES[c.rarity]; });
+    var have = set.cards.filter(function(x){ return owned.indexOf(x.id) !== -1; }).length;
     // skew toward whatever brings a set closest to complete, then cheaper rarities
-    function score(c){
-      var set = deskSetOf(c);
-      var have = set.cards.filter(function(x){ return owned.indexOf(x.id) !== -1; }).length;
-      return (have / set.cards.length) * 100 - deskRank(c.rarity) * 3;
+    return (have / set.cards.length) * 100 - deskRank(c.rarity) * 3;
+  }
+  function eligibleTradeCards(excludeIds){
+    var owned = state.desksUnlocked || [];
+    return allDeskCards().filter(function(c){
+      return owned.indexOf(c.id) === -1 && TRADE_RATES[c.rarity] && excludeIds.indexOf(c.id) === -1;
+    });
+  }
+  function pickRandomTradeCard(excludeIds){
+    var pool = eligibleTradeCards(excludeIds);
+    if (!pool.length) return null;
+    // most offers lean toward what actually helps you, but not always \u2014 keep it a little unpredictable
+    if (Math.random() < XCHG_WILDCARD_CHANCE) return pool[Math.floor(Math.random() * pool.length)];
+    var weighted = pool.map(function(c){ return { card: c, w: Math.max(1, tradeCardNeedScore(c) + 20) }; });
+    var total = weighted.reduce(function(a, x){ return a + x.w; }, 0);
+    var r = Math.random() * total;
+    for (var i = 0; i < weighted.length; i++){ r -= weighted[i].w; if (r <= 0) return weighted[i].card; }
+    return weighted[weighted.length - 1].card;
+  }
+  function ensureXchgSlots(){
+    var slots = state.xchgSlots || (state.xchgSlots = []);
+    var owned = state.desksUnlocked || [];
+    var now = Date.now();
+    // drop slots whose card got owned some other way (a pack, etc.)
+    for (var i = slots.length - 1; i >= 0; i--){
+      if (slots[i].id && owned.indexOf(slots[i].id) !== -1) slots.splice(i, 1);
     }
-    cand.sort(function(a, b){ return score(b) - score(a); });
-    return cand.slice(0, 3);
+    var used = slots.filter(function(s){ return s.id; }).map(function(s){ return s.id; });
+    // fill any slot whose cooldown has finished
+    slots.forEach(function(s){
+      if (!s.id && now >= (s.readyAt || 0)){
+        var pick = pickRandomTradeCard(used);
+        if (pick){ s.id = pick.id; s.readyAt = 0; used.push(pick.id); }
+      }
+    });
+    // top up to XCHG_SLOTS (first run, or the pool grew)
+    while (slots.length < XCHG_SLOTS){
+      var pick2 = pickRandomTradeCard(used);
+      if (!pick2) break;
+      slots.push({ id: pick2.id, readyAt: 0 });
+      used.push(pick2.id);
+    }
   }
   var xchgSig = "";
   function renderExchange(){
     var box = el["desk-exchange"];
     if (!box || !state) return;
-    var targets = tradeTargets();
-    var sig = targets.map(function(t){ var p = tradePlan(t); return t.id + ":" + p.rarity + p.have + "/" + p.n; }).join("|") + "#" + (state.desksUnlocked || []).length;
+    ensureXchgSlots();
+    var slots = state.xchgSlots || [];
+    var now = Date.now();
+    var sig = slots.map(function(s){
+      if (!s.id) return "pending:" + Math.ceil(((s.readyAt || 0) - now) / 5000);
+      var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
+      if (!t) return "x";
+      var p = tradePlan(t);
+      return t.id + ":" + p.rarity + p.have + "/" + p.n;
+    }).join("|") + "#" + (state.desksUnlocked || []).length;
     if (sig === xchgSig) return;
     xchgSig = sig;
-    if (!targets.length){
+    if (!slots.length){
       box.innerHTML = '<div class="xchg-title">Card Exchange</div><p class="xchg-sub">You own every card. The exchange has closed for lack of anything to sell you.</p>';
       return;
     }
     var owned = state.desksUnlocked || [];
-    var html = '<div class="xchg-title">Card Exchange</div><p class="xchg-sub">Swap spare copies (the extras beyond your first) for a card you need. Spending a spare gives up its small duplicate bonus. No timers &mdash; the offers never expire.</p>';
-    targets.forEach(function(t){
+    var html = '<div class="xchg-title">Card Exchange</div><p class="xchg-sub">Swap spare copies (the extras beyond your first) for a card you need. Not into an offer? Skip it &mdash; a new one rolls in after a while.</p>';
+    slots.forEach(function(s){
+      if (!s.id){
+        html += '<div class="xchg-row xchg-pending"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div>';
+        return;
+      }
+      var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
+      if (!t) return;
       var p = tradePlan(t), set = deskSetOf(t);
       var have = set.cards.filter(function(x){ return owned.indexOf(x.id) !== -1; }).length;
       var completes = have + 1 === set.cards.length;
@@ -3045,6 +3105,7 @@
           (completes ? '<span class="xchg-tag">COMPLETES SET</span>' : '') +
           '<small>' + set.name + ' ' + have + '/' + set.cards.length + ' &middot; give ' + p.n + ' spare ' + p.rarity + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ')</small></div>' +
         '<button class="row-buy" type="button" data-trade="' + t.id + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Trade</span></button>' +
+        '<button class="xchg-skip" type="button" data-trade-skip="' + t.id + '" title="Not interested \u2014 roll a new offer later">&times;</button>' +
       '</div>';
     });
     box.innerHTML = html;
@@ -3064,14 +3125,30 @@
     });
     state.desksUnlocked.push(target.id);
     state.desksCounts[target.id] = 1;
+    // this slot's card is now owned \u2014 free it up for an immediate replacement (successful trades aren't penalized with a cooldown)
+    (state.xchgSlots || []).forEach(function(s){ if (s.id === target.id){ s.id = null; s.readyAt = 0; } });
+    xchgSig = "";
     renderDesk(); renderStaff(); renderUpgrades();
     checkDeskSetComplete(target);
     updateStats(); updateAffordability(); saveGame();
     showGiftReveal({ icon:"\ud83d\udd01", title:"CARD EXCHANGE", desc:"Traded " + spent.join(", ") + " for " + target.name + ".", cards:[{ card: target, isNew: true, count: 1 }] });
   }
+  function skipTradeOffer(id){
+    var slots = state.xchgSlots || [];
+    var changed = false;
+    slots.forEach(function(s){
+      if (s.id === id){ s.id = null; s.readyAt = Date.now() + XCHG_REFILL_MS; changed = true; }
+    });
+    if (!changed) return;
+    xchgSig = "";
+    renderExchange();
+    saveGame();
+  }
   document.addEventListener("click", function(e){
     var b = e.target.closest && e.target.closest("[data-trade]");
-    if (b && !b.disabled) doTrade(b.getAttribute("data-trade"));
+    if (b && !b.disabled){ doTrade(b.getAttribute("data-trade")); return; }
+    var s = e.target.closest && e.target.closest("[data-trade-skip]");
+    if (s) skipTradeOffer(s.getAttribute("data-trade-skip"));
   });
 
   function checkDeskSetComplete(justUnlockedCard){
@@ -3345,11 +3422,25 @@
 
   function spawnFloat(val, e){
     if (reduceMotion) return;
+    var layer = el["float-layer"];
     var span = document.createElement("span");
     span.className = "float-num";
     span.textContent = "+" + fmt(val);
-    if (e && e.offsetX !== undefined) span.style.left = e.offsetX + "px";
-    el["float-layer"].appendChild(span);
+    // Position relative to where the click actually landed, in the float layer's own
+    // coordinate space — not e.offsetX, which is relative to whatever nested element (the
+    // button vs. the mascot svg inside it) happened to receive the event, and was being
+    // applied directly as a page-relative "left" (so the number could pop up wherever that
+    // offset landed on the *whole page*, often nowhere near the button — e.g. over the
+    // background art).
+    if (e && typeof e.clientX === "number" && layer){
+      var rect = layer.getBoundingClientRect();
+      var x = e.clientX - rect.left, y = e.clientY - rect.top;
+      x = Math.max(20, Math.min(rect.width - 20, x));
+      y = Math.max(10, Math.min(rect.height - 10, y));
+      span.style.left = x + "px";
+      span.style.top = y + "px";
+    }
+    layer.appendChild(span);
     setTimeout(function(){ span.remove(); }, 950);
   }
 
@@ -5021,6 +5112,7 @@
     updateSupplyUI();
     updateBoostBanner();
     updateMiniAlert();
+    renderExchange();
   }, TICK_MS);
 
   setInterval(saveGame, 5000);
