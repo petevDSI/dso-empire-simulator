@@ -1158,6 +1158,7 @@
   <div class="boost-banner" id="boost-banner">
     <span class="boost-chip" id="chip-frenzy">⚡ FRENZY 3× <span class="boost-timer" id="chip-frenzy-timer"></span></span>
     <span class="boost-chip" id="chip-sponsor">📣 SPONSOR BOOST 2× <span class="boost-timer" id="chip-sponsor-timer"></span></span>
+    <span class="boost-chip" id="chip-collect-rush">⏩ COLLECTION RUSH 3× <span class="boost-timer" id="chip-collect-rush-timer"></span></span>
     <span class="boost-chip" id="chip-supply-boost">🚚 RUSH SHIPPING 2× <span class="boost-timer" id="chip-supply-boost-timer"></span></span>
     <span class="boost-chip warn" id="chip-supply-debuff">📦 BACKORDERED <span class="boost-timer" id="chip-supply-debuff-timer"></span></span>
   </div>
@@ -1454,6 +1455,8 @@
   var SPONSOR_PLAY_MS = 4000;
   var SPONSOR_CASH_SECONDS = 45;
   var SPONSOR_BONUS_PCT = 0.01;
+  var COLLECT_RUSH_MULT = 3;
+  var COLLECT_RUSH_MS = 120000;
 
   // ---------- Google Ad Manager (H5 Games Ads) rewarded-video config ----------
   // Leave enabled:false until your GAM / H5 Games Ads application is approved and you've
@@ -1546,10 +1549,16 @@
 
   var UPGRADES = [
     {id:"manager", name:"Hire a Practice Manager", icon:ICONS.practice_manager, flavor:"Now someone else remembers to reorder gloves — and to actually deposit Dana's cash instead of leaving it in a drawer. Auto-collects Dana Whitfield, RDH.", cost:500, target:"chair"},
+    {id:"speed-chair", name:"Digital Recall Reminders", icon:ICONS.dana_whitfield, flavor:"Text reminders instead of sticky notes. Dana's chair turns over twice as fast — collect twice as often.", cost:60, speedTarget:"chair", speedMult:2},
     {id:"cdo", name:"Hire a CDO", icon:ICONS.cdo, flavor:"Someone has to be in the room when clinical says no and finance says yes — and someone has to collect the revenue. Auto-collects Dr. Raj Malhotra.", cost:5000, target:"associate"},
+    {id:"speed-associate", name:"Same-Day Scheduling Block", icon:ICONS.dr_raj_malhotra, flavor:"Dr. Malhotra's afternoons run on rails now. Cases close — and collect — twice as fast.", cost:600, speedTarget:"associate", speedMult:2},
     {id:"pms", name:"Implement a PMS Rollout", icon:ICONS.pms_rollout, flavor:"New software, same passwords taped to the monitor. At least the cash gets swept automatically now. Auto-collects The Wilmington Satellite.", cost:50000, target:"location"},
+    {id:"speed-location", name:"Local Marketing Push", icon:ICONS.wilmington_satellite, flavor:"A few Google reviews and a parking-lot banner later, Wilmington fills its chairs — and collects — twice as fast.", cost:6000, speedTarget:"location", speedMult:2},
     {id:"dsolayer", name:"Add a DSO Layer", icon:ICONS.dso_layer, flavor:"Same practices, new logo, extra layer of management fees — and the revenue finally collects itself. Auto-collects Cornerstone Dental Group.", cost:250000, target:"acquired", deskRequirement:{count:1}},
+    {id:"speed-acquired", name:"Integration Playbook", icon:ICONS.cornerstone_dental, flavor:"A checklist for absorbing an acquisition instead of improvising it. Cornerstone's cash cycle runs twice as fast.", cost:30000, speedTarget:"acquired", speedMult:2},
     {id:"billing", name:"Centralize Billing", icon:ICONS.centralize_billing, flavor:"Denials now take 45 days instead of 30. Progress. Also stops the cash from piling up uncollected. Auto-collects Meridian Regional Platform.", cost:1000000, target:"platform", multipleBonus:1.5, deskRequirement:{count:2}},
+    {id:"speed-platform", name:"Regional Ops Cadence", icon:ICONS.meridian_platform, flavor:"A weekly ops rhythm across the whole platform. Meridian's collections run twice as fast.", cost:120000, speedTarget:"platform", speedMult:2},
+    {id:"speed-global", name:"Unified Practice Management Suite", icon:ICONS.centralize_service, flavor:"One system, every location, nobody waiting on the slow one. Every roster spot collects an extra 25% faster, stacking with anything above.", cost:3000000, speedGlobalMult:1.25},
     {id:"gpo", name:"Land a GPO Contract", icon:ICONS.gpo_contract, flavor:"You saved 4% on gloves. Tell everyone.", cost:2000000, globalPct:0.25},
     {id:"audit", name:"Pass a Compliance Audit", icon:ICONS.compliance_audit, flavor:"Only three findings. Frame it.", cost:8000000, multipleBonus:1.5, deskRequirement:{count:3}}
   ];
@@ -1967,6 +1976,7 @@
       frenzyUntil:0,
       sponsorReadyAt:0,
       sponsorBoostUntil:0,
+      collectRushUntil:0,
       lpPoints:0,
       seasonsCompleted:0,
       totalClicks:0,
@@ -2668,13 +2678,13 @@
    "redeem-form","redeem-input","redeem-status",
    "achv-toast","achv-toast-eyebrow","achv-toast-text","modal-overlay","modal-title","modal-body",
    "modal-cancel","modal-confirm",
-   "click-zone","coffee-run","chip-frenzy","chip-sponsor","sponsor-btn","sponsor-progress","sponsor-progress-bar","board-alert-dot",
+   "click-zone","coffee-run","chip-frenzy","chip-sponsor","chip-collect-rush","sponsor-btn","sponsor-progress","sponsor-progress-bar","board-alert-dot",
    "exit-lp-line","exit-lp-bonus","panel-fund","fund-locked-note","fund-locked-progress","fund-stats",
    "fund-lp-points","fund-lp-pct","fund-sac-points","fund-gain","fund-btn",
    "mini-toggle","mini-toggle-label","mini-collect-list","hire-max-toggle","company-name","mini-alert-dot","sfx-toggle","music-toggle",
    "exit-topbar-stat","exit-progress-bar-top","exit-ready-sign",
    "episodes-heading","episodes-sub","exit-target-sub","exit-target-stat","exit-points",
-   "achievement-rows","mascot-secret","chip-frenzy-timer","chip-sponsor-timer",
+   "achievement-rows","mascot-secret","chip-frenzy-timer","chip-sponsor-timer","chip-collect-rush-timer",
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
    "holiday-banner","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
@@ -2931,17 +2941,35 @@
     });
   }
 
+  // Collect-speed multipliers: permanent per-tier (speedTarget upgrades), permanent all-tier
+  // (speedGlobalMult upgrades), and a temporary all-tier rush from the Sponsor Message. All
+  // three stack multiplicatively.
+  function tierSpeedMult(s, id){
+    var m = 1;
+    UPGRADES.forEach(function(u){
+      if (u.speedTarget === id && s.upgrades[u.id]) m *= u.speedMult;
+      if (u.speedGlobalMult && s.upgrades[u.id]) m *= u.speedGlobalMult;
+    });
+    return m * activeCollectSpeedMult(s);
+  }
+  function activeCollectSpeedMult(s){
+    var now = Date.now();
+    return (s.collectRushUntil && now < s.collectRushUntil) ? COLLECT_RUSH_MULT : 1;
+  }
   // The Collect meter: each tier charges over its own fillSec (see STAFF), so the roster reads
   // as different rhythms rather than one uniform "click when lit up" loop. Lazily starts the
   // clock on first read (covers older saves with no collectFillAt yet) and persists it to state
   // so the percentage is stable across ticks rather than recomputed from "now" each time.
+  // fillSec is divided by tierSpeedMult, so a speed-up upgrade or the Collection Rush boost
+  // shortens the wait immediately, even mid-charge.
   function collectFillPct(s, id){
     var g = STAFF.filter(function(x){ return x.id === id; })[0];
     if (!g || !g.fillSec) return 1;
     if (!s.collectFillAt) s.collectFillAt = {};
     if (!s.collectFillAt[id]) s.collectFillAt[id] = Date.now();
+    var effectiveSec = g.fillSec / tierSpeedMult(s, id);
     var elapsed = (Date.now() - s.collectFillAt[id]) / 1000;
-    return Math.max(0, Math.min(1, elapsed / g.fillSec));
+    return Math.max(0, Math.min(1, elapsed / Math.max(0.05, effectiveSec)));
   }
   function collectReady(s, id){
     return (s.pending[id] || 0) >= 0.005 && collectFillPct(s, id) >= 1;
@@ -4189,6 +4217,15 @@
       updateAffordability();
       updatePending();
     }
+    if (u.speedTarget){
+      var sg = STAFF.filter(function(x){ return x.id === u.speedTarget; })[0];
+      showToast("FASTER COLLECTING", (sg ? sg.name : "That roster spot") + " now charges " + u.speedMult + "× faster.");
+      updatePending();
+    }
+    if (u.speedGlobalMult){
+      showToast("FASTER COLLECTING", "Every roster spot now charges an extra " + Math.round((u.speedGlobalMult - 1) * 100) + "% faster.");
+      updatePending();
+    }
   }
 
   // Same "money popped up" feedback as BILL A PATIENT's spawnFloat, but viewport-fixed since
@@ -4280,6 +4317,7 @@
     fresh.sponsorReadyAt = state.sponsorReadyAt;
     fresh.sponsorBoostUntil = state.sponsorBoostUntil;
     fresh.frenzyUntil = state.frenzyUntil;
+    fresh.collectRushUntil = state.collectRushUntil;
     fresh.lpPoints = state.lpPoints || 0;
     fresh.totalClicks = state.totalClicks || 0;
     fresh.mascotClicks = state.mascotClicks || 0;
@@ -4335,6 +4373,7 @@
     fresh.sponsorReadyAt = state.sponsorReadyAt;
     fresh.sponsorBoostUntil = state.sponsorBoostUntil;
     fresh.frenzyUntil = state.frenzyUntil;
+    fresh.collectRushUntil = state.collectRushUntil;
     fresh.totalClicks = state.totalClicks || 0;
     fresh.mascotClicks = state.mascotClicks || 0;
     fresh.ebitdaAdjustTotal = state.ebitdaAdjustTotal || 0;
@@ -4416,6 +4455,7 @@
     fresh.sponsorReadyAt = state.sponsorReadyAt;
     fresh.sponsorBoostUntil = state.sponsorBoostUntil;
     fresh.frenzyUntil = state.frenzyUntil;
+    fresh.collectRushUntil = state.collectRushUntil;
     fresh.totalClicks = state.totalClicks || 0;
     fresh.mascotClicks = state.mascotClicks || 0;
     fresh.ebitdaAdjustTotal = state.ebitdaAdjustTotal || 0;
@@ -4647,6 +4687,10 @@
     {id:"loyalty", weight:15, run:function(){
       state.supplyBonusPct = (state.supplyBonusPct || 0) + SPONSOR_BONUS_PCT;
       return { title:"LOYALTY BONUS", desc:"+" + Math.round(SPONSOR_BONUS_PCT * 100) + "% permanent production, forever." };
+    }},
+    {id:"collectrush", weight:15, run:function(){
+      state.collectRushUntil = Date.now() + COLLECT_RUSH_MS;
+      return { title:"COLLECTION RUSH", desc:COLLECT_RUSH_MULT + "× faster roster collecting for " + Math.round(COLLECT_RUSH_MS / 60000) + " minutes." };
     }}
   ];
   function rollSponsorOutcome(){
@@ -4662,7 +4706,7 @@
     state.sponsorReadyAt = Date.now() + SPONSOR_COOLDOWN_MS;
     var outcome = rollSponsorOutcome();
     var result = outcome.run();
-    if (outcome.id === "boost") sfxArpeggioUp();
+    if (outcome.id === "boost" || outcome.id === "collectrush") sfxArpeggioUp();
     else if (outcome.id === "cash" || outcome.id === "loyalty") sfxChimeRare();
     // "card" outcome's sound is already played inside awardDeskCard via sfxForDeskCard
     showToast(result.title, result.desc);
@@ -4977,6 +5021,11 @@
     if (el["chip-sponsor"]){
       el["chip-sponsor"].classList.toggle("active", !!sponsorOn);
       if (sponsorOn && el["chip-sponsor-timer"]) el["chip-sponsor-timer"].textContent = "· " + formatDuration((state.sponsorBoostUntil - now) / 1000);
+    }
+    var collectRushOn = state.collectRushUntil && now < state.collectRushUntil;
+    if (el["chip-collect-rush"]){
+      el["chip-collect-rush"].classList.toggle("active", !!collectRushOn);
+      if (collectRushOn && el["chip-collect-rush-timer"]) el["chip-collect-rush-timer"].textContent = "· " + formatDuration((state.collectRushUntil - now) / 1000);
     }
     var supplyBoostOn = state.supplyBoostUntil && now < state.supplyBoostUntil;
     var supplyDebuffOn = state.supplyDebuffUntil && now < state.supplyDebuffUntil;
