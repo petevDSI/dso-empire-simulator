@@ -195,6 +195,7 @@
   .bench-drawback{font-size:0.66rem; color:var(--ink-soft); font-style:italic; margin:2px 0 0;}
   .bench-bonus{font-size:0.68rem; font-weight:800; color:var(--accent-2); margin:2px 0 0;}
   .masthead{
+    position:-webkit-sticky;
     position:sticky;
     top:env(safe-area-inset-top, 0px);
     z-index:20;
@@ -266,6 +267,17 @@
     padding:2px 12px; box-shadow:2px 2px 0 var(--hard-shadow);
     animation:floatUp 0.95s cubic-bezier(.2,.8,.3,1.3) forwards;
   }
+  /* v53: a Collect click gets the same "money popped up" feedback as BILL A PATIENT — a
+     viewport-fixed floating +amount (spawnCollectFloat) since a roster row isn't inside the
+     click-zone's own .float-layer. */
+  .collect-float{
+    position:fixed; left:0; top:0; transform:translate(-50%, -50%) scale(0.6);
+    font-family:'Fredoka', sans-serif; font-weight:800; font-size:1rem; white-space:nowrap;
+    color:var(--on-gold); background:var(--gold); border:2.5px solid var(--ink); border-radius:999px;
+    padding:2px 10px; box-shadow:2px 2px 0 var(--hard-shadow); pointer-events:none; z-index:60;
+    animation:floatUp 0.95s cubic-bezier(.2,.8,.3,1.3) forwards;
+  }
+  @media (prefers-reduced-motion: reduce){ .collect-float{animation:none; opacity:0;} }
   @keyframes floatUp{
     0%{opacity:1; transform:translate(-50%, -50%) scale(0.5);}
     25%{opacity:1; transform:translate(-50%, calc(-50% - 18px)) scale(1.2);}
@@ -341,6 +353,16 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg stroke='white' stroke-width='2.5' stroke-linecap='round' opacity='0.65'%3E%3Cline x1='20' y1='20' x2='20' y2='5'/%3E%3Cline x1='20' y1='20' x2='32' y2='13'/%3E%3Cline x1='20' y1='20' x2='32' y2='27'/%3E%3Cline x1='20' y1='20' x2='20' y2='35'/%3E%3Cline x1='20' y1='20' x2='8' y2='27'/%3E%3Cline x1='20' y1='20' x2='8' y2='13'/%3E%3C/g%3E%3Cg fill='white' opacity='0.65'%3E%3Ccircle cx='20' cy='5' r='2.2'/%3E%3Ccircle cx='32' cy='13' r='2.2'/%3E%3Ccircle cx='32' cy='27' r='2.2'/%3E%3Ccircle cx='20' cy='35' r='2.2'/%3E%3Ccircle cx='8' cy='27' r='2.2'/%3E%3Ccircle cx='8' cy='13' r='2.2'/%3E%3Ccircle cx='20' cy='20' r='2.6'/%3E%3C/g%3E%3C/svg%3E");
     background-size:contain; background-repeat:no-repeat; pointer-events:none;
   }
+
+  /* ---------- v53: mascot appearances beyond the splash/header (Pete's request) ---------- */
+  .mascot-peek{
+    position:absolute; width:46px; height:46px; border-radius:50%; object-fit:cover;
+    border:3px solid var(--ink); background:var(--surface); box-shadow:2px 2px 0 var(--hard-shadow);
+    pointer-events:none; z-index:2;
+  }
+  .toast .mascot-peek{ top:-14px; left:-12px; width:38px; height:38px; transform:rotate(-8deg); }
+  .gift-card .mascot-peek{ top:-18px; right:-14px; transform:rotate(9deg); }
+  @media (prefers-reduced-motion: reduce){ .mascot-peek{ transform:none !important; } }
   /* ---------- v51: pending-decision notification dot (currently just the Board Room) ---------- */
   .panel-alert-dot{
     position:absolute; top:-6px; left:-6px; width:15px; height:15px; border-radius:50%;
@@ -414,8 +436,26 @@
       color-mix(in srgb, var(--gold) 16%, transparent) 0px, color-mix(in srgb, var(--gold) 16%, transparent) 3px,
       transparent 3px, transparent 18px);
   }
+  #tab-content-bonuses .panel{
+    background-color:var(--surface);
+    background-image:
+      repeating-linear-gradient(45deg, color-mix(in srgb, var(--accent-2) 8%, transparent) 0px, color-mix(in srgb, var(--accent-2) 8%, transparent) 1.5px, transparent 1.5px, transparent 15px),
+      repeating-linear-gradient(-45deg, color-mix(in srgb, var(--accent-2) 8%, transparent) 0px, color-mix(in srgb, var(--accent-2) 8%, transparent) 1.5px, transparent 1.5px, transparent 15px);
+  }
   .panel-sub{margin:4px 0 14px; font-size:0.8rem; color:var(--ink-soft); font-weight:700;}
   .rows{display:flex; flex-direction:column; gap:10px;}
+
+  .bonus-group{border:2.5px solid var(--ink); border-radius:14px; background:var(--surface-2); padding:10px 12px;}
+  .bonus-group + .bonus-group{margin-top:10px;}
+  .bonus-group-title{font-family:'Fredoka', sans-serif; font-weight:700; font-size:0.9rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;}
+  .bonus-group-title .bonus-group-mult{font-family:'Nunito', sans-serif; font-weight:900; font-size:0.82rem; color:var(--accent-2); margin-left:auto;}
+  .bonus-line{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:0.78rem; font-weight:700; padding:3px 0; border-bottom:1.5px dashed color-mix(in srgb, var(--ink) 18%, transparent);}
+  .bonus-line:last-child{border-bottom:none;}
+  .bonus-line.zero{opacity:0.45;}
+  .bonus-line-label{color:var(--ink-soft);}
+  .bonus-line-val{font-family:'Nunito', sans-serif; font-weight:900; color:var(--ink); white-space:nowrap;}
+  .bonus-total-line{display:flex; align-items:center; justify-content:space-between; gap:10px; font-family:'Fredoka', sans-serif; font-weight:700; font-size:0.9rem; margin-top:8px; padding-top:8px; border-top:2.5px solid var(--ink);}
+  .bonus-total-line .bonus-line-val{color:var(--accent-2); font-size:1.02rem;}
 
   .row{display:flex; align-items:center; gap:12px; padding:10px; border:2.5px solid var(--ink); border-radius:14px; background:var(--surface-2);}
   .row-icon{flex:0 0 auto; width:44px; height:44px; display:flex; align-items:center; justify-content:center;}
@@ -830,6 +870,12 @@
   .exit-btn:active:not(:disabled){transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hard-shadow);}
   .exit-btn:disabled{background:var(--surface-2); color:var(--ink-soft); border-color:var(--line); cursor:not-allowed; box-shadow:none;}
   .exit-btn:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
+  /* v53: #exit-btn deliberately uses aria-disabled instead of the disabled attribute, unlike
+     the other .exit-btn buttons (Raise a Fund / Ring the Bell) — a real disabled button never
+     fires click at all, and the whole point here is to catch that click and clap back at it
+     (see the EXIT_TOO_SOON_LINES snark array). Same visual treatment either way. */
+  #exit-btn[aria-disabled="true"]{background:var(--surface-2); color:var(--ink-soft); border-color:var(--line); box-shadow:none;}
+  #exit-btn[aria-disabled="true"]:hover, #exit-btn[aria-disabled="true"]:active{transform:none; box-shadow:none;}
 
   .redeem-form{display:flex; gap:8px; margin-top:4px;}
   .redeem-form input{
@@ -1135,6 +1181,7 @@
     <button class="tab-btn" type="button" data-tab="collection" role="tab" aria-selected="false">Collection</button>
     <button class="tab-btn" type="button" data-tab="story" role="tab" aria-selected="false">Story</button>
     <button class="tab-btn" type="button" data-tab="leaderboard" role="tab" aria-selected="false">Leaderboard</button>
+    <button class="tab-btn" type="button" data-tab="bonuses" role="tab" aria-selected="false">Bonuses</button>
   </div>
 
   <div class="tab-content" id="tab-content-ops" data-tab-content="ops">
@@ -1207,7 +1254,7 @@
           <button id="ebitda-adjust-btn" class="ebitda-adjust-btn" type="button">Adjust EBITDA</button>
           <p class="panel-sub ebitda-adjust-note">Purely cosmetic. Nobody's checking.</p>
         </div>
-        <button id="exit-btn" class="exit-btn" type="button" disabled>Exit to Private Equity</button>
+        <button id="exit-btn" class="exit-btn" type="button" aria-disabled="true">Exit to Private Equity</button>
       </div>
 
       <div class="side-card" id="panel-fund">
@@ -1286,6 +1333,19 @@
     </section>
   </div>
 
+  <div class="tab-content" id="tab-content-bonuses" data-tab-content="bonuses" hidden>
+    <section class="panel" id="panel-bonuses-global">
+      <h2>Gamewide Bonuses</h2>
+      <p class="panel-sub">Every multiplier stacking on top of your raw production, all in one place &mdash; and the combined total at the bottom.</p>
+      <div class="rows" id="bonus-global-rows"></div>
+    </section>
+    <section class="panel" id="panel-bonuses-roster">
+      <h2>Roster Bonuses</h2>
+      <p class="panel-sub">Per-hire-type multipliers &mdash; milestones, Board Room tier boosts, Initiative auto-hires, synergy combos and Bench managers, stacked for each role.</p>
+      <div class="rows" id="bonus-roster-rows"></div>
+    </section>
+  </div>
+
   <footer class="footer">
     <p>a dumb little game about dental DSOs. no real practices were rolled up in the making of this.</p>
     <button id="splash-reopen" class="reset-link" type="button">view the office</button>
@@ -1306,6 +1366,7 @@
 
 <div class="gift-overlay" id="gift-overlay" hidden>
   <div class="gift-card" role="dialog" aria-modal="true" aria-labelledby="gift-title">
+    <img class="mascot-peek" src="data:image/png;base64,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" alt="" aria-hidden="true">
     <div class="gift-icon" id="gift-icon" aria-hidden="true">🎁</div>
     <h2 id="gift-title">Milestone!</h2>
     <p class="gift-desc" id="gift-desc"></p>
@@ -1325,6 +1386,7 @@
 </div>
 
 <div class="toast" id="achv-toast" hidden>
+  <img class="mascot-peek" src="data:image/png;base64,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" alt="" aria-hidden="true">
   <span class="toast-eyebrow" id="achv-toast-eyebrow">NEW EPISODE</span>
   <span class="toast-text" id="achv-toast-text"></span>
 </div>
@@ -1934,6 +1996,41 @@
       {n:5,  name:"Holding Company",      pct:0.10}
     ]
   };
+  /* ---------- v53: sliding-scale milestone extension ----------
+     The original 4 tiers per hire type were all reachable inside Season 1, and milestonesUnlocked
+     is permanent (never resets), so from Season 2 on — once each type's season cap (genCap =
+     baseCap + seasonsCompleted*capStep) had grown past 30/20/12/8/5 — a player would blow through
+     every remaining milestone for a type within seconds of a fresh season and then have nothing
+     left to earn from it, ever. Pete's ask: milestones were "dropping way too quickly" and needed
+     "a reason to keep playing." Rather than raise the original 4 thresholds (which would just move
+     the same problem later), each type gets 6 more tiers appended on a rising curve that roughly
+     tracks how fast that type's own season cap grows, so there's always a next one worth chasing
+     deep into a long run. Reward pct per extra tier shrinks (0.12 down to 0.06) so the total
+     possible bonus per type is no longer a flat, quickly-exhausted +30% cap — it keeps climbing,
+     just more slowly each time, which is the "sliding scale of rarity" Pete asked for. */
+  var MILESTONE_EXTRA_COUNTS = {
+    chair:     [45, 65, 90, 120, 160, 210],
+    associate: [28, 38, 50, 65, 85, 110],
+    location:  [17, 23, 30, 40, 52, 68],
+    acquired:  [11, 15, 20, 27, 36, 48],
+    platform:  [7, 10, 14, 19, 26, 35]
+  };
+  var MILESTONE_EXTRA_PCTS = [0.12, 0.10, 0.09, 0.08, 0.07, 0.06];
+  var MILESTONE_EXTRA_NAMES = [
+    "This Is Getting Out of Hand",
+    "HR Has Stopped Asking Questions",
+    "The Spreadsheet Needs a New Tab",
+    "Somehow Still Hiring",
+    "The Org Chart Gave Up",
+    "Nobody Believes This Number"
+  ];
+  (function(){
+    Object.keys(MILESTONES).forEach(function(id){
+      (MILESTONE_EXTRA_COUNTS[id] || []).forEach(function(n, i){
+        MILESTONES[id].push({n:n, name:MILESTONE_EXTRA_NAMES[i] || ("Milestone " + (i + 5)), pct:MILESTONE_EXTRA_PCTS[i] || 0.05});
+      });
+    });
+  })();
   (function(){ Object.keys(MILESTONES).forEach(function(id){ MILESTONES[id].forEach(function(m){ m.id = "ms-" + id + "-" + m.n; }); }); })();
   function msMult(s, id){
     var m = 1;
@@ -2459,7 +2556,8 @@
    "desk-drop","desk-grid","desk-exchange","panel-auto","auto-sub","auto-body","panel-bench","bench-body",
    "news","news-bar","news-track","news-more","news-log","news-list",
    "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit",
-   "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn"
+   "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn",
+   "bonus-global-rows","bonus-roster-rows"
   ].forEach(function(id){ el[id] = document.getElementById(id); });
 
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -2742,7 +2840,7 @@
     el["exit-bonus"].textContent = "+" + Math.round((serialMult(state) - 1) * 100) + "%";
     if (el["exit-points"]) el["exit-points"].textContent = state.prestigePoints || 0;
     el["exit-count"].textContent = state.prestigeCount;
-    el["exit-btn"].disabled = ev < target;
+    el["exit-btn"].setAttribute("aria-disabled", ev < target ? "true" : "false");
     updateLockProgress();
     checkMilestones();
     checkCombos();
@@ -2791,7 +2889,7 @@
       changed = true;
     });
     renderSeasonCheckpoints();
-    if (changed) saveGame();
+    if (changed){ sfxPresentReady(); saveGame(); }
   }
 
   // Awards the reward for checkpoint i and returns {icon,title,desc} for the reveal modal.
@@ -2966,6 +3064,73 @@
         '</div>';
       el["achievement-rows"].appendChild(row);
     });
+  }
+
+  function bonusLineHtml(label, valStr, zero){
+    return '<div class="bonus-line' + (zero ? ' zero' : '') + '"><span class="bonus-line-label">' + label + '</span><span class="bonus-line-val">' + valStr + '</span></div>';
+  }
+  function pctStr(x){ return (x >= 0 ? "+" : "") + Math.round(x * 100) + "%"; }
+  function fmtMult(x){ return "×" + x.toFixed(2); }
+
+  function renderBonuses(){
+    if (!el["bonus-global-rows"] || !el["bonus-roster-rows"] || !state) return;
+    var s = state;
+
+    var initiativePct = 0;
+    UPGRADES.forEach(function(u){ if (u.globalPct && s.upgrades[u.id]) initiativePct += u.globalPct; });
+    var addLines = [
+      {label:"Growth Initiatives", val: initiativePct},
+      {label:"DSI Resource Code boost", val: s.codeBoostPct || 0},
+      {label:"Daily streak bonus", val: s.streakBonusPct || 0},
+      {label:"Supply Order bonus", val: s.supplyBonusPct || 0},
+      {label:"Board Room — Centralize a Service", val: s.spendGlobalPct || 0}
+    ];
+    var addTotal = addLines.reduce(function(a, l){ return a + l.val; }, 0);
+
+    var mulLines = [
+      {label:"Serial Entrepreneur (past Exits)", val: serialMult(s) - 1},
+      {label:"LP Track Record (Fund Raise)", val: lpMult(s) - 1},
+      {label:"IPO Shares", val: ipoMult(s) - 1},
+      {label:"Trophy Case (Achievements)", val: achievementMult(s) - 1},
+      {label:"Desk Collection", val: deskMult(s) - 1},
+      {label:"Active temporary boosts", val: activeBoostMult(s) - 1},
+      {label:"Synergy Combos (global)", val: comboGlobal(s)},
+      {label:"Seasonal / Holiday Event", val: holidayMult() - 1}
+    ];
+
+    var totalMult = globalMult(s);
+    var html =
+      '<div class="bonus-group"><div class="bonus-group-title">Additive Bonuses<span class="bonus-group-mult">' + pctStr(addTotal) + '</span></div>' +
+        addLines.map(function(l){ return bonusLineHtml(l.label, pctStr(l.val), l.val === 0); }).join("") +
+      '</div>' +
+      '<div class="bonus-group"><div class="bonus-group-title">Multiplicative Stack</div>' +
+        mulLines.map(function(l){ return bonusLineHtml(l.label, pctStr(l.val), Math.abs(l.val) < 0.0001); }).join("") +
+      '</div>' +
+      '<div class="bonus-total-line"><span>Combined Gamewide Multiplier</span><span class="bonus-line-val">' + fmtMult(totalMult) + '</span></div>';
+    el["bonus-global-rows"].innerHTML = html;
+
+    var rosterHtml = "";
+    STAFF.forEach(function(g){
+      var tierBoost = (s.spendTierBoost || {})[g.id] || 0;
+      var automated = isAutomated(s, g.id);
+      var lines = [
+        {label:"Milestones", val: msMult(s, g.id) - 1},
+        {label:"Board Room — Optimize Your Best Tier", val: tierBoost},
+        {label:"Synergy combos", val: comboGen(s, g.id)},
+        {label:"Bench managers", val: managerMult(s, g.id) - 1}
+      ];
+      var roleMult = genMult(s, g.id);
+      var effectiveMult = roleMult * totalMult;
+      rosterHtml +=
+        '<div class="bonus-group"><div class="bonus-group-title">' + g.name.split(",")[0] +
+          (automated ? ' <span style="font-weight:600;font-size:0.7rem;color:var(--ink-soft)">(automated)</span>' : '') +
+          '<span class="bonus-group-mult">' + fmtMult(roleMult) + '</span></div>' +
+          lines.map(function(l){ return bonusLineHtml(l.label, pctStr(l.val), Math.abs(l.val) < 0.0001); }).join("") +
+          (automated ? bonusLineHtml("Initiative auto-hire (2×)", "×2.00", false) : "") +
+          '<div class="bonus-total-line"><span>Effective total (role × gamewide)</span><span class="bonus-line-val">' + fmtMult(effectiveMult) + '</span></div>' +
+        '</div>';
+    });
+    el["bonus-roster-rows"].innerHTML = rosterHtml;
   }
 
   function unlockAchievement(a){
@@ -3696,6 +3861,30 @@
   }
 
   /* ---------- acquisition diligence reveal (the "acquired" hire tier only) ---------- */
+  // v53: clicked "Exit to Private Equity" before the enterprise-value target was actually
+  // reached. Picked (never the same one twice in a row) and shown via the mascot-toast.
+  var EXIT_TOO_SOON_LINES = [
+    "The bankers haven't even returned your call yet.",
+    "Cute. Nobody's buying this at today's multiple.",
+    "The board would like a word. A short, disappointed word.",
+    "Private equity has better things to do than this, right now.",
+    "You can't spell \"exit\" without... actually you can. You just can't do it yet.",
+    "Diligence would take one look at this and laugh.",
+    "Ambitious. Wrong, but ambitious.",
+    "Somewhere, an investment banker felt a disturbance and did not know why.",
+    "The term sheet is still a blank page. On purpose.",
+    "Nice try. The multiple isn't going to sign itself.",
+    "This valuation wouldn't survive a phone call, let alone a diligence process.",
+    "Patience. Even fake private equity has standards."
+  ];
+  var lastExitSnarkIdx = -1;
+  function exitTooSoonLine(){
+    if (EXIT_TOO_SOON_LINES.length < 2) return EXIT_TOO_SOON_LINES[0];
+    var i;
+    do { i = Math.floor(Math.random() * EXIT_TOO_SOON_LINES.length); } while (i === lastExitSnarkIdx);
+    lastExitSnarkIdx = i;
+    return EXIT_TOO_SOON_LINES[i];
+  }
   var ACQUISITION_TARGET_NAMES = [
     "Bright Smiles Dental","Lakeside Dental Partners","Heritage Family Dentistry","Crestview Dental Care",
     "Parkway Family Dentistry","Union Square Dental","Maplewood Dental Group","Northside Smile Center",
@@ -3840,6 +4029,20 @@
     }
   }
 
+  // Same "money popped up" feedback as BILL A PATIENT's spawnFloat, but viewport-fixed since
+  // a roster row's Collect button isn't inside the click-zone's own .float-layer.
+  function spawnCollectFloat(amt, btn){
+    if (reduceMotion || !btn) return;
+    var r = btn.getBoundingClientRect();
+    var span = document.createElement("span");
+    span.className = "collect-float";
+    span.textContent = "+" + fmt(amt);
+    span.style.left = (r.left + r.width / 2) + "px";
+    span.style.top = r.top + "px";
+    document.body.appendChild(span);
+    setTimeout(function(){ span.remove(); }, 950);
+  }
+
   function collectGenerator(id, btn){
     var amt = state.pending[id] || 0;
     if (amt < 0.005) return;
@@ -3851,6 +4054,8 @@
       btn.classList.add("collected");
       setTimeout(function(){ btn.classList.remove("collected"); }, 260);
     }
+    spawnCollectFloat(amt, btn);
+    sfxCollect();
     updatePending();
     updateStats();
     checkEpisodes();
@@ -4201,6 +4406,7 @@
     btn.style.left = (Math.random() * maxX) + "px";
     btn.style.top = (Math.random() * maxY) + "px";
     btn.hidden = false;
+    sfxPresentReady();
     var hideTimer = setTimeout(function(){ btn.hidden = true; scheduleCoffeeRun(); }, COFFEE_VISIBLE_MS);
     btn.onclick = function(){
       clearTimeout(hideTimer);
@@ -4245,6 +4451,7 @@
     btn.style.left = (Math.random() * maxX) + "px";
     btn.style.top = (Math.random() * maxY) + "px";
     btn.hidden = false;
+    sfxPresentReady();
     var hideTimer = setTimeout(function(){ btn.hidden = true; scheduleDeskDrop(); }, DESK_VISIBLE_MS);
     btn.onclick = function(){
       clearTimeout(hideTimer);
@@ -4600,6 +4807,7 @@
       panel.hidden = panel.getAttribute("data-tab-content") !== name;
     });
     if (name === "leaderboard") refreshLeaderboard();
+    if (name === "bonuses") renderBonuses();
   }
   function initTabs(){
     ACTIVE_TAB = loadActiveTabPref();
@@ -4848,6 +5056,8 @@
   var SOFT_TICK_MIN_GAP_MS = 90; // throttles routine hires during Hire Max bulk buys
   var lastStampAt = 0;
   var STAMP_MIN_GAP_MS = 55; // throttles the Bill a Patient stamp during rapid-fire clicking
+  var lastCollectSfxAt = 0;
+  var COLLECT_MIN_GAP_MS = 70; // throttles the Collect chime during a Hire Max / multi-collect burst
 
   function loadSfxMuted(){
     try { return localStorage.getItem(SFX_KEY) === "1"; } catch(e){ return false; }
@@ -5200,6 +5410,22 @@
     src.stop(t0 + duration + 0.02);
   }
 
+  // Collect (roster row) — a short two-note ascending chime + a tiny sparkle, throttled so
+  // Hire Max / several rows collected in a burst doesn't stack into a mess
+  function sfxCollect(){
+    var now = Date.now();
+    if (now - lastCollectSfxAt < COLLECT_MIN_GAP_MS) return;
+    lastCollectSfxAt = now;
+    sfxNoiseBurst(0, 0.04, {filterType:"highpass", filterFreq:4000, gain:0.10});
+    sfxTone(987.77, 0.01, 0.09, {type:"triangle", gain:0.14});
+    sfxTone(1318.51, 0.06, 0.13, {type:"triangle", gain:0.14});
+  }
+  // v53: a tiny "something's waiting for you" ding — season-checkpoint gift boxes becoming
+  // claimable, and the coffee-run/desk-drop bonus icons popping up on the click zone.
+  function sfxPresentReady(){
+    sfxTone(1760, 0, 0.1, {type:"sine", gain:0.07});
+    sfxTone(2349.3, 0.05, 0.09, {type:"sine", gain:0.06});
+  }
   // Bill a Patient stamp click — a quick paper-thunk + tiny bright tick, throttled so
   // rapid-fire clicking doesn't turn into a wall of noise
   function sfxStamp(){
@@ -5367,8 +5593,17 @@
     el["redeem-input"].value = "";
   });
   el["exit-btn"].addEventListener("click", function(){
+    if (el["exit-btn"].getAttribute("aria-disabled") === "true"){
+      showToast("NOT YET", exitTooSoonLine());
+      sfxWahWah();
+      return;
+    }
     var gain = prestigeGain();
-    if (gain < 1) return;
+    if (gain < 1){
+      showToast("NOT YET", exitTooSoonLine());
+      sfxWahWah();
+      return;
+    }
     var bonusNow = Math.round((serialMult(state) - 1) * 100);
     var bonusAfter = Math.round((1 + 0.1 * ((state.prestigePoints||0) + gain) - 1) * 100);
     var nextName = companyName((state.seasonsCompleted || 0) + 1);
@@ -5480,6 +5715,7 @@
     updateBoostBanner();
     updateMiniAlert();
     renderExchange();
+    if (ACTIVE_TAB === "bonuses") renderBonuses();
   }, TICK_MS);
 
   setInterval(function(){ state.lastSeen = Date.now(); saveGame(); }, 5000);
