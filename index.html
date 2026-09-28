@@ -5309,8 +5309,8 @@
     renderExchange();
   }, TICK_MS);
 
-  setInterval(saveGame, 5000);
-  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") saveGame(); });
+  setInterval(function(){ state.lastSeen = Date.now(); saveGame(); }, 5000);
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") { state.lastSeen = Date.now(); saveGame(); } });
 
   /* ---------- boot ---------- */
   function init(initialState){
