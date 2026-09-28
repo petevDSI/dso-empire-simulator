@@ -701,6 +701,18 @@
   .desk-set-head:first-child{margin-top:0;}
   .desk-set-count{font-family:'Nunito', sans-serif; font-weight:800; font-size:0.68rem; color:var(--ink-soft);}
   .desk-set-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:8px; margin-bottom:4px;}
+  /* ---------- combine a completed desk set into a permanent, repeatable resource ---------- */
+  .desk-set-combined-badge{
+    font-family:'Nunito', sans-serif; font-weight:800; font-size:0.64rem; color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 16%, transparent); padding:2px 7px; border-radius:999px; white-space:nowrap;
+  }
+  .desk-combine-btn{
+    font-family:'Fredoka', sans-serif; font-weight:700; font-size:0.66rem; cursor:pointer;
+    padding:4px 10px; border:2px solid var(--ink); border-radius:999px; background:var(--accent-2); color:#fff;
+    box-shadow:2px 2px 0 var(--hard-shadow); white-space:nowrap; transition:transform 0.1s ease;
+  }
+  .desk-combine-btn:not(:disabled):hover{transform:translateY(-1px);}
+  .desk-combine-btn:disabled{background:var(--surface-2); color:var(--ink-soft); cursor:not-allowed; box-shadow:none; opacity:0.75;}
   .desk-card{
     border:2.5px solid var(--ink); border-radius:12px; background:var(--surface-2); overflow:hidden;
     display:flex; align-items:center; justify-content:center; aspect-ratio:0.58; position:relative;
@@ -1848,10 +1860,40 @@
   function deskGateActive(s){
     return (s.seasonsCompleted || 0) >= DESK_GATE_MIN_SEASON;
   }
+  /* ---------- combining a completed set: a repeatable resource so initiative requirements
+     can keep climbing past the 5 sets that exist, instead of topping out once each set is
+     merely owned. First combine of a set is free (just cashes in full ownership); every
+     combine after that spends escalating spare copies of every card in the set, so it stays
+     a real, repeatable sink fed by ongoing desk-card drops. ---------- */
+  function deskCombineCount(s, setId){ return (s.deskCombinesBySet || {})[setId] || 0; }
+  function totalDeskCombines(s){
+    var m = s.deskCombinesBySet || {}, t = 0;
+    for (var k in m) if (m.hasOwnProperty(k)) t += m[k];
+    return t;
+  }
+  function deskCombineCost(s, setId){
+    var n = deskCombineCount(s, setId) + 1; // the combine about to be attempted
+    if (n <= 1) return 0; // first combine of a set is always free
+    return Math.ceil(Math.pow(1.6, n - 2)); // spare copies of EACH card the set needs, per combine
+  }
+  function deskSetFullyOwned(s, set){
+    var owned = s.desksUnlocked || [];
+    return set.cards.every(function(c){ return owned.indexOf(c.id) !== -1; });
+  }
+  function canCombineSet(s, setId){
+    var set = DESK_SETS.filter(function(x){ return x.id === setId; })[0];
+    if (!set || !deskSetFullyOwned(s, set)) return false;
+    var cost = deskCombineCost(s, setId);
+    if (cost === 0) return true;
+    return set.cards.every(function(c){ return deskCardCount(s, c.id) - 1 >= cost; });
+  }
   function meetsDeskRequirement(s, req){
     if (!req) return true;
     if (!deskGateActive(s)) return true;
-    return completedDeskSetCount(s) >= req.count;
+    // either metric satisfies it: merely owning that many complete sets (the original,
+    // pre-combine behavior — kept so no existing save or requirement regresses), or having
+    // combined that many times total, which is the only way past 5 (the total set count).
+    return Math.max(completedDeskSetCount(s), totalDeskCombines(s)) >= req.count;
   }
 
   /* ---------- trophy case: permanent, cross-season achievements ---------- */
@@ -2891,7 +2933,7 @@
   }
   function lockCurrent(kind){
     switch (kind){
-      case "desk": return completedDeskSetCount(state);
+      case "desk": return Math.max(completedDeskSetCount(state), totalDeskCombines(state));
       case "rev": return state.lifetimeRevenue || 0;
       case "own": return totalOwned(state);
       case "ev": return computeEV(state);
@@ -3518,15 +3560,45 @@
     if (earnedAny){ renderAchievements(); updateStats(); updateAffordability(); }
   }
 
+  function doCombineSet(setId){
+    var set = DESK_SETS.filter(function(x){ return x.id === setId; })[0];
+    if (!set || !canCombineSet(state, setId)) return;
+    var n = deskCombineCount(state, setId) + 1;
+    var cost = deskCombineCost(state, setId);
+    if (cost > 0){
+      set.cards.forEach(function(c){ state.desksCounts[c.id] = deskCardCount(state, c.id) - cost; });
+    }
+    state.deskCombinesBySet = state.deskCombinesBySet || {};
+    state.deskCombinesBySet[setId] = n;
+    var total = totalDeskCombines(state);
+    showToast("SET COMBINED", set.name + " combined (×" + n + "). " + total + " total combine" + (total === 1 ? "" : "s") + " — counts toward higher-tier initiatives.");
+    sfxMilestoneBrass();
+    saveGame();
+    renderDesk();
+    checkAchievements();
+    updateAffordability();
+    updateTabAlerts();
+  }
   function renderDesk(){
     if (!el["desk-grid"]) return;
     el["desk-grid"].innerHTML = "";
     DESK_SETS.forEach(function(set){
       var owned = state.desksUnlocked || [];
       var ownedCount = set.cards.filter(function(c){ return owned.indexOf(c.id) !== -1; }).length;
+      var complete = ownedCount === set.cards.length;
+      var combined = deskCombineCount(state, set.id);
+      var cost = deskCombineCost(state, set.id);
+      var canCombine = complete && canCombineSet(state, set.id);
       var head = document.createElement("div");
       head.className = "desk-set-head";
-      head.innerHTML = '<span>' + set.name + '</span><span class="desk-set-count">' + ownedCount + '/' + set.cards.length + '</span>';
+      head.innerHTML = '<span>' + set.name + '</span>' +
+        '<span class="desk-set-count">' + ownedCount + '/' + set.cards.length + '</span>' +
+        (combined > 0 ? '<span class="desk-set-combined-badge">Combined ×' + combined + '</span>' : '') +
+        (complete ? '<button class="desk-combine-btn" type="button" data-combine="' + set.id + '"' + (canCombine ? '' : ' disabled') +
+          ' title="' + (cost === 0 ? 'Combine this completed set' : (canCombine ? 'Combine using ' + cost + ' spare copies of each card' : 'Need ' + cost + ' spare of each card to combine again')) + '">' +
+          (cost === 0 ? 'Combine Set' : 'Combine (' + cost + ' spares ea.)') + '</button>' : '');
+      var combineBtn = head.querySelector(".desk-combine-btn");
+      if (combineBtn) combineBtn.addEventListener("click", function(){ doCombineSet(set.id); });
       el["desk-grid"].appendChild(head);
       var grid = document.createElement("div");
       grid.className = "desk-set-grid";
@@ -4705,6 +4777,7 @@
     carryIpo(fresh);
     fresh.desksUnlocked = (state.desksUnlocked || []).slice();
     fresh.desksCounts = Object.assign({}, state.desksCounts || {});
+    fresh.deskCombinesBySet = Object.assign({}, state.deskCombinesBySet || {});
     fresh.deskClicks = Object.assign({}, state.deskClicks || {});
     fresh.deskEggTargets = Object.assign({}, state.deskEggTargets || {});
     fresh.supplyReadyAt = state.supplyReadyAt;
@@ -4760,6 +4833,7 @@
     carryIpo(fresh);
     fresh.desksUnlocked = (state.desksUnlocked || []).slice();
     fresh.desksCounts = Object.assign({}, state.desksCounts || {});
+    fresh.deskCombinesBySet = Object.assign({}, state.deskCombinesBySet || {});
     fresh.deskClicks = Object.assign({}, state.deskClicks || {});
     fresh.deskEggTargets = Object.assign({}, state.deskEggTargets || {});
     fresh.supplyReadyAt = state.supplyReadyAt;
@@ -4841,6 +4915,7 @@
     fresh.spendLife = Object.assign({new:0,opt:0,cen:0,hold:0}, state.spendLife || {});
     fresh.desksUnlocked = (state.desksUnlocked || []).slice();
     fresh.desksCounts = Object.assign({}, state.desksCounts || {});
+    fresh.deskCombinesBySet = Object.assign({}, state.deskCombinesBySet || {});
     fresh.deskClicks = Object.assign({}, state.deskClicks || {});
     fresh.deskEggTargets = Object.assign({}, state.deskEggTargets || {});
     fresh.supplyReadyAt = state.supplyReadyAt;
@@ -6224,7 +6299,7 @@
     if (!exitReady && fundUnlocked(state) && fundGain(state) >= 1) exitReady = true;
     if (!exitReady && ipoUnlocked(state) && ipoGain(state) >= 1 && computeEV(state) >= ipoNeed(state)) exitReady = true;
 
-    collectionReady = xchgHasAffordableOffer();
+    collectionReady = xchgHasAffordableOffer() || DESK_SETS.some(function(set){ return canCombineSet(state, set.id); });
 
     if (el["tab-dot-ops"]) el["tab-dot-ops"].hidden = !opsReady;
     if (el["tab-dot-exit"]) el["tab-dot-exit"].hidden = !exitReady;
