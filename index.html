@@ -4691,7 +4691,7 @@
     var b = e.target.closest && e.target.closest("#xchg-pack-btn");
     if (b && !b.disabled) startPackCheckout();
   });
-  function grantPackCards(){
+  function grantPackCards(sessionId, amountTotal, currency){
     var cards = [];
     for (var i = 0; i < PACK_CARD_COUNT; i++){
       var card = drawPackCard();
@@ -4706,6 +4706,23 @@
     cards.forEach(function(c){ checkDeskSetComplete(c.card); });
     updateStats(); updateAffordability(); saveGame();
     showGiftReveal({ icon:ICONS.card_exchange, title:"LEGENDARY PACK OPENED", desc:"Your " + PACK_CARD_COUNT + " cards are in.", cards:cards });
+    logPackPurchase(sessionId, cards.map(function(c){ return c.card.id; }), amountTotal, currency);
+  }
+  // Fire-and-forget support/audit trail: lets a purchase be looked up later by
+  // Stripe session id or player id if someone disputes a charge or says they
+  // paid but didn't get cards. Never blocks or affects the reveal — cards are
+  // already granted locally by the time this fires.
+  function logPackPurchase(sessionId, cardIds, amountTotal, currency){
+    if (!sessionId) return;
+    try {
+      lbCall("dso_log_pack_purchase", {
+        p_player_id: lbGetPlayerId(),
+        p_stripe_session_id: sessionId,
+        p_cards: cardIds || [],
+        p_amount_total: (typeof amountTotal === "number") ? amountTotal : null,
+        p_currency: currency || null
+      }).catch(function(){ /* offline / blocked — the purchase still succeeded, this is just the paper trail */ });
+    } catch(e){ /* never let logging touch the reveal */ }
   }
   function checkPackRedemption(){
     var params;
@@ -4727,7 +4744,7 @@
       .then(function(data){
         if (data && data.paid){
           state.redeemedStripeSessions.push(sessionId);
-          grantPackCards();
+          grantPackCards(sessionId, data.amount_total, data.currency);
         } else {
           showToast("PAYMENT NOT CONFIRMED", "We couldn't confirm that payment — no cards were granted. If you were charged, contact us.");
         }
