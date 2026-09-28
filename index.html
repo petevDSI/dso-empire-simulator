@@ -176,6 +176,17 @@
   .xchg-buy-row{border-color:var(--r-legendary); background:color-mix(in srgb, var(--r-legendary) 8%, var(--surface)); grid-column:1 / -1;}
   .xchg-buy-icon{flex:none; font-size:1.5rem; line-height:1;}
   #xchg-buy-btn{min-width:104px;}
+  .xchg-pack-row{
+    border-color:var(--accent-2); border-width:3px;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--accent-2) 14%, var(--surface)), color-mix(in srgb, var(--gold) 14%, var(--surface)));
+    grid-column:1 / -1; box-shadow:3px 3px 0 var(--hard-shadow);
+  }
+  .xchg-real-money-tag{
+    display:inline-block; font-size:0.6rem; font-weight:800; padding:1px 6px; border-radius:6px;
+    border:1.5px solid var(--ink); background:var(--accent-2); color:var(--on-accent-2); margin-left:4px; vertical-align:middle;
+  }
+  .pack-buy-btn{background:var(--accent-2); color:var(--on-accent-2); min-width:104px;}
+  .pack-buy-btn:disabled{opacity:0.6;}
   .auto-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:8px; background:var(--surface);}
   .auto-row.off{opacity:.55;}
   .auto-row select{font:700 0.78rem 'Nunito',sans-serif; padding:5px 6px; border:2px solid var(--ink); border-radius:8px; background:var(--surface-2); color:var(--ink); max-width:100%;}
@@ -2205,6 +2216,7 @@
       desksCounts:{},
       xchgSlots:[],
       xchgBuyReadyAt:0,
+      redeemedStripeSessions:[],
       seasonCheckpointsClaimed:[false,false,false,false],
       seasonCheckpointsReady:[false,false,false,false],
       exitReadyFired:false,
@@ -4005,6 +4017,107 @@
       if (costEl) costEl.textContent = fmt(price);
     }
   }
+
+  /* ---------- Legendary Card Pack: real-money purchase via Stripe Checkout ----------
+     $1.99 for 3 cards, each an INDEPENDENT equal-odds draw across all 5 Legendary desk
+     cards (20% each) — unlike the cash-based Buy a Card above, this ignores what you
+     already own, so duplicates are possible; they still stack the usual permanent
+     duplicate bonus (see DESK_DUPLICATE_BONUS_FRACTION), never wasted. Payment itself is
+     handled entirely by Stripe's hosted Checkout page — no card details ever pass
+     through this game's own code. See api/create-checkout-session.js and
+     api/verify-checkout-session.js. */
+  var PACK_PRICE_DISPLAY = "$1.99";
+  var PACK_CARD_COUNT = 3;
+  var PACK_ODDS_PCT = Math.round(1000 / 5) / 10; // 20.0
+  function packLegendaryPool(){ return allDeskCards().filter(function(c){ return c.rarity === "legendary"; }); }
+  function drawPackCard(){
+    var pool = packLegendaryPool();
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function xchgPackRowHtml(){
+    if (!packLegendaryPool().length) return "";
+    return '<div class="xchg-row xchg-pack-row" id="xchg-pack-row">' +
+      '<div class="xchg-buy-icon" aria-hidden="true">💎</div>' +
+      '<div class="xchg-info">Legendary Card Pack <span class="xchg-real-money-tag">REAL MONEY</span>' +
+        '<small>' + PACK_CARD_COUNT + ' cards, each an independent pull from all 5 Legendaries at equal odds (' + PACK_ODDS_PCT + '% each). Duplicates are possible and still count toward your permanent bonus. Securely processed by Stripe — we never see your card details.</small></div>' +
+      '<button class="row-buy pack-buy-btn" type="button" id="xchg-pack-btn"><span class="buy-label">Buy Pack</span> <span class="buy-cost">' + PACK_PRICE_DISPLAY + '</span></button>' +
+    '</div>';
+  }
+  var packCheckoutInFlight = false;
+  function startPackCheckout(){
+    if (packCheckoutInFlight) return;
+    var btn = document.getElementById("xchg-pack-btn");
+    packCheckoutInFlight = true;
+    if (btn){ btn.disabled = true; btn.querySelector(".buy-label").textContent = "Redirecting…"; }
+    fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ playerId: lbGetPlayerId() })
+    }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+      .then(function(res){
+        if (res.ok && res.data && res.data.url){
+          window.location.href = res.data.url;
+          return;
+        }
+        throw new Error((res.data && res.data.error) || "Checkout unavailable");
+      })
+      .catch(function(err){
+        packCheckoutInFlight = false;
+        if (btn){ btn.disabled = false; btn.querySelector(".buy-label").textContent = "Buy Pack"; }
+        showToast("CHECKOUT UNAVAILABLE", "Couldn't start checkout right now — please try again in a moment.");
+        console.error("startPackCheckout error:", err);
+      });
+  }
+  document.addEventListener("click", function(e){
+    var b = e.target.closest && e.target.closest("#xchg-pack-btn");
+    if (b && !b.disabled) startPackCheckout();
+  });
+  function grantPackCards(){
+    var cards = [];
+    for (var i = 0; i < PACK_CARD_COUNT; i++){
+      var card = drawPackCard();
+      if (!card) break;
+      var already = (state.desksUnlocked || []).indexOf(card.id) !== -1;
+      if (!already) state.desksUnlocked.push(card.id);
+      state.desksCounts[card.id] = deskCardCount(state, card.id) + 1;
+      cards.push({ card: card, isNew: !already, count: 1 });
+    }
+    xchgSig = "";
+    renderDesk(); renderStaff(); renderUpgrades();
+    cards.forEach(function(c){ checkDeskSetComplete(c.card); });
+    updateStats(); updateAffordability(); saveGame();
+    showGiftReveal({ icon:ICONS.card_exchange, title:"LEGENDARY PACK OPENED", desc:"Your " + PACK_CARD_COUNT + " cards are in.", cards:cards });
+  }
+  function checkPackRedemption(){
+    var params;
+    try { params = new URLSearchParams(window.location.search); } catch(e){ return; }
+    var sessionId = params.get("pack_session");
+    var cancelled = params.get("pack_cancelled");
+    if (!sessionId && !cancelled) return;
+    // strip the query string right away so a refresh/back-nav can't re-trigger this
+    try { window.history.replaceState(null, "", window.location.pathname); } catch(e){}
+    if (cancelled){
+      showToast("CHECKOUT CANCELED", "No charge was made.");
+      return;
+    }
+    if (!state.redeemedStripeSessions) state.redeemedStripeSessions = [];
+    if (state.redeemedStripeSessions.indexOf(sessionId) !== -1) return; // already granted
+    var playerId = lbGetPlayerId();
+    fetch("/api/verify-checkout-session?session_id=" + encodeURIComponent(sessionId) + "&player_id=" + encodeURIComponent(playerId))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data && data.paid){
+          state.redeemedStripeSessions.push(sessionId);
+          grantPackCards();
+        } else {
+          showToast("PAYMENT NOT CONFIRMED", "We couldn't confirm that payment — no cards were granted. If you were charged, contact us.");
+        }
+      })
+      .catch(function(err){
+        console.error("checkPackRedemption error:", err);
+        showToast("VERIFICATION FAILED", "Couldn't confirm that purchase right now. If you were charged, contact us.");
+      });
+  }
   function renderExchange(){
     var box = el["desk-exchange"];
     if (!box || !state) return;
@@ -4028,7 +4141,7 @@
       var owned = state.desksUnlocked || [];
       var html;
       if (offersDone && !xchgBuyPool().length){
-        html = '<p class="xchg-sub">You own every card. The exchange has closed for lack of anything to sell you.</p>';
+        html = '<p class="xchg-sub">You own every trade-able card — the free exchange has closed for lack of anything left to sell you.</p>' + xchgPackRowHtml();
       } else {
         html = '<p class="xchg-sub">One Rare, one Epic, one Legendary \u2014 swap spare copies (the extras beyond your first) for whichever you need, or buy a guaranteed pull outright. Not into a trade offer? Skip it &mdash; a new one rolls in after a while.</p>';
         slots.forEach(function(s, i){
@@ -4055,6 +4168,7 @@
           '</div>';
         });
         html += xchgBuyRowHtml();
+        html += xchgPackRowHtml();
       }
       box.innerHTML = html;
     }
@@ -6498,6 +6612,7 @@
       base.codesRedeemed = initialState.codesRedeemed || [];
       state = base;
     }
+    checkPackRedemption();
     renderMemo();
     renderStaff();
     renderUpgrades();

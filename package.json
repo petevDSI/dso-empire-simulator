@@ -1,0 +1,9 @@
+{
+  "name": "dso-empire-simulator",
+  "private": true,
+  "version": "1.0.0",
+  "description": "DSO Empire Simulator — static satirical idle game, plus a couple of small Vercel serverless functions for real-money card pack checkout (Stripe).",
+  "dependencies": {
+    "stripe": "^22.6.2"
+  }
+}
