@@ -460,6 +460,19 @@
     background-size:contain; background-repeat:no-repeat; pointer-events:none;
   }
 
+  /* ---------- v69: plaque prestige-tier filters (placeholder for tiers 2-9, see PLAQUE_TIERS in JS) ----------
+     Tier 1 (wood, season 0) is the unmodified base art already in the rule above. Tiers 2-9
+     apply a progressively warmer/richer filter over that same wood.png until each tier's own
+     illustrated art is cropped from a reference sheet and swapped in (drop the filter then). */
+  body.plaque-tier-1 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.15) brightness(1.05) contrast(1.02); }
+  body.plaque-tier-2 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.22) brightness(1.08) hue-rotate(-3deg) contrast(1.04); }
+  body.plaque-tier-3 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.28) brightness(1.1) hue-rotate(2deg) contrast(1.05); }
+  body.plaque-tier-4 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.34) brightness(1.12) hue-rotate(6deg) contrast(1.06); }
+  body.plaque-tier-5 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.4) brightness(1.15) hue-rotate(10deg) contrast(1.08); }
+  body.plaque-tier-6 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.48) brightness(1.18) hue-rotate(15deg) contrast(1.1); }
+  body.plaque-tier-7 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.58) brightness(1.23) hue-rotate(20deg) contrast(1.12) drop-shadow(0 0 3px rgba(255,210,110,0.35)); }
+  body.plaque-tier-8 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ filter:saturate(1.78) brightness(1.32) hue-rotate(27deg) contrast(1.16) drop-shadow(0 0 6px rgba(255,215,80,0.6)); }
+
   /* ---------- v53: mascot appearances beyond the splash/header (Pete's request) ---------- */
   .mascot-peek{
     position:absolute; width:46px; height:46px; border-radius:50%; object-fit:cover;
@@ -1082,13 +1095,17 @@
   .redeem-hint code{font-family:'Nunito', sans-serif; font-weight:800; background:var(--surface-2); padding:1px 5px; border-radius:6px; border:1.5px solid var(--line);}
 
   /* ---------- footer ---------- */
-  .footer{text-align:center; padding-top:4px; display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .footer{text-align:center; padding-top:8px; display:flex; flex-direction:column; align-items:center; gap:10px;}
   .footer p{margin:0; font-size:0.74rem; color:var(--ink-soft); font-weight:700;}
-  .footer-links{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; max-width:420px;}
-  .reset-link{background:var(--surface); border:1.5px solid var(--line); font-family:'Nunito', sans-serif; font-weight:700;
-    font-size:0.7rem; color:var(--ink-soft); text-decoration:none; cursor:pointer; padding:6px 11px; border-radius:999px;
-    display:inline-flex; align-items:center; gap:5px; line-height:1; transition:border-color .15s, color .15s;}
-  .reset-link:hover{border-color:var(--accent); color:var(--ink);}
+  .footer-links{display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px;}
+  /* v69: each footer link gets its own small plaque, same art + prestige-tier filter as the panel headers */
+  .reset-link{
+    display:inline-flex; align-items:center; gap:5px; line-height:1; background:none; border:none; font-family:'Nunito', sans-serif; font-weight:700;
+    font-size:0.7rem; color:var(--ink); text-decoration:none; cursor:pointer;
+    padding:7px 16px; margin:0;
+    background-image:url('assets/plaques/wood.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:center;
+    text-shadow:0 1px 0 rgba(255,255,255,0.4);
+  }
   .reset-link svg{width:13px; height:13px; flex:none; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
 
   /* ---------- toast ---------- */
@@ -2670,6 +2687,7 @@
       collectRushUntil:0,
       lpPoints:0,
       seasonsCompleted:0,
+      plaqueTierSeen:0,
       totalClicks:0,
       mascotClicks:0,
       achievementsUnlocked:[],
@@ -3998,6 +4016,7 @@
     updateLockProgress();
     checkMilestones();
     checkCombos();
+    checkPlaqueTier();
     updateBoard();
 
     if ((state.lpPoints || 0) > 0){
@@ -4612,6 +4631,45 @@
     epic: { from: "rare", n: 3 }
   };
   var FORGE_ORDER = ["uncommon", "rare", "epic"];
+
+  /* ---------- v69: panel-plaque prestige progression (cosmetic only, no bonus) ----------
+     The wood-plank header plaque (v49) now upgrades through 9 styles as the player racks up
+     lifetime Seasons Completed (state.seasonsCompleted, permanent, never resets across Exit/
+     Fund Raise/IPO). Pete ranked the original 9-option reference sheet from plainest to
+     fanciest; only the wood art (assets/plaques/wood.png) was ever saved to disk, so tiers 2-9
+     are a CSS-filter placeholder on that same image (progressively warmer/richer) until the
+     other 8 crops exist -- see PLAQUE_TIER_CSS below and claude/handoff.md Open Items. Swapping
+     in real art later is a per-tier change (new background-image + drop the filter), no
+     structural changes needed. Purely cosmetic: no multiplier, no gameplay effect anywhere. */
+  var PLAQUE_TIERS = [
+    { season: 0,  name: "Wood Plank" },
+    { season: 10, name: "Metal Plate" },
+    { season: 20, name: "Riveted Parchment Banner" },
+    { season: 30, name: "Parchment Scroll" },
+    { season: 40, name: "Green Arched Plaque" },
+    { season: 50, name: "Cream Ornate Rectangle" },
+    { season: 60, name: "Wood & Laurel" },
+    { season: 70, name: "Blue Ribbon Banner" },
+    { season: 90, name: "Gold Ornate Crown Frame" }
+  ];
+  function plaqueTierIndex(s){
+    var seasons = (s && s.seasonsCompleted) || 0;
+    var idx = 0;
+    for (var i = 0; i < PLAQUE_TIERS.length; i++){ if (seasons >= PLAQUE_TIERS[i].season) idx = i; }
+    return idx;
+  }
+  function checkPlaqueTier(){
+    var idx = plaqueTierIndex(state);
+    for (var i = 0; i < PLAQUE_TIERS.length; i++){ document.body.classList.remove("plaque-tier-" + i); }
+    document.body.classList.add("plaque-tier-" + idx);
+    if (idx > (state.plaqueTierSeen || 0)){
+      state.plaqueTierSeen = idx;
+      if (idx > 0){
+        sfxMilestoneBrass();
+        showToast("PANELS UPGRADED", "Every panel header just leveled up to " + PLAQUE_TIERS[idx].name + ".");
+      }
+    }
+  }
   function deskSetOf(card){ return DESK_SETS.filter(function(set){ return set.cards.some(function(c){ return c.id === card.id; }); })[0]; }
 
   /* ---------- desk card detail modal: large view + what the card and its set do ---------- */
@@ -5950,6 +6008,7 @@
     fresh.flagshipName = state.flagshipName || ""; fresh.flagshipIcon = state.flagshipIcon || "\ud83e\uddb7"; fresh.flagshipAsked = !!state.flagshipAsked; fresh.autoRules = JSON.parse(JSON.stringify(state.autoRules || []));
     fresh.deskPity = Object.assign({rare:0,leg:0}, state.deskPity || {}); fresh.deskBag = (state.deskBag || []).slice(); fresh.deskBagInit = !!state.deskBagInit;
     fresh.equipTier = JSON.parse(JSON.stringify(state.equipTier || {}));
+    fresh.plaqueTierSeen = state.plaqueTierSeen || 0;
   }
 
   function doIPO(){
