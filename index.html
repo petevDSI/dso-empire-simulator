@@ -853,6 +853,8 @@
   /* ---------- v64: The Office (Operatory Equipment & Office Buildout) ---------- */
   .office-room{border:2.5px solid var(--ink); border-radius:14px; padding:12px 14px; margin-bottom:14px; background:var(--surface); transition:border-color 0.2s ease, background 0.2s ease;}
   .office-room.complete{border-color:var(--r-legendary); background:color-mix(in srgb, var(--r-legendary) 8%, var(--surface));}
+  .office-room.locked{border-style:dashed; opacity:0.82; background:var(--surface-2);}
+  .office-room.locked .office-room-name{color:var(--ink-soft);}
   .office-room-head{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
   .office-room-icon{font-size:1.4rem; line-height:1;}
   .office-room-name{font-family:'Fredoka', sans-serif; font-weight:700; font-size:1rem;}
@@ -1881,8 +1883,16 @@
      gamewide % bonus; maxing every category in a room gives a room-complete bonus;
      maxing every room gives a one-time office-complete bonus and unlocks the
      Founder's Office (CEO Luxury) teaser — layer 2 of this backlog item, built as a
-     read-only preview for now (see EQUIP_CEO below), matching backlog #18. */
-  var EQUIP_UNLOCK_SEASONS = 3; // matches the "advanced gameplay" ask; opens once Season 4 begins
+     read-only preview for now (see EQUIP_CEO below), matching backlog #18.
+     v65 rebalance (Pete: "way too low... need it to be HARD... this is a LONG game
+     perk"): each room now carries its own unlockSeason gate in addition to cash cost,
+     spread roughly Season 8 through Season 38 so the whole equipment layer is a
+     multi-season-reset grind, not a same-run purchase — mirroring how IPO/Automation
+     already gate on seasonsCompleted. Costs were raised by roughly 2-3 orders of
+     magnitude per room, scaled to the season each room unlocks at (a Season 30+
+     economy is producing far more than a Season 1 one, per the milestone ladder's own
+     climb into the trillions), so a newly-unlocked room is never a one-click buy. */
+  var EQUIP_UNLOCK_SEASONS = 8; // earliest room (Operatories) opens; tab shows a locked teaser before this
   var EQUIP_ROOM_COMPLETE_BONUS = 0.025;   // +2.5% gamewide per fully-maxed room
   var EQUIP_OFFICE_COMPLETE_BONUS = 0.10;  // +10% gamewide, one time, for maxing the whole office
   var EQUIP_GLYPH = {
@@ -1894,79 +1904,80 @@
   };
   var EQUIPMENT = {
     rooms: [
-      { id:"operatory", name:"Operatories", icon:"🦩", categories:[
+      { id:"operatory", name:"Operatories", icon:"🦩", unlockSeason:8, categories:[
         { id:"chair", name:"Dental Chair", tiers:[
-          {name:"DCI Edge Fixed Base Ortho Chair", cost:8000, bonusPct:0.015, flavor:"Fast entry-level chair, ideal for rapid high-volume hygiene bays. Lower comfort, low cost, rapid reset."},
-          {name:"DCI Edge Series 4 Chair", cost:32000, bonusPct:0.03, flavor:"Mid-tier workhorse. Balanced patient comfort, dual-articulating headrest, smooth hydraulics."},
-          {name:"DCI Edge Series 5 Chair", cost:95000, bonusPct:0.05, flavor:"Premium flagship. Ergonomic contouring, ultra-smooth movement, maximum patient satisfaction and reduced clinician fatigue."}
+          {name:"DCI Edge Fixed Base Ortho Chair", cost:300000, bonusPct:0.015, flavor:"Fast entry-level chair, ideal for rapid high-volume hygiene bays. Lower comfort, low cost, rapid reset."},
+          {name:"DCI Edge Series 4 Chair", cost:1200000, bonusPct:0.03, flavor:"Mid-tier workhorse. Balanced patient comfort, dual-articulating headrest, smooth hydraulics."},
+          {name:"DCI Edge Series 5 Chair", cost:3600000, bonusPct:0.05, flavor:"Premium flagship. Ergonomic contouring, ultra-smooth movement, maximum patient satisfaction and reduced clinician fatigue."}
         ]},
         { id:"delivery", name:"Delivery System", tiers:[
-          {name:"Over-the-Patient Basic 3-Handpiece", cost:6000, bonusPct:0.015, flavor:"Basic air-driven lines, manual controls. Slow handpiece speed adjustments."},
-          {name:"DCI Edge Series 4 Delivery Unit", cost:24000, bonusPct:0.03, flavor:"Integrated touchpad, electric motor support, clean-water bottle system, reliable air/water controls."},
-          {name:"DCI Edge Series 5 Continental Delivery", cost:72000, bonusPct:0.05, flavor:"Integrated digital touch-screen interface, built-in electric handpieces, precision LED tubing, automated line flushing."}
+          {name:"Over-the-Patient Basic 3-Handpiece", cost:220000, bonusPct:0.015, flavor:"Basic air-driven lines, manual controls. Slow handpiece speed adjustments."},
+          {name:"DCI Edge Series 4 Delivery Unit", cost:900000, bonusPct:0.03, flavor:"Integrated touchpad, electric motor support, clean-water bottle system, reliable air/water controls."},
+          {name:"DCI Edge Series 5 Continental Delivery", cost:2700000, bonusPct:0.05, flavor:"Integrated digital touch-screen interface, built-in electric handpieces, precision LED tubing, automated line flushing."}
         ]},
         { id:"light", name:"Operatory Light", tiers:[
-          {name:"Halogen Operatory Light", cost:3000, bonusPct:0.015, flavor:"High heat, yellow tint, basic illumination. Causes mild patient discomfort over long procedures."},
-          {name:"DCI Edge Series 4 LED Light", cost:12000, bonusPct:0.03, flavor:"Cool white LED, dual-axis rotation, reduced shadow glare, energy-efficient."},
-          {name:"DCI Edge Series 5 No-Touch Motion LED", cost:36000, bonusPct:0.05, flavor:"Multi-axis motion control, curing-safe composite mode, true-color spectrum. Cosmetic case acceptance climbs."}
+          {name:"Halogen Operatory Light", cost:110000, bonusPct:0.015, flavor:"High heat, yellow tint, basic illumination. Causes mild patient discomfort over long procedures."},
+          {name:"DCI Edge Series 4 LED Light", cost:450000, bonusPct:0.03, flavor:"Cool white LED, dual-axis rotation, reduced shadow glare, energy-efficient."},
+          {name:"DCI Edge Series 5 No-Touch Motion LED", cost:1350000, bonusPct:0.05, flavor:"Multi-axis motion control, curing-safe composite mode, true-color spectrum. Cosmetic case acceptance climbs."}
         ]},
         { id:"cabinet", name:"Cabinetry", tiers:[
-          {name:"Standard Modular Laminate Cabinets", cost:5000, bonusPct:0.015, flavor:"Basic storage, manual drawers, higher wear-and-tear rate."},
-          {name:"DCI Edge Series 4 Storage Cabinets", cost:20000, bonusPct:0.03, flavor:"Integrated glove/cup/towel dispensers, soft-close drawers, durable solid-surface countertops."},
-          {name:"DCI Edge Series 5 Center Island Console", cost:60000, bonusPct:0.05, flavor:"Dual-pass-through design for assistant efficiency, built-in monitor arm, automated foot-actuated faucet."}
+          {name:"Standard Modular Laminate Cabinets", cost:180000, bonusPct:0.015, flavor:"Basic storage, manual drawers, higher wear-and-tear rate."},
+          {name:"DCI Edge Series 4 Storage Cabinets", cost:750000, bonusPct:0.03, flavor:"Integrated glove/cup/towel dispensers, soft-close drawers, durable solid-surface countertops."},
+          {name:"DCI Edge Series 5 Center Island Console", cost:2250000, bonusPct:0.05, flavor:"Dual-pass-through design for assistant efficiency, built-in monitor arm, automated foot-actuated faucet."}
         ]}
       ]},
-      { id:"imaging", name:"Imaging & Diagnostics", icon:"📷", categories:[
-        { id:"intraoral", name:"Intraoral X-Ray Sensor", tiers:[
-          {name:"Standard Wired Size 2 Sensor", cost:10000, bonusPct:0.015, flavor:"Thick cable, rigid corners. Occasional retakes from patient movement."},
-          {name:"DEXIS Platinum Sensor", cost:40000, bonusPct:0.03, flavor:"Ergonomic rounded corners, high resolution, reduced radiation dosage, faster capture."},
-          {name:"DEXIS Titanium Sensor", cost:120000, bonusPct:0.05, flavor:"Ultra-HD resolution, unbreakable reinforced cable, instant diagnosis. Restorative case acceptance climbs."}
-        ]},
-        { id:"extraoral", name:"Extraoral Imaging Suite", tiers:[
-          {name:"Panoramic X-Ray (2D Only)", cost:25000, bonusPct:0.015, flavor:"Basic 2D jaw imaging for routine hygiene check-ups."},
-          {name:"Pan / Ceph Combination", cost:100000, bonusPct:0.03, flavor:"Unlocks orthodontic diagnostic capability and specialty treatment plans."},
-          {name:"DEXIS OP 3D Pro / CBCT", cost:400000, bonusPct:0.05, flavor:"Full 3D volumetric imaging. Unlocks high-value implant, endodontic and surgical case flow."}
-        ]}
-      ]},
-      { id:"sterilization", name:"Sterilization Center", icon:"🧼", categories:[
+      { id:"sterilization", name:"Sterilization Center", icon:"🧼", unlockSeason:14, categories:[
         { id:"autoclave", name:"Autoclave / Sterilizer", tiers:[
-          {name:"Manual Chamber Sterilizer", cost:4000, bonusPct:0.015, flavor:"Slow cycles (45+ mins). Heavy manual tracking required."},
-          {name:"Midmark M11 UltraClave", cost:16000, bonusPct:0.03, flavor:"Fast steam cycles, automatic door opening, digital tracking."},
-          {name:"SciCan Statim 5000 G4 Cassette", cost:48000, bonusPct:0.05, flavor:"Rapid 9-minute cassette turnaround. Keeps operatories running at maximum velocity."}
+          {name:"Manual Chamber Sterilizer", cost:6000000, bonusPct:0.015, flavor:"Slow cycles (45+ mins). Heavy manual tracking required."},
+          {name:"Midmark M11 UltraClave", cost:24000000, bonusPct:0.03, flavor:"Fast steam cycles, automatic door opening, digital tracking."},
+          {name:"SciCan Statim 5000 G4 Cassette", cost:72000000, bonusPct:0.05, flavor:"Rapid 9-minute cassette turnaround. Keeps operatories running at maximum velocity."}
         ]},
         { id:"washer", name:"Washer / Disinfector", tiers:[
-          {name:"Manual Ultrasonic Bath", cost:3500, bonusPct:0.02, flavor:"Requires hand-scrubbing instruments. Slower turnaround, higher injury risk."},
-          {name:"Automated Thermal Washer-Disinfector", cost:14000, bonusPct:0.045, flavor:"Hands-free washing and drying, standardized infection control."}
+          {name:"Manual Ultrasonic Bath", cost:5000000, bonusPct:0.02, flavor:"Requires hand-scrubbing instruments. Slower turnaround, higher injury risk."},
+          {name:"Automated Thermal Washer-Disinfector", cost:21000000, bonusPct:0.045, flavor:"Hands-free washing and drying, standardized infection control."}
         ]}
       ]},
-      { id:"mechanical", name:"Mechanical Room", icon:"⚙️", categories:[
+      { id:"mechanical", name:"Mechanical Room", icon:"⚙️", unlockSeason:20, categories:[
         { id:"compressor", name:"Air Compressor", tiers:[
-          {name:"Single-Head Basic Oil Compressor", cost:7000, bonusPct:0.015, flavor:"Loud, occasional moisture in lines that can contaminate bonding agents."},
-          {name:"Air Techniques AirStar 30 Neo", cost:28000, bonusPct:0.03, flavor:"Oil-free, ultra-clean dry air, quiet membrane dryer system."},
-          {name:"Dual AirStar 50/70 Neo, Smart Diagnostics", cost:85000, bonusPct:0.05, flavor:"Supports 10+ simultaneous operatories with zero air pressure drop; remote monitoring."}
+          {name:"Single-Head Basic Oil Compressor", cost:70000000, bonusPct:0.015, flavor:"Loud, occasional moisture in lines that can contaminate bonding agents."},
+          {name:"Air Techniques AirStar 30 Neo", cost:280000000, bonusPct:0.03, flavor:"Oil-free, ultra-clean dry air, quiet membrane dryer system."},
+          {name:"Dual AirStar 50/70 Neo, Smart Diagnostics", cost:850000000, bonusPct:0.05, flavor:"Supports 10+ simultaneous operatories with zero air pressure drop; remote monitoring."}
         ]},
         { id:"vacuum", name:"Vacuum System", tiers:[
-          {name:"Single Dry Vacuum", cost:6500, bonusPct:0.015, flavor:"Adequate suction for 1-2 chairs."},
-          {name:"Air Techniques VacStar Neo", cost:26000, bonusPct:0.03, flavor:"High-performance wet/dry suction, dual-frequency drive for power saving."},
-          {name:"Dual VacStar Neo + Amalgam Separator", cost:80000, bonusPct:0.05, flavor:"Commercial-grade high-volume suction, fully EPA-compliant."}
+          {name:"Single Dry Vacuum", cost:65000000, bonusPct:0.015, flavor:"Adequate suction for 1-2 chairs."},
+          {name:"Air Techniques VacStar Neo", cost:260000000, bonusPct:0.03, flavor:"High-performance wet/dry suction, dual-frequency drive for power saving."},
+          {name:"Dual VacStar Neo + Amalgam Separator", cost:800000000, bonusPct:0.05, flavor:"Commercial-grade high-volume suction, fully EPA-compliant."}
         ]}
       ]},
-      { id:"lobby", name:"Lobby & Reception", icon:"🛋️", categories:[
+      { id:"imaging", name:"Imaging & Diagnostics", icon:"📷", unlockSeason:26, categories:[
+        { id:"intraoral", name:"Intraoral X-Ray Sensor", tiers:[
+          {name:"Standard Wired Size 2 Sensor", cost:1200000000, bonusPct:0.015, flavor:"Thick cable, rigid corners. Occasional retakes from patient movement."},
+          {name:"DEXIS Platinum Sensor", cost:4800000000, bonusPct:0.03, flavor:"Ergonomic rounded corners, high resolution, reduced radiation dosage, faster capture."},
+          {name:"DEXIS Titanium Sensor", cost:14000000000, bonusPct:0.05, flavor:"Ultra-HD resolution, unbreakable reinforced cable, instant diagnosis. Restorative case acceptance climbs."}
+        ]},
+        { id:"extraoral", name:"Extraoral Imaging Suite", tiers:[
+          {name:"Panoramic X-Ray (2D Only)", cost:3000000000, bonusPct:0.015, flavor:"Basic 2D jaw imaging for routine hygiene check-ups."},
+          {name:"Pan / Ceph Combination", cost:12000000000, bonusPct:0.03, flavor:"Unlocks orthodontic diagnostic capability and specialty treatment plans."},
+          {name:"DEXIS OP 3D Pro / CBCT", cost:45000000000, bonusPct:0.05, flavor:"Full 3D volumetric imaging. Unlocks high-value implant, endodontic and surgical case flow."}
+        ]}
+      ]},
+      { id:"lobby", name:"Lobby & Reception", icon:"🛋️", unlockSeason:32, categories:[
         { id:"reception", name:"Lobby & Reception", tiers:[
-          {name:"Budget Vinyl Chairs & Magazine Rack", cost:4000, bonusPct:0.015, flavor:"Neutral patient satisfaction."},
-          {name:"Modern Executive Seating & Beverage Station", cost:16000, bonusPct:0.03, flavor:"Reduces perceived wait times; increases patient reviews."},
-          {name:"Tech-Infused Luxury Lounge", cost:50000, bonusPct:0.05, flavor:"Tablet check-in, refreshment bar, ambient fireplace. VIP/cosmetic retention climbs."}
+          {name:"Budget Vinyl Chairs & Magazine Rack", cost:25000000000, bonusPct:0.015, flavor:"Neutral patient satisfaction."},
+          {name:"Modern Executive Seating & Beverage Station", cost:100000000000, bonusPct:0.03, flavor:"Reduces perceived wait times; increases patient reviews."},
+          {name:"Tech-Infused Luxury Lounge", cost:300000000000, bonusPct:0.05, flavor:"Tablet check-in, refreshment bar, ambient fireplace. VIP/cosmetic retention climbs."}
         ]}
       ]},
-      { id:"breakroom", name:"Staff Breakroom", icon:"☕", categories:[
+      { id:"breakroom", name:"Staff Breakroom", icon:"☕", unlockSeason:38, categories:[
         { id:"breakroom", name:"Staff Breakroom", tiers:[
-          {name:"Microwave & Folding Table", cost:3000, bonusPct:0.015, flavor:"Basic staff energy recovery."},
-          {name:"Full Kitchenette & Espresso Machine", cost:12000, bonusPct:0.03, flavor:"Comfortable couches too. Reduces staff burnout."},
-          {name:"High-End Lounge with Massage Chairs", cost:40000, bonusPct:0.05, flavor:"Catered snack bar included. Cuts dentist/hygienist turnover and poaching risk."}
+          {name:"Microwave & Folding Table", cost:120000000000, bonusPct:0.015, flavor:"Basic staff energy recovery."},
+          {name:"Full Kitchenette & Espresso Machine", cost:480000000000, bonusPct:0.03, flavor:"Comfortable couches too. Reduces staff burnout."},
+          {name:"High-End Lounge with Massage Chairs", cost:1400000000000, bonusPct:0.05, flavor:"Catered snack bar included. Cuts dentist/hygienist turnover and poaching risk."}
         ]}
       ]}
     ]
   };
+  function equipRoomUnlocked(s, room){ return (s.seasonsCompleted || 0) >= (room.unlockSeason || 0); }
   function equipRoom(roomId){ return EQUIPMENT.rooms.filter(function(r){ return r.id === roomId; })[0] || null; }
   function equipCat(roomId, catId){
     var room = equipRoom(roomId); if (!room) return null;
@@ -2002,6 +2013,7 @@
     if (!state || !equipUnlocked(state)) return;
     var room = equipRoom(roomId), cat = equipCat(roomId, catId);
     if (!room || !cat) return;
+    if (!equipRoomUnlocked(state, room)) return;
     var cur = equipCurrentTier(state, roomId, catId);
     if (cur >= cat.tiers.length) return;
     var tierDef = cat.tiers[cur];
@@ -2032,36 +2044,42 @@
   }
   /* ---------- Founder's Office / CEO Luxury (backlog #18) ----------
      Layer 2, unlocked once the whole Operatory buildout above is maxed. Shipping as a
-     read-only catalog preview for now — no purchase logic yet (see handoff doc). */
+     read-only catalog preview for now — no purchase logic yet (see handoff doc).
+     v65 rebalance: each luxury category also carries its own unlockSeason (42-58),
+     independent of the office-complete gate above, so even once the Founder's Office
+     opens the full catalog still reveals gradually — matching Pete's "40-60 for the
+     luxury items" ask. A category not yet unlocked renders as a locked teaser row. */
+  var EQUIP_CEO_UNLOCK_SEASONS = 42; // Founder's Office section itself never opens before this, even if the office completes earlier
   var EQUIP_CEO = {
     categories: [
-      { id:"auto", name:"Executive Transportation", icon:"🚗", tiers:[
+      { id:"auto", name:"Executive Transportation", icon:"🚗", unlockSeason:42, tiers:[
         {name:"Mid-Size Luxury SUV", flavor:"Reliable daily driver for visiting regional clinics. Small boost to regional manager morale."},
         {name:"Executive Sportscar / EV", flavor:"Parked in the CEO reserved spot outside flagship practices. Boosts local clinic valuation."},
         {name:"Exotic Supercar Collection", flavor:"Displayed in the Executive Garage. Unlocks Car & Coffee recruiting events."}
       ]},
-      { id:"boat", name:"Maritime & Watercraft", icon:"🚤", tiers:[
+      { id:"boat", name:"Maritime & Watercraft", icon:"🚤", unlockSeason:46, tiers:[
         {name:"22-Foot Performance Tritoon", flavor:"Weekend regional office outings and team-building. Reduces staff burnout nearby."},
         {name:"35-Foot Center Console Cruiser", flavor:"Entertains bank executives and DSO lenders. Unlocks lower acquisition-loan rates."},
         {name:"100-Foot Luxury Tri-Deck Superyacht", flavor:"Floating corporate retreat. Unlocks offshore tax shelters and PE investor summits."}
       ]},
-      { id:"jet", name:"Aviation & Travel", icon:"✈️", tiers:[
+      { id:"jet", name:"Aviation & Travel", icon:"✈️", unlockSeason:50, tiers:[
         {name:"Turboprop / Fractional Jet Card", flavor:"Fast travel to out-of-state practices. Cuts multi-state travel downtime 25%."},
         {name:"Mid-Size Business Jet", flavor:"Dedicated CEO aircraft for rapid regional acquisitions."},
         {name:"Ultra-Long-Range Heavy Jet", flavor:"Flying boardroom. Removes regional expansion limits, boosts national prestige."}
       ]},
-      { id:"estate", name:"Real Estate & Estates", icon:"🏠", tiers:[
+      { id:"estate", name:"Real Estate & Estates", icon:"🏠", unlockSeason:54, tiers:[
         {name:"Suburban Executive Estate", flavor:"High-end primary residence with home office. Boosts offline-earnings recovery."},
         {name:"Coastal / Lakefront Mountain Lodge", flavor:"Hosts annual executive retreats, boosting regional sales manager efficiency."},
         {name:"Mega-Mansion Compound", flavor:"10-car garage, helicopter pad, private security. Max Net Worth Leaderboard status."}
       ]},
-      { id:"watch", name:"Horology & Fine Jewelry", icon:"⌚", tiers:[
+      { id:"watch", name:"Horology & Fine Jewelry", icon:"⌚", unlockSeason:58, tiers:[
         {name:"Modern Luxury Smartwatch", flavor:"Basic status symbol worn during practice walkthroughs."},
         {name:"Rolex Daytona / AP Royal Oak", flavor:"Worn to DSO board meetings. Increases acquisition negotiation leverage."},
         {name:"Patek Philippe Grand Complications", flavor:"Ultimate flex piece. Unlocks the “Billionaire Founder” leaderboard title."}
       ]}
     ]
   };
+  function equipCeoCatUnlocked(s, cat){ return (s.seasonsCompleted || 0) >= (cat.unlockSeason || 0); }
 
   /* ---------- the desk: permanent, cross-season collectible cards ---------- */
   var CARD_IMG = {
@@ -3097,11 +3115,18 @@
       officeSig = "";
       return;
     }
-    var sig = JSON.stringify(state.equipTier || {});
+    var sig = JSON.stringify(state.equipTier || {}) + "|" + (state.seasonsCompleted || 0);
     if (sig !== officeSig){
       officeSig = sig;
       var html = "";
       EQUIPMENT.rooms.forEach(function(room){
+        if (!equipRoomUnlocked(state, room)){
+          html += '<div class="office-room locked">' +
+            '<div class="office-room-head"><span class="office-room-icon">' + room.icon + '</span><span class="office-room-name">' + room.name + '</span></div>' +
+            '<div class="lock-req">&#128274; Opens ' + room.unlockSeason + ' seasons in</div>' + lockProgHtml("seasons", room.unlockSeason) +
+          '</div>';
+          return;
+        }
         var complete = equipRoomComplete(state, room);
         html += '<div class="office-room' + (complete ? ' complete' : '') + '">' +
           '<div class="office-room-head"><span class="office-room-icon">' + room.icon + '</span><span class="office-room-name">' + room.name + '</span>' +
@@ -3110,10 +3135,11 @@
         '</div>';
       });
       el["office-body"].innerHTML = html;
-      var officeComplete = equipOfficeComplete(state);
+      updateLockProgress();
+      var ceoSectionReady = equipOfficeComplete(state) && (state.seasonsCompleted || 0) >= EQUIP_CEO_UNLOCK_SEASONS;
       if (el["panel-office-ceo"]){
-        el["panel-office-ceo"].hidden = !officeComplete;
-        if (officeComplete) renderOfficeCeo();
+        el["panel-office-ceo"].hidden = !ceoSectionReady;
+        if (ceoSectionReady) renderOfficeCeo();
       }
     }
     updateOfficeAffordability();
@@ -3132,11 +3158,17 @@
     });
     if (el["office-alert-dot"]) el["office-alert-dot"].hidden = !anyAffordable;
   }
-  var officeCeoRendered = false;
+  var officeCeoSig = "";
   function renderOfficeCeo(){
-    if (!el["office-ceo-body"] || officeCeoRendered) return;
-    officeCeoRendered = true;
+    if (!el["office-ceo-body"] || !state) return;
+    var sig = state.seasonsCompleted || 0;
+    if (sig === officeCeoSig) return;
+    officeCeoSig = sig;
     var html = EQUIP_CEO.categories.map(function(cat){
+      if (!equipCeoCatUnlocked(state, cat)){
+        return '<div class="office-room locked"><div class="office-room-head"><span class="office-room-icon">' + cat.icon + '</span><span class="office-room-name">' + cat.name + '</span></div>' +
+          '<div class="lock-req">&#128274; Opens ' + cat.unlockSeason + ' seasons in</div>' + lockProgHtml("seasons", cat.unlockSeason) + '</div>';
+      }
       return '<div class="office-room"><div class="office-room-head"><span class="office-room-icon">' + cat.icon + '</span><span class="office-room-name">' + cat.name + '</span></div>' +
         '<div class="office-slots">' + cat.tiers.map(function(t, i){
           return '<div class="office-slot ceo-slot"><div class="office-slot-visual"><span class="office-glyph tier-' + (i + 1) + '">' + cat.icon + '</span></div>' +
@@ -3146,6 +3178,7 @@
         }).join("") + '</div></div>';
     }).join("");
     el["office-ceo-body"].innerHTML = html;
+    updateLockProgress();
   }
   document.addEventListener("click", function(e){
     var btn = e.target && e.target.closest && e.target.closest(".office-buy-btn[data-room]");
@@ -7080,6 +7113,7 @@
     var officeReady = false;
     if (equipUnlocked(state)){
       EQUIPMENT.rooms.some(function(room){
+        if (!equipRoomUnlocked(state, room)) return false;
         return room.categories.some(function(cat){
           var tier = equipCurrentTier(state, room.id, cat.id);
           var tierDef = cat.tiers[tier];
