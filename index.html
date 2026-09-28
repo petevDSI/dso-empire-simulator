@@ -849,6 +849,43 @@
   .board-card-buy .buy-cost{font-family:'Nunito', sans-serif; font-size:0.86rem; font-weight:900;}
   .board-card-buy:disabled{opacity:0.4; cursor:not-allowed; background:var(--surface-2); color:var(--ink-soft); box-shadow:none;}
   .board-card-buy:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
+
+  /* ---------- v64: The Office (Operatory Equipment & Office Buildout) ---------- */
+  .office-room{border:2.5px solid var(--ink); border-radius:14px; padding:12px 14px; margin-bottom:14px; background:var(--surface); transition:border-color 0.2s ease, background 0.2s ease;}
+  .office-room.complete{border-color:var(--r-legendary); background:color-mix(in srgb, var(--r-legendary) 8%, var(--surface));}
+  .office-room-head{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .office-room-icon{font-size:1.4rem; line-height:1;}
+  .office-room-name{font-family:'Fredoka', sans-serif; font-weight:700; font-size:1rem;}
+  .office-room-badge{margin-left:auto; font-size:0.7rem; font-weight:800; color:#141413; background:var(--r-legendary); border:2px solid var(--ink); border-radius:999px; padding:3px 9px;}
+  .office-slots{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:12px;}
+  .office-slot{display:flex; gap:10px; padding:10px; border:2px solid var(--line); border-radius:12px; background:var(--surface-2); transition:border-color 0.2s ease;}
+  .office-slot.empty{border-style:dashed;}
+  .office-slot.maxed{border-color:var(--r-legendary);}
+  .office-slot-visual{flex:0 0 auto; width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--surface); border:2px solid var(--ink);}
+  .office-glyph{font-size:1.5rem; line-height:1; filter:grayscale(1) opacity(0.4); transition:filter 0.25s ease, transform 0.2s ease;}
+  .office-glyph.tier-1{filter:grayscale(0.15) opacity(0.85); color:var(--r-uncommon);}
+  .office-glyph.tier-2{filter:none; transform:scale(1.08); color:var(--r-rare);}
+  .office-glyph.tier-3{filter:drop-shadow(0 0 4px var(--r-legendary)); transform:scale(1.18); color:var(--r-legendary);}
+  .office-slot-info{flex:1 1 auto; min-width:0;}
+  .office-slot-name{font-family:'Fredoka', sans-serif; font-weight:700; font-size:0.85rem;}
+  .office-slot-tier{font-size:0.74rem; font-weight:700; color:var(--ink-soft); margin-top:1px;}
+  .office-slot-flavor{font-size:0.7rem; color:var(--ink-soft); line-height:1.3; margin-top:3px; font-weight:600;}
+  .office-slot-bonus{font-size:0.72rem; font-weight:800; color:var(--accent-2); margin-top:3px;}
+  .office-slot-next{font-size:0.68rem; color:var(--ink-soft); margin-top:4px; font-weight:600;}
+  .office-slot-maxed{font-size:0.74rem; font-weight:800; color:var(--r-legendary); margin-top:6px;}
+  .office-buy-btn{
+    margin-top:6px; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    padding:8px 10px; border-radius:10px; border:2.5px solid var(--ink); background:var(--accent); color:var(--on-accent);
+    font-family:'Nunito', sans-serif; cursor:pointer; box-shadow:3px 3px 0 var(--hard-shadow);
+    transition:transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+  }
+  .office-buy-btn:hover:not(:disabled){transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--hard-shadow);}
+  .office-buy-btn:active:not(:disabled){transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hard-shadow);}
+  .office-buy-btn .buy-label{font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:800;}
+  .office-buy-btn .buy-cost{font-family:'Nunito', sans-serif; font-size:0.82rem; font-weight:900;}
+  .office-buy-btn:disabled{opacity:0.45; cursor:not-allowed; background:var(--surface-2); color:var(--ink-soft); box-shadow:none;}
+  .office-ceo-tag{font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); background:var(--surface-2); border:2px solid var(--ink); border-radius:999px; padding:2px 8px; margin-left:8px; vertical-align:middle;}
+  .ceo-slot .office-buy-btn:disabled{opacity:0.6;}
   .exit-progress{position:relative; height:14px; border-radius:8px; background:var(--surface-2); border:2.5px solid var(--ink); overflow:visible; margin-block:16px 14px;}
   .exit-progress-bar{height:100%; width:0%; border-radius:6px; background:repeating-linear-gradient(135deg, var(--accent), var(--accent) 10px, var(--gold) 10px, var(--gold) 20px); transition:width 0.3s ease;}
   .exit-checkpoint{
@@ -1393,6 +1430,7 @@
     <button class="tab-btn active" type="button" data-tab="ops" role="tab" aria-selected="true">Operations<span class="tab-btn-dot" id="tab-dot-ops" hidden aria-label="Something is waiting on this tab"></span></button>
     <button class="tab-btn" type="button" data-tab="exit" role="tab" aria-selected="false">Exit Strategy<span class="tab-btn-dot" id="tab-dot-exit" hidden aria-label="Something is waiting on this tab"></span></button>
     <button class="tab-btn" type="button" data-tab="collection" role="tab" aria-selected="false">Collection<span class="tab-btn-dot" id="tab-dot-collection" hidden aria-label="Something is waiting on this tab"></span></button>
+    <button class="tab-btn" type="button" data-tab="office" role="tab" aria-selected="false">Office<span class="tab-btn-dot" id="tab-dot-office" hidden aria-label="Something is waiting on this tab"></span></button>
     <button class="tab-btn" type="button" data-tab="story" role="tab" aria-selected="false">Story</button>
     <button class="tab-btn" type="button" data-tab="leaderboard" role="tab" aria-selected="false">Leaderboard</button>
     <button class="tab-btn" type="button" data-tab="bonuses" role="tab" aria-selected="false">Bonuses</button>
@@ -1525,6 +1563,19 @@
           <div class="rows" id="achievement-rows"></div>
         </div>
       </div>
+    </section>
+  </div>
+
+  <div class="tab-content" id="tab-content-office" data-tab-content="office" hidden>
+    <section class="panel" id="panel-office">
+      <h2>The Office<span class="panel-alert-dot" id="office-alert-dot" hidden aria-label="Equipment is affordable"></span></h2>
+      <p class="panel-sub">Buy and upgrade real equipment for every room, drop it into the floor plan, and watch it sit there permanently. Each tier is a small gamewide bonus on its own; max out a whole room for a kicker, and max the entire office for the big one.</p>
+      <div id="office-body"></div>
+    </section>
+    <section class="panel" id="panel-office-ceo" hidden>
+      <h2>Founder's Office <span class="office-ceo-tag">Coming Soon</span></h2>
+      <p class="panel-sub">The whole Office is outfitted &mdash; the next layer is personal. A preview of what's coming for the Founder himself, funded by net worth and IPO count rather than cash on hand.</p>
+      <div id="office-ceo-body"></div>
     </section>
   </div>
 
@@ -1824,6 +1875,194 @@
     {id:"audit", name:"Pass a Compliance Audit", icon:ICONS.compliance_audit, flavor:"Only three findings. Frame it.", cost:8000000, multipleBonus:1.5, deskRequirement:{count:3}}
   ];
 
+  /* ---------- v64: Operatory Equipment & Office Buildout (backlog #17) ----------
+     Advanced-gameplay tab: buy/upgrade equipment for six rooms (each with 1-4 slot
+     categories, each slot 2-3 tiers). Each owned tier gives a small permanent
+     gamewide % bonus; maxing every category in a room gives a room-complete bonus;
+     maxing every room gives a one-time office-complete bonus and unlocks the
+     Founder's Office (CEO Luxury) teaser — layer 2 of this backlog item, built as a
+     read-only preview for now (see EQUIP_CEO below), matching backlog #18. */
+  var EQUIP_UNLOCK_SEASONS = 3; // matches the "advanced gameplay" ask; opens once Season 4 begins
+  var EQUIP_ROOM_COMPLETE_BONUS = 0.025;   // +2.5% gamewide per fully-maxed room
+  var EQUIP_OFFICE_COMPLETE_BONUS = 0.10;  // +10% gamewide, one time, for maxing the whole office
+  var EQUIP_GLYPH = {
+    chair:"🪑", delivery:"🦷", light:"💡", cabinet:"🗄️",
+    intraoral:"🪥", extraoral:"🖥️",
+    autoclave:"🧼", washer:"🚿",
+    compressor:"🌬️", vacuum:"🧹",
+    reception:"🛋️", breakroom:"☕"
+  };
+  var EQUIPMENT = {
+    rooms: [
+      { id:"operatory", name:"Operatories", icon:"🦩", categories:[
+        { id:"chair", name:"Dental Chair", tiers:[
+          {name:"DCI Edge Fixed Base Ortho Chair", cost:8000, bonusPct:0.015, flavor:"Fast entry-level chair, ideal for rapid high-volume hygiene bays. Lower comfort, low cost, rapid reset."},
+          {name:"DCI Edge Series 4 Chair", cost:32000, bonusPct:0.03, flavor:"Mid-tier workhorse. Balanced patient comfort, dual-articulating headrest, smooth hydraulics."},
+          {name:"DCI Edge Series 5 Chair", cost:95000, bonusPct:0.05, flavor:"Premium flagship. Ergonomic contouring, ultra-smooth movement, maximum patient satisfaction and reduced clinician fatigue."}
+        ]},
+        { id:"delivery", name:"Delivery System", tiers:[
+          {name:"Over-the-Patient Basic 3-Handpiece", cost:6000, bonusPct:0.015, flavor:"Basic air-driven lines, manual controls. Slow handpiece speed adjustments."},
+          {name:"DCI Edge Series 4 Delivery Unit", cost:24000, bonusPct:0.03, flavor:"Integrated touchpad, electric motor support, clean-water bottle system, reliable air/water controls."},
+          {name:"DCI Edge Series 5 Continental Delivery", cost:72000, bonusPct:0.05, flavor:"Integrated digital touch-screen interface, built-in electric handpieces, precision LED tubing, automated line flushing."}
+        ]},
+        { id:"light", name:"Operatory Light", tiers:[
+          {name:"Halogen Operatory Light", cost:3000, bonusPct:0.015, flavor:"High heat, yellow tint, basic illumination. Causes mild patient discomfort over long procedures."},
+          {name:"DCI Edge Series 4 LED Light", cost:12000, bonusPct:0.03, flavor:"Cool white LED, dual-axis rotation, reduced shadow glare, energy-efficient."},
+          {name:"DCI Edge Series 5 No-Touch Motion LED", cost:36000, bonusPct:0.05, flavor:"Multi-axis motion control, curing-safe composite mode, true-color spectrum. Cosmetic case acceptance climbs."}
+        ]},
+        { id:"cabinet", name:"Cabinetry", tiers:[
+          {name:"Standard Modular Laminate Cabinets", cost:5000, bonusPct:0.015, flavor:"Basic storage, manual drawers, higher wear-and-tear rate."},
+          {name:"DCI Edge Series 4 Storage Cabinets", cost:20000, bonusPct:0.03, flavor:"Integrated glove/cup/towel dispensers, soft-close drawers, durable solid-surface countertops."},
+          {name:"DCI Edge Series 5 Center Island Console", cost:60000, bonusPct:0.05, flavor:"Dual-pass-through design for assistant efficiency, built-in monitor arm, automated foot-actuated faucet."}
+        ]}
+      ]},
+      { id:"imaging", name:"Imaging & Diagnostics", icon:"📷", categories:[
+        { id:"intraoral", name:"Intraoral X-Ray Sensor", tiers:[
+          {name:"Standard Wired Size 2 Sensor", cost:10000, bonusPct:0.015, flavor:"Thick cable, rigid corners. Occasional retakes from patient movement."},
+          {name:"DEXIS Platinum Sensor", cost:40000, bonusPct:0.03, flavor:"Ergonomic rounded corners, high resolution, reduced radiation dosage, faster capture."},
+          {name:"DEXIS Titanium Sensor", cost:120000, bonusPct:0.05, flavor:"Ultra-HD resolution, unbreakable reinforced cable, instant diagnosis. Restorative case acceptance climbs."}
+        ]},
+        { id:"extraoral", name:"Extraoral Imaging Suite", tiers:[
+          {name:"Panoramic X-Ray (2D Only)", cost:25000, bonusPct:0.015, flavor:"Basic 2D jaw imaging for routine hygiene check-ups."},
+          {name:"Pan / Ceph Combination", cost:100000, bonusPct:0.03, flavor:"Unlocks orthodontic diagnostic capability and specialty treatment plans."},
+          {name:"DEXIS OP 3D Pro / CBCT", cost:400000, bonusPct:0.05, flavor:"Full 3D volumetric imaging. Unlocks high-value implant, endodontic and surgical case flow."}
+        ]}
+      ]},
+      { id:"sterilization", name:"Sterilization Center", icon:"🧼", categories:[
+        { id:"autoclave", name:"Autoclave / Sterilizer", tiers:[
+          {name:"Manual Chamber Sterilizer", cost:4000, bonusPct:0.015, flavor:"Slow cycles (45+ mins). Heavy manual tracking required."},
+          {name:"Midmark M11 UltraClave", cost:16000, bonusPct:0.03, flavor:"Fast steam cycles, automatic door opening, digital tracking."},
+          {name:"SciCan Statim 5000 G4 Cassette", cost:48000, bonusPct:0.05, flavor:"Rapid 9-minute cassette turnaround. Keeps operatories running at maximum velocity."}
+        ]},
+        { id:"washer", name:"Washer / Disinfector", tiers:[
+          {name:"Manual Ultrasonic Bath", cost:3500, bonusPct:0.02, flavor:"Requires hand-scrubbing instruments. Slower turnaround, higher injury risk."},
+          {name:"Automated Thermal Washer-Disinfector", cost:14000, bonusPct:0.045, flavor:"Hands-free washing and drying, standardized infection control."}
+        ]}
+      ]},
+      { id:"mechanical", name:"Mechanical Room", icon:"⚙️", categories:[
+        { id:"compressor", name:"Air Compressor", tiers:[
+          {name:"Single-Head Basic Oil Compressor", cost:7000, bonusPct:0.015, flavor:"Loud, occasional moisture in lines that can contaminate bonding agents."},
+          {name:"Air Techniques AirStar 30 Neo", cost:28000, bonusPct:0.03, flavor:"Oil-free, ultra-clean dry air, quiet membrane dryer system."},
+          {name:"Dual AirStar 50/70 Neo, Smart Diagnostics", cost:85000, bonusPct:0.05, flavor:"Supports 10+ simultaneous operatories with zero air pressure drop; remote monitoring."}
+        ]},
+        { id:"vacuum", name:"Vacuum System", tiers:[
+          {name:"Single Dry Vacuum", cost:6500, bonusPct:0.015, flavor:"Adequate suction for 1-2 chairs."},
+          {name:"Air Techniques VacStar Neo", cost:26000, bonusPct:0.03, flavor:"High-performance wet/dry suction, dual-frequency drive for power saving."},
+          {name:"Dual VacStar Neo + Amalgam Separator", cost:80000, bonusPct:0.05, flavor:"Commercial-grade high-volume suction, fully EPA-compliant."}
+        ]}
+      ]},
+      { id:"lobby", name:"Lobby & Reception", icon:"🛋️", categories:[
+        { id:"reception", name:"Lobby & Reception", tiers:[
+          {name:"Budget Vinyl Chairs & Magazine Rack", cost:4000, bonusPct:0.015, flavor:"Neutral patient satisfaction."},
+          {name:"Modern Executive Seating & Beverage Station", cost:16000, bonusPct:0.03, flavor:"Reduces perceived wait times; increases patient reviews."},
+          {name:"Tech-Infused Luxury Lounge", cost:50000, bonusPct:0.05, flavor:"Tablet check-in, refreshment bar, ambient fireplace. VIP/cosmetic retention climbs."}
+        ]}
+      ]},
+      { id:"breakroom", name:"Staff Breakroom", icon:"☕", categories:[
+        { id:"breakroom", name:"Staff Breakroom", tiers:[
+          {name:"Microwave & Folding Table", cost:3000, bonusPct:0.015, flavor:"Basic staff energy recovery."},
+          {name:"Full Kitchenette & Espresso Machine", cost:12000, bonusPct:0.03, flavor:"Comfortable couches too. Reduces staff burnout."},
+          {name:"High-End Lounge with Massage Chairs", cost:40000, bonusPct:0.05, flavor:"Catered snack bar included. Cuts dentist/hygienist turnover and poaching risk."}
+        ]}
+      ]}
+    ]
+  };
+  function equipRoom(roomId){ return EQUIPMENT.rooms.filter(function(r){ return r.id === roomId; })[0] || null; }
+  function equipCat(roomId, catId){
+    var room = equipRoom(roomId); if (!room) return null;
+    return room.categories.filter(function(c){ return c.id === catId; })[0] || null;
+  }
+  function equipUnlocked(s){ return (s.seasonsCompleted || 0) >= EQUIP_UNLOCK_SEASONS; }
+  function equipCurrentTier(s, roomId, catId){ return (((s.equipTier || {})[roomId] || {})[catId]) || 0; }
+  function equipCategoryMaxed(s, roomId, catId){
+    var cat = equipCat(roomId, catId); if (!cat) return false;
+    return equipCurrentTier(s, roomId, catId) >= cat.tiers.length;
+  }
+  function equipRoomComplete(s, room){
+    return room.categories.every(function(c){ return equipCategoryMaxed(s, room.id, c.id); });
+  }
+  function equipOfficeComplete(s){
+    return EQUIPMENT.rooms.every(function(r){ return equipRoomComplete(s, r); });
+  }
+  function equipCategoryBonus(s, roomId, catId){
+    var cat = equipCat(roomId, catId); var t = equipCurrentTier(s, roomId, catId);
+    if (!cat || t <= 0) return 0;
+    return cat.tiers[t - 1].bonusPct;
+  }
+  function equipmentBonusPct(s){
+    var total = 0;
+    EQUIPMENT.rooms.forEach(function(room){
+      room.categories.forEach(function(cat){ total += equipCategoryBonus(s, room.id, cat.id); });
+      if (equipRoomComplete(s, room)) total += EQUIP_ROOM_COMPLETE_BONUS;
+    });
+    if (equipOfficeComplete(s)) total += EQUIP_OFFICE_COMPLETE_BONUS;
+    return total;
+  }
+  function buyEquipTier(roomId, catId){
+    if (!state || !equipUnlocked(state)) return;
+    var room = equipRoom(roomId), cat = equipCat(roomId, catId);
+    if (!room || !cat) return;
+    var cur = equipCurrentTier(state, roomId, catId);
+    if (cur >= cat.tiers.length) return;
+    var tierDef = cat.tiers[cur];
+    if (state.revenue < tierDef.cost) return;
+    state.revenue -= tierDef.cost;
+    if (!state.equipTier) state.equipTier = {};
+    if (!state.equipTier[roomId]) state.equipTier[roomId] = {};
+    state.equipTier[roomId][catId] = cur + 1;
+    sfxMilestoneBrass();
+    pushNews("EQUIPMENT UPGRADED", tierDef.name + " installed in " + room.name + ".");
+    var roomNowComplete = equipRoomComplete(state, room);
+    var officeNowComplete = equipOfficeComplete(state);
+    if (roomNowComplete){
+      sfxFlourishEpic();
+      showToast("ROOM COMPLETE", room.name + " is fully outfitted — top tier across the board. +" + Math.round(EQUIP_ROOM_COMPLETE_BONUS * 100) + "% gamewide, permanent.");
+      pushNews("ROOM COMPLETE", room.name + " fully outfitted.");
+    }
+    if (officeNowComplete){
+      sfxFanfareLegendary();
+      showToast("THE OFFICE IS COMPLETE", "Every room, every piece of equipment, top tier. +" + Math.round(EQUIP_OFFICE_COMPLETE_BONUS * 100) + "% gamewide, permanent — and the Founder's Office just opened.");
+      pushNews("THE OFFICE IS COMPLETE", "Every room fully outfitted. Founder's Office unlocked.");
+    }
+    checkAchievements();
+    renderOffice();
+    updateStats();
+    updateAffordability();
+    saveGame();
+  }
+  /* ---------- Founder's Office / CEO Luxury (backlog #18) ----------
+     Layer 2, unlocked once the whole Operatory buildout above is maxed. Shipping as a
+     read-only catalog preview for now — no purchase logic yet (see handoff doc). */
+  var EQUIP_CEO = {
+    categories: [
+      { id:"auto", name:"Executive Transportation", icon:"🚗", tiers:[
+        {name:"Mid-Size Luxury SUV", flavor:"Reliable daily driver for visiting regional clinics. Small boost to regional manager morale."},
+        {name:"Executive Sportscar / EV", flavor:"Parked in the CEO reserved spot outside flagship practices. Boosts local clinic valuation."},
+        {name:"Exotic Supercar Collection", flavor:"Displayed in the Executive Garage. Unlocks Car & Coffee recruiting events."}
+      ]},
+      { id:"boat", name:"Maritime & Watercraft", icon:"🚤", tiers:[
+        {name:"22-Foot Performance Tritoon", flavor:"Weekend regional office outings and team-building. Reduces staff burnout nearby."},
+        {name:"35-Foot Center Console Cruiser", flavor:"Entertains bank executives and DSO lenders. Unlocks lower acquisition-loan rates."},
+        {name:"100-Foot Luxury Tri-Deck Superyacht", flavor:"Floating corporate retreat. Unlocks offshore tax shelters and PE investor summits."}
+      ]},
+      { id:"jet", name:"Aviation & Travel", icon:"✈️", tiers:[
+        {name:"Turboprop / Fractional Jet Card", flavor:"Fast travel to out-of-state practices. Cuts multi-state travel downtime 25%."},
+        {name:"Mid-Size Business Jet", flavor:"Dedicated CEO aircraft for rapid regional acquisitions."},
+        {name:"Ultra-Long-Range Heavy Jet", flavor:"Flying boardroom. Removes regional expansion limits, boosts national prestige."}
+      ]},
+      { id:"estate", name:"Real Estate & Estates", icon:"🏠", tiers:[
+        {name:"Suburban Executive Estate", flavor:"High-end primary residence with home office. Boosts offline-earnings recovery."},
+        {name:"Coastal / Lakefront Mountain Lodge", flavor:"Hosts annual executive retreats, boosting regional sales manager efficiency."},
+        {name:"Mega-Mansion Compound", flavor:"10-car garage, helicopter pad, private security. Max Net Worth Leaderboard status."}
+      ]},
+      { id:"watch", name:"Horology & Fine Jewelry", icon:"⌚", tiers:[
+        {name:"Modern Luxury Smartwatch", flavor:"Basic status symbol worn during practice walkthroughs."},
+        {name:"Rolex Daytona / AP Royal Oak", flavor:"Worn to DSO board meetings. Increases acquisition negotiation leverage."},
+        {name:"Patek Philippe Grand Complications", flavor:"Ultimate flex piece. Unlocks the “Billionaire Founder” leaderboard title."}
+      ]}
+    ]
+  };
+
   /* ---------- the desk: permanent, cross-season collectible cards ---------- */
   var CARD_IMG = {
     deskMug:"data:image/png;base64,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",
@@ -2005,7 +2244,9 @@
     {id:"ebitda1m", name:"Creative Accounting", desc:"Adjust EBITDA by $1M cumulative. Nobody's checking the math.", bonusPct:0.02, check:function(s){ return (s.ebitdaAdjustTotal || 0) >= 1000000; }},
     {id:"ebitda5m", name:"Very Adjusted EBITDA", desc:"Adjust EBITDA by $5M cumulative.", bonusPct:0.03, check:function(s){ return (s.ebitdaAdjustTotal || 0) >= 5000000; }},
     {id:"ebitdac", name:"EBITDAC", desc:"Adjust EBITDA by $25M cumulative. We don't know what the C stands for either.", bonusPct:0.05, check:function(s){ return (s.ebitdaAdjustTotal || 0) >= 25000000; }},
-    {id:"trustmebro", name:"Trust Me Bro", desc:"Reach $100M enterprise value while your actual EBITDA/sec still reads under $10M.", bonusPct:0.05, secret:true, check:function(s){ return computeEV(s) >= 100000000 && computeEbitda(s) < 10000000; }}
+    {id:"trustmebro", name:"Trust Me Bro", desc:"Reach $100M enterprise value while your actual EBITDA/sec still reads under $10M.", bonusPct:0.05, secret:true, check:function(s){ return computeEV(s) >= 100000000 && computeEbitda(s) < 10000000; }},
+    {id:"equip-firstroom", name:"Fully Outfitted", desc:"Max out every piece of equipment in one room of the Office.", bonusPct:0.02, check:function(s){ return EQUIPMENT.rooms.some(function(r){ return equipRoomComplete(s, r); }); }},
+    {id:"equip-office", name:"The Whole Office", desc:"Max out every room's equipment. Founder's Office unlocked.", bonusPct:0.05, check:function(s){ return equipOfficeComplete(s); }}
   ];
   /* ---------- desk-card easter eggs: poke an owned card enough times for a one-off gag + tiny permanent bonus ---------- */
   var DESK_EGGS = {
@@ -2296,7 +2537,8 @@
       tutorialStep:0,
       tutorialChoice:"",
       clinicalQuality:70,
-      integrationStrain:0
+      integrationStrain:0,
+      equipTier:{}
     };
   }
 
@@ -2825,6 +3067,92 @@
     el["bench-body"].innerHTML = html;
   }
 
+  /* ---------- v64: The Office (Operatory Equipment & Office Buildout, backlog #17) ---------- */
+  var officeSig = "";
+  function equipSlotHtml(room, cat){
+    var tier = equipCurrentTier(state, room.id, cat.id);
+    var maxTier = cat.tiers.length;
+    var maxed = tier >= maxTier;
+    var cur = tier > 0 ? cat.tiers[tier - 1] : null;
+    var next = !maxed ? cat.tiers[tier] : null;
+    var glyph = EQUIP_GLYPH[cat.id] || "❓";
+    return '<div class="office-slot' + (maxed ? ' maxed' : '') + (tier === 0 ? ' empty' : '') + '">' +
+      '<div class="office-slot-visual"><span class="office-glyph tier-' + tier + '" title="' + (cur ? cur.name.replace(/"/g,"&quot;") : "Not yet purchased") + '">' + glyph + '</span></div>' +
+      '<div class="office-slot-info">' +
+        '<div class="office-slot-name">' + cat.name + '</div>' +
+        '<div class="office-slot-tier">' + (cur ? ("Tier " + tier + " — " + cur.name) : "Empty slot") + '</div>' +
+        (cur ? '<div class="office-slot-flavor">' + cur.flavor + '</div><div class="office-slot-bonus">+' + Math.round(cur.bonusPct * 100) + '% gamewide, permanent</div>' : '<div class="office-slot-flavor">' + (next ? next.flavor : "") + '</div>') +
+        (next ? ('<button class="office-buy-btn" type="button" data-room="' + room.id + '" data-cat="' + cat.id + '">' +
+            '<span class="buy-label">' + (tier === 0 ? "Buy" : "Upgrade") + '</span><span class="buy-cost">' + fmt(next.cost) + '</span></button>' +
+            '<div class="office-slot-next">Next: ' + next.name + '</div>')
+          : '<div class="office-slot-maxed">✓ Top tier installed</div>') +
+      '</div></div>';
+  }
+  function renderOffice(){
+    var panel = el["panel-office"]; if (!panel || !state) return;
+    if (!equipUnlocked(state)){
+      el["office-body"].innerHTML = '<div class="lock-req">&#128274; ??? &mdash; the buildout opens ' + EQUIP_UNLOCK_SEASONS + ' seasons in</div>' + lockProgHtml("seasons", EQUIP_UNLOCK_SEASONS);
+      updateLockProgress();
+      if (el["panel-office-ceo"]) el["panel-office-ceo"].hidden = true;
+      officeSig = "";
+      return;
+    }
+    var sig = JSON.stringify(state.equipTier || {});
+    if (sig !== officeSig){
+      officeSig = sig;
+      var html = "";
+      EQUIPMENT.rooms.forEach(function(room){
+        var complete = equipRoomComplete(state, room);
+        html += '<div class="office-room' + (complete ? ' complete' : '') + '">' +
+          '<div class="office-room-head"><span class="office-room-icon">' + room.icon + '</span><span class="office-room-name">' + room.name + '</span>' +
+          (complete ? '<span class="office-room-badge">✓ Complete +' + Math.round(EQUIP_ROOM_COMPLETE_BONUS * 100) + '%</span>' : '') + '</div>' +
+          '<div class="office-slots">' + room.categories.map(function(cat){ return equipSlotHtml(room, cat); }).join("") + '</div>' +
+        '</div>';
+      });
+      el["office-body"].innerHTML = html;
+      var officeComplete = equipOfficeComplete(state);
+      if (el["panel-office-ceo"]){
+        el["panel-office-ceo"].hidden = !officeComplete;
+        if (officeComplete) renderOfficeCeo();
+      }
+    }
+    updateOfficeAffordability();
+  }
+  function updateOfficeAffordability(){
+    if (!el["office-body"] || !state) return;
+    var anyAffordable = false;
+    el["office-body"].querySelectorAll("[data-room]").forEach(function(btn){
+      var roomId = btn.getAttribute("data-room"), catId = btn.getAttribute("data-cat");
+      var cat = equipCat(roomId, catId); if (!cat) return;
+      var tier = equipCurrentTier(state, roomId, catId);
+      var tierDef = cat.tiers[tier];
+      var affordable = !!tierDef && state.revenue >= tierDef.cost;
+      btn.disabled = !affordable;
+      if (affordable) anyAffordable = true;
+    });
+    if (el["office-alert-dot"]) el["office-alert-dot"].hidden = !anyAffordable;
+  }
+  var officeCeoRendered = false;
+  function renderOfficeCeo(){
+    if (!el["office-ceo-body"] || officeCeoRendered) return;
+    officeCeoRendered = true;
+    var html = EQUIP_CEO.categories.map(function(cat){
+      return '<div class="office-room"><div class="office-room-head"><span class="office-room-icon">' + cat.icon + '</span><span class="office-room-name">' + cat.name + '</span></div>' +
+        '<div class="office-slots">' + cat.tiers.map(function(t, i){
+          return '<div class="office-slot ceo-slot"><div class="office-slot-visual"><span class="office-glyph tier-' + (i + 1) + '">' + cat.icon + '</span></div>' +
+            '<div class="office-slot-info"><div class="office-slot-name">Tier ' + (i + 1) + '</div><div class="office-slot-tier">' + t.name + '</div>' +
+            '<div class="office-slot-flavor">' + t.flavor + '</div>' +
+            '<button class="office-buy-btn" type="button" disabled><span class="buy-label">Coming Soon</span></button></div></div>';
+        }).join("") + '</div></div>';
+    }).join("");
+    el["office-ceo-body"].innerHTML = html;
+  }
+  document.addEventListener("click", function(e){
+    var btn = e.target && e.target.closest && e.target.closest(".office-buy-btn[data-room]");
+    if (!btn || btn.disabled) return;
+    buyEquipTier(btn.getAttribute("data-room"), btn.getAttribute("data-cat"));
+  });
+
   function genMult(s, id){
     var m = 1;
     m *= msMult(s, id);
@@ -2841,6 +3169,7 @@
     m += (s.streakBonusPct || 0);
     m += (s.supplyBonusPct || 0);
     m += (s.spendGlobalPct || 0);
+    m += equipmentBonusPct(s);
     return m * serialMult(s) * lpMult(s) * ipoMult(s) * achievementMult(s) * deskMult(s) * activeBoostMult(s) * (1 + comboGlobal(s)) * holidayMult() * dsoHealthMult(s);
   }
   // v56: "Turn DSO tradeoffs into mechanics" (Pete's playtest item 3) — early choices (Acquisitions,
@@ -3143,7 +3472,8 @@
    "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn",
    "bonus-global-rows","bonus-roster-rows","ms-progress-badge","ev-info-btn","ev-explain-link",
    "tutorial-banner","tutorial-banner-text","tutorial-skip","tutorial-choice-overlay","tutorial-choice-automate","tutorial-choice-grow",
-   "dso-health-readout"
+   "dso-health-readout",
+   "panel-office","office-body","office-alert-dot","panel-office-ceo","office-ceo-body","tab-dot-office"
   ].forEach(function(id){ el[id] = document.getElementById(id); });
 
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3492,6 +3822,7 @@
     updateIPO();
     renderAuto();
     renderBench();
+    renderOffice();
     updateCompanyName();
     updateEbitdaAdjustUI();
     checkSeasonCheckpoints(pct);
@@ -3719,7 +4050,8 @@
       {label:"DSI Resource Code boost", val: s.codeBoostPct || 0},
       {label:"Daily streak bonus", val: s.streakBonusPct || 0},
       {label:"Supply Order bonus", val: s.supplyBonusPct || 0},
-      {label:"Board Room — Centralize a Service", val: s.spendGlobalPct || 0}
+      {label:"Board Room — Centralize a Service", val: s.spendGlobalPct || 0},
+      {label:"Office Equipment", val: equipmentBonusPct(s)}
     ];
     var addTotal = addLines.reduce(function(a, l){ return a + l.val; }, 0);
 
@@ -5308,6 +5640,7 @@
     fresh.managersUnlocked = JSON.parse(JSON.stringify(state.managersUnlocked || {}));
     fresh.flagshipName = state.flagshipName || ""; fresh.flagshipIcon = state.flagshipIcon || "\ud83e\uddb7"; fresh.flagshipAsked = !!state.flagshipAsked; fresh.autoRules = JSON.parse(JSON.stringify(state.autoRules || []));
     fresh.deskPity = Object.assign({rare:0,leg:0}, state.deskPity || {}); fresh.deskBag = (state.deskBag || []).slice(); fresh.deskBagInit = !!state.deskBagInit;
+    fresh.equipTier = JSON.parse(JSON.stringify(state.equipTier || {}));
   }
 
   function doIPO(){
@@ -6727,9 +7060,22 @@
 
     collectionReady = xchgHasAffordableOffer() || DESK_SETS.some(function(set){ return canCombineSet(state, set.id); });
 
+    var officeReady = false;
+    if (equipUnlocked(state)){
+      EQUIPMENT.rooms.some(function(room){
+        return room.categories.some(function(cat){
+          var tier = equipCurrentTier(state, room.id, cat.id);
+          var tierDef = cat.tiers[tier];
+          if (tierDef && state.revenue >= tierDef.cost){ officeReady = true; return true; }
+          return false;
+        });
+      });
+    }
+
     if (el["tab-dot-ops"]) el["tab-dot-ops"].hidden = !opsReady;
     if (el["tab-dot-exit"]) el["tab-dot-exit"].hidden = !exitReady;
     if (el["tab-dot-collection"]) el["tab-dot-collection"].hidden = !collectionReady;
+    if (el["tab-dot-office"]) el["tab-dot-office"].hidden = !officeReady;
   }
 
   /* ---------- hire max toggle ---------- */
