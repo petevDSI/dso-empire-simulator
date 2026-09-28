@@ -417,6 +417,7 @@
 
   .row{display:flex; align-items:center; gap:12px; padding:10px; border:2.5px solid var(--ink); border-radius:14px; background:var(--surface-2);}
   .row-icon{flex:0 0 auto; width:44px; height:44px; display:flex; align-items:center; justify-content:center;}
+  .row-icon img{width:100%; height:100%; object-fit:contain;}
   .row-icon svg{width:100%; height:100%; display:block;}
   .row-icon img,.row-icon-img{width:100%; height:100%; object-fit:contain; display:block;}
   .row-info{flex:1 1 auto; min-width:0;}
@@ -641,6 +642,7 @@
   }
   .desk-card-stars .star{font-size:0.5rem; color:#ffe28a; opacity:0.32;}
   .desk-card-stars .star.on{opacity:1;}
+  .desk-card-frame{position:absolute; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none; user-select:none;}
 
   /* ---------- sponsor bonus ---------- */
   .sponsor-btn{
@@ -2940,7 +2942,7 @@
         cell.className = "desk-card" + (unlocked ? " r-" + c.rarity : " locked");
         cell.title = unlocked ? (c.name + " — " + c.flavor + (copies > 1 ? " (×" + copies + " owned)" : "")) : "???";
         cell.innerHTML = unlocked
-          ? '<img src="' + c.img + '" alt="' + c.name + '">' + deskStarsHtml(c.rarity) + (copies > 1 ? '<div class="desk-card-count">×' + copies + '</div>' : '')
+          ? '<img src="' + c.img + '" alt="' + c.name + '">' + deskFrameHtml(c.rarity) + deskStarsHtml(c.rarity) + (copies > 1 ? '<div class="desk-card-count">×' + copies + '</div>' : '')
           : '<img class="desk-silhouette" src="' + c.img + '" alt="" aria-hidden="true" draggable="false">';
         if (!unlocked) cell.setAttribute("aria-label", "Undiscovered desk card");
         else {
@@ -2959,6 +2961,11 @@
   var DESK_LEG_SOFT = 60, DESK_LEG_HARD = 100;      // drops since the last Legendary
   var DESK_UNOWNED_WEIGHT = 3;                     // an unowned card is 3x as likely as an owned one within its rarity
   var DESK_STARTER_BAG = ["common","common","common","common","uncommon","uncommon","uncommon","rare","rare","epic"];
+  var RARITY_FRAME_IMG = {common:"assets/frames/common.png", uncommon:"assets/frames/uncommon.png", rare:"assets/frames/rare.png", epic:"assets/frames/epic.png", legendary:"assets/frames/legendary.png"};
+  function deskFrameHtml(rarity){
+    var src = RARITY_FRAME_IMG[rarity];
+    return src ? '<img class="desk-card-frame" src="' + src + '" alt="" aria-hidden="true" draggable="false">' : '';
+  }
   function deskStarsHtml(rarity){
     var n = deskRank(rarity) + 1;
     var stars = "";
