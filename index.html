@@ -586,6 +586,32 @@
 
   /* ---------- side row: exit + sponsor + redeem ---------- */
   .side-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px;}
+  .side-card.wide{grid-column:1 / -1;}
+
+  /* ---------- v44: Board Room option cards (was a stack of narrow, cramped rows) ---------- */
+  .board-options{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-top:10px;}
+  .board-card{
+    display:flex; flex-direction:column; gap:7px;
+    padding:14px; border:2.5px solid var(--ink); border-radius:14px; background:var(--surface-2);
+  }
+  .board-card-head{display:flex; align-items:center; gap:9px;}
+  .board-card-icon{font-size:1.6rem; line-height:1; flex:0 0 auto;}
+  .board-card-name{font-family:'Fredoka', sans-serif; font-weight:600; font-size:0.95rem;}
+  .board-card-flavor{font-size:0.78rem; color:var(--ink-soft); line-height:1.35; font-weight:600; flex:1 1 auto;}
+  .board-card-gain{font-family:'Nunito', sans-serif; font-weight:800; font-size:0.74rem; color:var(--accent-2);}
+  .board-card-hint{font-size:0.7rem; color:var(--ink-soft); font-weight:700;}
+  .board-card-buy{
+    margin-top:4px; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    padding:9px 10px; border-radius:12px; border:2.5px solid var(--ink); background:var(--accent); color:var(--on-accent);
+    font-family:'Nunito', sans-serif; cursor:pointer; box-shadow:3px 3px 0 var(--hard-shadow);
+    transition:transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+  }
+  .board-card-buy:hover:not(:disabled){transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--hard-shadow);}
+  .board-card-buy:active:not(:disabled){transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hard-shadow);}
+  .board-card-buy .buy-label{font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:800;}
+  .board-card-buy .buy-cost{font-family:'Nunito', sans-serif; font-size:0.86rem; font-weight:900;}
+  .board-card-buy:disabled{opacity:0.4; cursor:not-allowed; background:var(--surface-2); color:var(--ink-soft); box-shadow:none;}
+  .board-card-buy:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
   .exit-progress{position:relative; height:14px; border-radius:8px; background:var(--surface-2); border:2.5px solid var(--ink); overflow:visible; margin-block:16px 14px;}
   .exit-progress-bar{height:100%; width:0%; border-radius:6px; background:repeating-linear-gradient(135deg, var(--accent), var(--accent) 10px, var(--gold) 10px, var(--gold) 20px); transition:width 0.3s ease;}
   .exit-checkpoint{
@@ -978,7 +1004,7 @@
 
   <div class="tab-content" id="tab-content-ops" data-tab-content="ops">
     <section class="side-row">
-      <div class="side-card" id="panel-board">
+      <div class="side-card wide" id="panel-board">
         <h2>Board Room</h2>
         <p class="panel-sub" id="board-sub">Cash on hand unlocks capital-allocation decisions. Each option has a different cost, payoff and catch &mdash; and there's no right answer, only the kind of DSO you're building.</p>
         <div id="board-body"></div>
@@ -1897,18 +1923,20 @@
     } else {
       html += '<p class="panel-sub"><strong>Board meeting ' + (idx + 1) + ' of ' + T.length + '.</strong> You have cash. Everyone has an opinion on how to spend it. Pick one.' +
         ((state.spendPowder || 0) > 0 ? ' <strong>Dry powder: next decision \u00d7' + boardMult().toFixed(1) + '.</strong>' : '') + '</p>';
+      html += '<div class="board-options">';
       BOARD_OFFERS[idx].forEach(function(key){
         var o = BOARD_OPTS[key];
         var cost = boardCost(key, T[idx]);
-        html += '<div class="row board-opt">' +
-          '<div class="row-icon" aria-hidden="true" style="font-size:1.5rem;">' + o.icon + '</div>' +
-          '<div class="row-info"><div class="row-name">' + o.name + '</div>' +
-            '<div class="row-flavor">' + o.flavor + '</div>' +
-            '<div class="row-meta" data-board-gain="' + key + '"></div>' +
-            '<div class="lock-hint">' + o.best + '</div></div>' +
-          '<button class="row-buy" type="button" data-board-opt="' + key + '"><span class="buy-label">' + (key === "hold" ? 'Hold' : 'Approve') + '</span>' +
+        html += '<div class="board-card">' +
+          '<div class="board-card-head"><span class="board-card-icon" aria-hidden="true">' + o.icon + '</span>' +
+            '<span class="board-card-name">' + o.name + '</span></div>' +
+          '<div class="board-card-flavor">' + o.flavor + '</div>' +
+          '<div class="board-card-gain" data-board-gain="' + key + '"></div>' +
+          '<div class="board-card-hint">' + o.best + '</div>' +
+          '<button class="board-card-buy" type="button" data-board-opt="' + key + '"><span class="buy-label">' + (key === "hold" ? 'Hold' : 'Approve') + '</span>' +
             (key === "hold" ? '' : '<span class="buy-cost num">' + fmt(cost) + '</span>') + '</button></div>';
       });
+      html += '</div>';
     }
     var life = state.spendLife || {}, seas = state.spendSeason || {};
     var any = Object.keys(BOARD_OPTS).some(function(k){ return (seas[k] || 0) > 0; });
