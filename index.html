@@ -1549,7 +1549,7 @@
       <div class="side-row-trio">
         <div class="side-card" id="panel-desk">
           <h2>The Desk</h2>
-          <p class="panel-sub">Random desk clutter drops while you play. Collect it all for small permanent bonuses &mdash; complete a full set for an extra kicker. Permanent, like the Trophy Case.</p>
+          <p class="panel-sub">Random desk clutter drops while you play. Collect it all for small permanent bonuses &mdash; complete a full set for an extra kicker. Cards stick around for good&hellip; unless you choose to Combine a completed set, which cashes it in for a permanent bonus and empties those slots so you can collect &amp; combine it again.</p>
           <div id="desk-grid"></div>
         </div>
 
@@ -4165,13 +4165,25 @@
     if (cost > 0){
       set.cards.forEach(function(c){ state.desksCounts[c.id] = deskCardCount(state, c.id) - cost; });
     }
+    // Combining cashes in the whole set, not just its spares: every card in it goes back
+    // to locked (owned copies reset to 0, removed from desksUnlocked) so the slots read
+    // empty again — the payoff for combining is the permanent bonus below, and the payoff
+    // for re-collecting is being able to combine this set again. totalDeskCombines() already
+    // tracks this permanently for initiative gating, independent of current ownership.
+    set.cards.forEach(function(c){
+      state.desksCounts[c.id] = 0;
+      var idx = state.desksUnlocked.indexOf(c.id);
+      if (idx !== -1) state.desksUnlocked.splice(idx, 1);
+    });
     state.deskCombinesBySet = state.deskCombinesBySet || {};
     state.deskCombinesBySet[setId] = n;
     var total = totalDeskCombines(state);
-    showToast("SET COMBINED", set.name + " combined (×" + n + "). " + total + " total combine" + (total === 1 ? "" : "s") + " — counts toward higher-tier initiatives.");
+    xchgSig = "";
+    showToast("SET COMBINED", set.name + " combined (×" + n + ") for a permanent bonus. Its slots are empty again — collect all " + set.cards.length + " to combine it once more. " + total + " total combine" + (total === 1 ? "" : "s") + " so far — counts toward higher-tier initiatives.");
     sfxMilestoneBrass();
+    renderDesk(); renderStaff(); renderUpgrades();
+    updateStats();
     saveGame();
-    renderDesk();
     checkAchievements();
     updateAffordability();
     updateTabAlerts();
@@ -4192,7 +4204,7 @@
         '<span class="desk-set-count">' + ownedCount + '/' + set.cards.length + '</span>' +
         (combined > 0 ? '<span class="desk-set-combined-badge">Combined ×' + combined + '</span>' : '') +
         (complete ? '<button class="desk-combine-btn" type="button" data-combine="' + set.id + '"' + (canCombine ? '' : ' disabled') +
-          ' title="' + (cost === 0 ? 'Combine this completed set' : (canCombine ? 'Combine using ' + cost + ' spare copies of each card' : 'Need ' + cost + ' spare of each card to combine again')) + '">' +
+          ' title="' + (cost === 0 ? 'Combine this completed set for a permanent bonus — its 5 cards go back to locked, so you’ll need to collect them all again to combine it once more.' : (canCombine ? 'Combine using ' + cost + ' spare copies of each card — the set goes back to locked, so you’ll need to collect it all again to combine it once more.' : 'Need ' + cost + ' spare of each card to combine again')) + '">' +
           (cost === 0 ? 'Combine Set' : 'Combine (' + cost + ' spares ea.)') + '</button>' : '');
       var combineBtn = head.querySelector(".desk-combine-btn");
       if (combineBtn) combineBtn.addEventListener("click", function(){ doCombineSet(set.id); });
