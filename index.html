@@ -503,6 +503,8 @@
   .board-tally{margin-top:10px; padding-top:6px; border-top:2px dashed var(--line); font-family:'Nunito', sans-serif; font-weight:700; font-size:0.72rem; color:var(--ink-soft);}
   .ms-block{margin-top:6px; padding-top:5px; border-top:2px dashed var(--line);}
   .ms-head{font-family:'Fredoka', sans-serif; font-weight:700; font-size:0.72rem; color:var(--accent-2);}
+  .ms-progress{font-family:'Nunito', sans-serif; font-weight:700; color:var(--ink-soft); font-size:0.66rem;}
+  .ms-progress-badge{font-family:'Nunito', sans-serif; font-weight:800; font-size:0.6rem; padding:2px 8px; border-radius:999px; border:1.5px solid var(--ink); background:var(--surface-2); color:var(--ink-soft); margin-left:8px; vertical-align:middle; white-space:nowrap;}
   .ms-chips{display:flex; flex-wrap:wrap; gap:4px; margin-top:3px;}
   .ms-chip{font-family:'Nunito', sans-serif; font-weight:800; font-size:0.66rem; padding:2px 7px; border-radius:999px; border:1.5px solid var(--ink); background:var(--surface-2); color:var(--ink-soft);}
   .ms-chip.done{background:var(--accent); color:var(--on-accent);}
@@ -1162,7 +1164,7 @@
   <section class="board">
     <div class="panel" id="panel-staff">
       <div class="panel-head-row">
-        <h2>The Roster</h2>
+        <h2>The Roster<span class="ms-progress-badge" id="ms-progress-badge" title="Total milestones unlocked across every role"></span></h2>
         <button id="hire-max-toggle" class="hire-max-toggle" type="button" title="Buy as many as you can afford in one click">Hire ×1</button>
       </div>
       <p class="panel-sub">Hire staff and locations. Each hire raises the next one's price, and each role has a cap for the season — once you're fully staffed, growth comes from the next tier up, or from a bigger season. New hires pile up cash until you tap Collect — or unlock the matching Initiative to automate them.</p>
@@ -2042,7 +2044,76 @@
       });
     });
   })();
+  /* ---------- v55: Adventure-Capitalist-style long milestone ladder ----------
+     Pete's ask: "every variable it seems has tens, hundred, thousands, millions, zillions
+     bonuses for hitting milestones" — an always-another-one-to-chase ladder like
+     AdventureCapitalist's Unlocks screen, instead of a list that eventually runs out. The v54
+     pass fixed the "milestones dry up after Season 1" bug by extending 4 tiers to 10; this
+     appends a much longer tail on top of that same curve — a classic 1-2-5-10-20-50... "nice
+     number" progression — so every hire type keeps climbing into the thousands, then millions,
+     then beyond, exactly as far as a long session's ever-growing season caps can reach. Reward
+     pct keeps shrinking per tier (so the total possible bonus doesn't blow up) but never hits
+     zero, and it gets a little bump at each clean power-of-ten for a bit of extra "big number"
+     payoff, matching the way AC's milestones feel more special at the round thresholds.
+     Existing tier ids (ms-<id>-<n>) are untouched — this only appends further out, so nothing
+     already unlocked on a live save is renamed or lost. */
+  var MILESTONE_LADDER_LENGTH = 30;
+  var MILESTONE_LADDER_DECAY = 0.93;
+  var MILESTONE_LADDER_NAMES = [
+    "Somebody Call HR", "The Break Room Ran Out of Pods", "Legal Has Given Up Reading These",
+    "The Parking Lot Needs a Second Lot", "Nobody Remembers the Mission Statement",
+    "The All-Hands Has Its Own Zip Code", "We Have a Chief Vibes Officer Now",
+    "The Org Chart Is Now Abstract Art", "Finance Stopped Asking Why",
+    "The Onboarding Deck Has 400 Slides", "Someone Founded a Sub-DSO Inside the DSO",
+    "The Snack Budget Rivals a Small Nation's GDP", "There's a Waitlist for the Waitlist",
+    "The Newsletter Needs an Editor-in-Chief", "Compliance Just Laughed and Walked Away",
+    "The Benefits Package Includes a Benefits Package", "Someone Trademarked Synergy Internally",
+    "The Slack Channels Have Sub-Channels", "A Consultant Was Hired to Study the Consultants",
+    "The Retreat Needs Its Own Airport", "Investors Started Sending Fruit Baskets",
+    "The Press Release Wrote Itself", "Nobody Can Find the Actual CEO Anymore",
+    "The Spreadsheet Achieved Sentience", "A Documentary Crew Showed Up Uninvited",
+    "The Merger Announcement Has a Sequel", "Wall Street Has Opinions Now",
+    "The Logo Committee Has Subcommittees", "There's a Statue Being Discussed",
+    "This Number Shouldn't Exist"
+  ];
+  function nextNiceNumber(n){
+    var exp = Math.floor(Math.log10(Math.max(n, 1)));
+    for (var e = exp; e <= exp + 3; e++){
+      var mults = [1, 2, 5];
+      for (var i = 0; i < mults.length; i++){
+        var v = Math.round(mults[i] * Math.pow(10, e));
+        if (v > n) return v;
+      }
+    }
+    return Math.round(n * 2);
+  }
+  (function(){
+    var nameIdx = 0;
+    Object.keys(MILESTONES).forEach(function(id){
+      var list = MILESTONES[id];
+      var last = list[list.length - 1].n;
+      var pct = list[list.length - 1].pct;
+      for (var i = 0; i < MILESTONE_LADDER_LENGTH; i++){
+        last = nextNiceNumber(last);
+        pct = Math.max(0.01, pct * MILESTONE_LADDER_DECAY);
+        var isPowerOfTen = Math.pow(10, Math.round(Math.log10(last))) === last;
+        var reward = Math.round((isPowerOfTen ? pct * 1.4 : pct) * 1000) / 1000;
+        var name = MILESTONE_LADDER_NAMES[nameIdx % MILESTONE_LADDER_NAMES.length];
+        nameIdx++;
+        list.push({n:last, name:name, pct:reward});
+      }
+    });
+  })();
   (function(){ Object.keys(MILESTONES).forEach(function(id){ MILESTONES[id].forEach(function(m){ m.id = "ms-" + id + "-" + m.n; }); }); })();
+  function milestoneProgressTotal(){
+    var done = 0, total = 0;
+    STAFF.forEach(function(g){
+      var list = MILESTONES[g.id] || [];
+      total += list.length;
+      done += list.filter(function(m){ return (state.milestonesUnlocked || []).indexOf(m.id) !== -1; }).length;
+    });
+    return {done:done, total:total};
+  }
   function msMult(s, id){
     var m = 1;
     var got = s.milestonesUnlocked || [];
@@ -2236,26 +2307,35 @@
     }
     renderStaff();
   }
+  /* v55: the ladder now runs ~40 tiers deep per role (see MILESTONE_LADDER_LENGTH above), so
+     rendering every tier as its own chip would flood a small side-card. Completed tiers collapse
+     into a single count once there are more than a few, and the un-reached tail collapses into a
+     single "+N more ahead" chip instead of one "???" chip per tier — the next tier up still gets
+     its own chip with a live progress bar, which is the one that actually matters to a player. */
   function milestoneHtml(g){
     var list = MILESTONES[g.id];
     if (!list) return '';
     var got = state.milestonesUnlocked || [];
-    var nextShown = false;
+    var doneList = [], remaining = [];
+    list.forEach(function(m){ (got.indexOf(m.id) !== -1 ? doneList : remaining).push(m); });
+    var bonus = doneList.reduce(function(a, m){ return a + m.pct; }, 0);
     var chips = '';
-    var bonus = 0;
-    list.forEach(function(m){
-      if (got.indexOf(m.id) !== -1){
-        bonus += m.pct;
+    if (doneList.length && doneList.length <= 3){
+      doneList.forEach(function(m){
         chips += '<span class="ms-chip done" title="' + m.name + ': +' + Math.round(m.pct * 100) + '% output, permanent">&#10003; ' + m.name + '</span>';
-      } else if (!nextShown){
-        nextShown = true;
-        chips += '<span class="ms-chip next">Next: ' + m.name + ' (own ' + m.n + ', +' + Math.round(m.pct * 100) + '%)</span>';
-      } else {
-        chips += '<span class="ms-chip far" title="Own ' + m.n + '">??? (own ' + m.n + ')</span>';
-      }
-    });
-    var nextM = list.filter(function(m){ return got.indexOf(m.id) === -1; })[0];
-    var head = '<div class="ms-head">Milestones' + (bonus > 0 ? ' &mdash; +' + Math.round(bonus * 100) + '% output earned' : '') + '</div>';
+      });
+    } else if (doneList.length > 3){
+      chips += '<span class="ms-chip done" title="' + doneList.length + ' milestones unlocked for this role, all permanent">&#10003; ' + doneList.length + ' unlocked</span>';
+    }
+    var nextM = remaining[0];
+    if (nextM){
+      chips += '<span class="ms-chip next">Next: ' + nextM.name + ' (own ' + fmtCount(nextM.n) + ', +' + Math.round(nextM.pct * 100) + '%)</span>';
+      if (remaining.length > 1) chips += '<span class="ms-chip far">+' + (remaining.length - 1) + ' more ahead</span>';
+    } else {
+      chips += '<span class="ms-chip done" title="Every milestone for this role is unlocked.">&#127942; Ladder complete</span>';
+    }
+    var head = '<div class="ms-head">Milestones' + (bonus > 0 ? ' &mdash; +' + Math.round(bonus * 100) + '% output earned' : '') +
+      ' <span class="ms-progress">(' + doneList.length + '/' + list.length + ')</span></div>';
     return '<div class="ms-block">' + head + '<div class="ms-chips">' + chips + '</div>' + (nextM ? lockProgHtml("hire:" + g.id, nextM.n) : '') + '</div>';
   }
 
@@ -2510,6 +2590,16 @@
     var scaled = n / Math.pow(1000, tier);
     return sign + "$" + scaled.toFixed(2) + units[tier];
   }
+  function fmtCount(n){
+    if (n === undefined || n === null || isNaN(n)) n = 0;
+    var sign = n < 0 ? "-" : "";
+    n = Math.abs(n);
+    if (n < 1000) return sign + Math.round(n);
+    var units = ["", "K", "M", "B", "T", "Qa", "Qi"];
+    var tier = Math.min(Math.floor(Math.log10(n) / 3), units.length - 1);
+    var scaled = n / Math.pow(1000, tier);
+    return sign + scaled.toFixed(scaled < 10 ? 2 : (scaled < 100 ? 1 : 0)) + units[tier];
+  }
 
   function pad2(n){ return (n < 10 ? "0" : "") + n; }
   function todayStr(){
@@ -2568,7 +2658,7 @@
    "news","news-bar","news-track","news-more","news-log","news-list",
    "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit",
    "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn",
-   "bonus-global-rows","bonus-roster-rows"
+   "bonus-global-rows","bonus-roster-rows","ms-progress-badge"
   ].forEach(function(id){ el[id] = document.getElementById(id); });
 
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -2612,7 +2702,7 @@
       case "seasons": return Math.min(cur, need) + "/" + need + " seasons completed";
       case "lp": return Math.min(cur, need) + "/" + need + " LP Track Record point" + (need > 1 ? "s" : "");
     }
-    if (kind.indexOf("hire:") === 0) return Math.min(cur, need) + "/" + need + " owned";
+    if (kind.indexOf("hire:") === 0) return fmtCount(Math.min(cur, need)) + "/" + fmtCount(need) + " owned";
     return "";
   }
   function updateLockProgress(){
@@ -2638,7 +2728,13 @@
     return '<div class="lock-teaser">&#128302; ??? &mdash; something about this gets locked in later seasons.</div>';
   }
 
+  function updateMilestoneBadge(){
+    if (!el["ms-progress-badge"] || !state) return;
+    var p = milestoneProgressTotal();
+    el["ms-progress-badge"].textContent = "Milestones " + p.done + "/" + p.total;
+  }
   function renderStaff(){
+    updateMilestoneBadge();
     el["staff-rows"].innerHTML = "";
     STAFF.forEach(function(g){
       var owned = state.staff[g.id] || 0;
@@ -3124,8 +3220,10 @@
     STAFF.forEach(function(g){
       var tierBoost = (s.spendTierBoost || {})[g.id] || 0;
       var automated = isAutomated(s, g.id);
+      var msList = MILESTONES[g.id] || [];
+      var msDone = msList.filter(function(m){ return (s.milestonesUnlocked || []).indexOf(m.id) !== -1; }).length;
       var lines = [
-        {label:"Milestones", val: msMult(s, g.id) - 1},
+        {label:"Milestones (" + msDone + "/" + msList.length + ")", val: msMult(s, g.id) - 1},
         {label:"Board Room — Optimize Your Best Tier", val: tierBoost},
         {label:"Synergy combos", val: comboGen(s, g.id)},
         {label:"Bench managers", val: managerMult(s, g.id) - 1}
