@@ -1493,6 +1493,11 @@
   var SEASON_COST_GROWTH_STEP = 0.005;
   var SEASON_COST_GROWTH_STEP_CAP = 10;
   var NET_WORTH_SHARE_PCT = 0.08;
+  // Collect fillSec also climbs a bit each completed season (same shape as genCap/capStep),
+  // so stacked speed-up upgrades don't leave a late-season roster "zipping by" the moment you
+  // hit a new level — the base wait grows to keep pace with the speed multipliers you'll have
+  // by then. Capped the same way cost growth is, so it doesn't run away after many seasons.
+  var SEASON_FILL_STEP_CAP = 10;
 
   var RARITY_LABEL = {common:"Common", uncommon:"Uncommon", rare:"Rare", epic:"Epic", legendary:"Legendary"};
   var RARITY_VAR = {common:"--r-common", uncommon:"--r-uncommon", rare:"--r-rare", epic:"--r-epic", legendary:"--r-legendary"};
@@ -1539,11 +1544,11 @@
   // This doesn't change total production (that still accrues every tick regardless); it only
   // paces how often each row is "worth" clicking, so the roster doesn't all feel the same.
   var STAFF = [
-    {id:"chair", name:"Dana Whitfield, RDH", role:"The Hygienist Who's Seen Everything", rarity:"common", svg:SVG_CHAIR, flavor:"Eighteen years in this chair. She knows which doctor to book you with just from your teeth.", baseCost:15, baseProd:0.5, baseCap:30, capStep:6, fillSec:1},
-    {id:"associate", name:"Dr. Raj Malhotra", role:"The Associate", rarity:"uncommon", svg:SVG_ASSOCIATE, flavor:"Signed a non-compete he definitely read the first page of.", baseCost:150, baseProd:5, baseCap:20, capStep:4, fillSec:2.5},
-    {id:"location", name:"The Wilmington Satellite", role:"Second Location", rarity:"rare", svg:SVG_LOCATION, flavor:"Same brand, new parking lot, same PPO negotiations.", baseCost:1500, baseProd:50, baseCap:12, capStep:3, fillSec:7.5},
-    {id:"acquired", name:"Cornerstone Dental Group", role:"Acquired Practice", rarity:"epic", svg:SVG_ACQUIRED, flavor:"You didn't build this one. You bought it. That's the whole strategy.", baseCost:20000, baseProd:750, baseCap:8, capStep:2, fillSec:20},
-    {id:"platform", name:"Meridian Regional Platform", role:"Regional DSO Platform", rarity:"legendary", svg:SVG_PLATFORM, flavor:"Congratulations, you now have an org chart nobody can draw from memory.", baseCost:300000, baseProd:12000, baseCap:5, capStep:1, deskRequirement:{count:1}, fillSec:45}
+    {id:"chair", name:"Dana Whitfield, RDH", role:"The Hygienist Who's Seen Everything", rarity:"common", svg:SVG_CHAIR, flavor:"Eighteen years in this chair. She knows which doctor to book you with just from your teeth.", baseCost:15, baseProd:0.5, baseCap:30, capStep:6, fillSec:1, fillStep:0.2},
+    {id:"associate", name:"Dr. Raj Malhotra", role:"The Associate", rarity:"uncommon", svg:SVG_ASSOCIATE, flavor:"Signed a non-compete he definitely read the first page of.", baseCost:150, baseProd:5, baseCap:20, capStep:4, fillSec:2.5, fillStep:0.5},
+    {id:"location", name:"The Wilmington Satellite", role:"Second Location", rarity:"rare", svg:SVG_LOCATION, flavor:"Same brand, new parking lot, same PPO negotiations.", baseCost:1500, baseProd:50, baseCap:12, capStep:3, fillSec:7.5, fillStep:1.5},
+    {id:"acquired", name:"Cornerstone Dental Group", role:"Acquired Practice", rarity:"epic", svg:SVG_ACQUIRED, flavor:"You didn't build this one. You bought it. That's the whole strategy.", baseCost:20000, baseProd:750, baseCap:8, capStep:2, fillSec:20, fillStep:4},
+    {id:"platform", name:"Meridian Regional Platform", role:"Regional DSO Platform", rarity:"legendary", svg:SVG_PLATFORM, flavor:"Congratulations, you now have an org chart nobody can draw from memory.", baseCost:300000, baseProd:12000, baseCap:5, capStep:1, deskRequirement:{count:1}, fillSec:45, fillStep:9}
   ];
   var COST_GROWTH = 1.15;
 
@@ -2956,6 +2961,12 @@
     var now = Date.now();
     return (s.collectRushUntil && now < s.collectRushUntil) ? COLLECT_RUSH_MULT : 1;
   }
+  // Base fillSec before any speed-up multiplier, but after the same season-over-season climb
+  // genCap gets from capStep — keeps the wait meaningful at higher levels instead of every tier
+  // converging on "instant" once a player has stacked a run's worth of speed upgrades.
+  function baseFillSec(g, s){
+    return g.fillSec + Math.min(s.seasonsCompleted || 0, SEASON_FILL_STEP_CAP) * (g.fillStep || 0);
+  }
   // The Collect meter: each tier charges over its own fillSec (see STAFF), so the roster reads
   // as different rhythms rather than one uniform "click when lit up" loop. Lazily starts the
   // clock on first read (covers older saves with no collectFillAt yet) and persists it to state
@@ -2967,7 +2978,7 @@
     if (!g || !g.fillSec) return 1;
     if (!s.collectFillAt) s.collectFillAt = {};
     if (!s.collectFillAt[id]) s.collectFillAt[id] = Date.now();
-    var effectiveSec = g.fillSec / tierSpeedMult(s, id);
+    var effectiveSec = baseFillSec(g, s) / tierSpeedMult(s, id);
     var elapsed = (Date.now() - s.collectFillAt[id]) / 1000;
     return Math.max(0, Math.min(1, elapsed / Math.max(0.05, effectiveSec)));
   }
