@@ -397,23 +397,27 @@
      still do the "break up the uniform grid" job on their own without any of that. */
   .board > .panel,
   .side-row > .side-card:not(.wide),
+  .side-row-trio > .side-card,
   .tab-content > .panel{
     position:relative; z-index:0;
   }
   .board > .panel:nth-child(odd),
   .side-row > .side-card:not(.wide):nth-child(odd),
+  .side-row-trio > .side-card:nth-child(odd),
   .tab-content > .panel:nth-child(odd){
     transform:rotate(-0.35deg);
     transition:transform 0.15s ease;
   }
   .board > .panel:nth-child(even),
   .side-row > .side-card:not(.wide):nth-child(even),
+  .side-row-trio > .side-card:nth-child(even),
   .tab-content > .panel:nth-child(even){
     transform:rotate(0.3deg);
     transition:transform 0.15s ease;
   }
   .board > .panel:hover,
   .side-row > .side-card:not(.wide):hover,
+  .side-row-trio > .side-card:hover,
   .tab-content > .panel:hover{
     transform:rotate(0deg);
   }
@@ -692,11 +696,15 @@
     border:2.5px solid var(--ink); border-radius:12px; background:var(--surface-2); overflow:hidden;
     display:flex; align-items:center; justify-content:center; aspect-ratio:0.58; position:relative;
   }
-  /* v51: the locked silhouette placeholder was already scaled up 1.15x to sit properly behind
-     the ornate .desk-card-frame overlay (its border chrome eats into the outer edge of the art).
-     The real unlocked artwork was left at 100%, so owned cards looked tightly cropped by the
-     frame border compared to the placeholder — matching the scale here fixes that. */
-  .desk-card img{width:100%; height:100%; object-fit:contain; transform:scale(1.15);}
+  /* v60: v51's 1.15x scale (meant to match the locked silhouette to the ornate frame overlay)
+     was also applied to the real unlocked artwork. But that art already has its own baked-in
+     card border and rarity label right at the edge of the canvas, so scaling it up pushed the
+     top of the art and the bottom label past the card's clipped edges — the "not centered/
+     cropped right" the artwork looked cut off. The silhouette keeps its own 1.15x scale via the
+     .desk-silhouette rule below; this rule (which only ever matches the real unlocked <img>,
+     since the silhouette gets the more specific selector) goes back to no extra scale so the
+     full card art sits centered and uncropped inside the frame. */
+  .desk-card img{width:100%; height:100%; object-fit:contain;}
   .desk-card.locked{background:var(--surface-2);}
   .desk-card.poke{cursor:pointer; -webkit-tap-highlight-color:transparent;}
   .desk-card.wobble{animation:deskWobble 0.35s ease;}
@@ -1009,6 +1017,51 @@
     .ms-modal{padding:16px; max-height:90vh;}
     .ms-modal-sub{display:none;}
   }
+
+  /* ---------- desk card detail modal: click a collected card for a large view + what it/its set does ---------- */
+  .dc-modal{
+    background:var(--surface); border:3px solid var(--ink); border-radius:var(--radius);
+    box-shadow:6px 6px 0 var(--hard-shadow); padding:20px; max-width:420px; width:100%;
+    max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px;
+  }
+  .dc-modal-head{display:flex; align-items:flex-start; gap:10px;}
+  .dc-modal-head h3{font-family:'Fredoka', sans-serif; font-size:1.05rem; margin:0; flex:1 1 auto; line-height:1.3;}
+  .dc-modal-close{
+    margin-left:auto; flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink);
+    background:var(--surface-2); color:var(--ink); font-size:0.85rem; font-weight:800; cursor:pointer;
+    box-shadow:2px 2px 0 var(--hard-shadow); transition:transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .dc-modal-close:hover{transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--hard-shadow);}
+  .dc-modal-close:active{transform:translate(1px,1px); box-shadow:1px 1px 0 var(--hard-shadow);}
+  .dc-modal-art{
+    width:160px; max-width:55%; margin:0 auto; aspect-ratio:0.58; border-radius:14px; border:3px solid var(--ink);
+    background:var(--surface-2); overflow:hidden; position:relative; box-shadow:4px 4px 0 var(--hard-shadow);
+  }
+  .dc-modal-art img{width:100%; height:100%; object-fit:contain;}
+  .dc-modal-art.r-common{border-color:var(--r-common);}
+  .dc-modal-art.r-uncommon{border-color:var(--r-uncommon);}
+  .dc-modal-art.r-rare{border-color:var(--r-rare);}
+  .dc-modal-art.r-epic{border-color:var(--r-epic); box-shadow:0 0 8px rgba(177,92,240,0.55);}
+  .dc-modal-art.r-legendary{border-color:var(--r-legendary); box-shadow:0 0 10px rgba(255,177,0,0.7);}
+  .dc-modal-stars{display:flex; justify-content:center; gap:2px;}
+  .dc-modal-stars .star{font-size:0.85rem; color:#ffe28a; opacity:0.32;}
+  .dc-modal-stars .star.on{opacity:1;}
+  .dc-modal-rarity{
+    text-align:center; font-family:'Nunito', sans-serif; font-weight:800; font-size:0.68rem;
+    letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft);
+  }
+  .dc-modal-flavor{font-size:0.85rem; font-style:italic; color:var(--ink-soft); line-height:1.45; text-align:center; margin:0;}
+  .dc-modal-section{border-top:2px dashed var(--line); padding-top:10px;}
+  .dc-modal-section h4{
+    font-family:'Fredoka', sans-serif; font-size:0.8rem; margin:0 0 4px; color:var(--ink);
+  }
+  .dc-modal-section p{font-size:0.8rem; color:var(--ink-soft); line-height:1.45; margin:0; font-weight:600;}
+  .dc-modal-section .dc-bonus-val{color:var(--accent); font-weight:800;}
+  .dc-modal-set-progress{
+    font-family:'Nunito', sans-serif; font-weight:800; font-size:0.66rem; color:var(--ink-soft);
+    background:var(--surface-2); border:1.5px solid var(--ink); border-radius:999px; padding:2px 8px; margin-left:6px; white-space:nowrap;
+  }
+  .dc-modal-set-progress.complete{color:var(--accent); border-color:var(--accent);}
 
   /* ---------- boot logo intro (plays once per page load, before the splash card) ---------- */
   .logo-intro{
@@ -1513,6 +1566,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="deskcard-overlay" hidden>
+  <div class="dc-modal" role="dialog" aria-modal="true" aria-labelledby="dc-modal-title">
+    <div class="dc-modal-head">
+      <h3 id="dc-modal-title"></h3>
+      <button class="dc-modal-close" id="dc-modal-close" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="dc-modal-art" id="dc-modal-art"></div>
+    <div class="dc-modal-stars" id="dc-modal-stars"></div>
+    <p class="dc-modal-rarity" id="dc-modal-rarity-label"></p>
+    <p class="dc-modal-flavor" id="dc-modal-flavor"></p>
+    <div class="dc-modal-section">
+      <h4>This card</h4>
+      <p id="dc-modal-card-bonus"></p>
+    </div>
+    <div class="dc-modal-section">
+      <h4 id="dc-modal-set-name"></h4>
+      <p id="dc-modal-set-bonus"></p>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -1820,6 +1894,7 @@
       void cell.offsetWidth;
       cell.classList.add("wobble");
     }
+    openDeskCardModal(cardId);
     var egg = DESK_EGGS[cardId];
     if (!egg) return;
     if (!state.deskClicks) state.deskClicks = {};
@@ -2770,6 +2845,8 @@
    "episodes-heading","episodes-sub","exit-target-sub","exit-target-stat","exit-points",
    "achievement-rows","mascot-secret","chip-frenzy-timer","chip-sponsor-timer","chip-collect-rush-timer",
    "milestones-overlay","ms-modal-body","ms-modal-progress","ms-modal-close",
+   "deskcard-overlay","dc-modal-title","dc-modal-close","dc-modal-art","dc-modal-stars","dc-modal-rarity-label",
+   "dc-modal-flavor","dc-modal-card-bonus","dc-modal-set-name","dc-modal-set-bonus",
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
    "holiday-banner","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
@@ -3676,6 +3753,49 @@
     legendary: [["rare", 4], ["epic", 3]]
   };
   function deskSetOf(card){ return DESK_SETS.filter(function(set){ return set.cards.some(function(c){ return c.id === card.id; }); })[0]; }
+
+  /* ---------- desk card detail modal: large view + what the card and its set do ---------- */
+  function openDeskCardModal(cardId){
+    var card = allDeskCards().filter(function(c){ return c.id === cardId; })[0];
+    var owned = (state.desksUnlocked || []).indexOf(cardId) !== -1;
+    if (!card || !owned) return;
+    var set = deskSetOf(card);
+    var copies = Math.max(1, deskCardCount(state, cardId));
+    var n = deskRank(card.rarity) + 1;
+    var stars = "";
+    for (var i = 1; i <= 5; i++){ stars += '<span class="star' + (i <= n ? " on" : "") + '">★</span>'; }
+    el["dc-modal-title"].textContent = card.name;
+    el["dc-modal-art"].className = "dc-modal-art r-" + card.rarity;
+    el["dc-modal-art"].innerHTML = '<img src="' + card.img + '" alt="' + card.name + '">';
+    el["dc-modal-stars"].innerHTML = stars;
+    el["dc-modal-rarity-label"].textContent = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1) + (copies > 1 ? " — ×" + copies + " owned" : "");
+    el["dc-modal-flavor"].textContent = card.flavor;
+    var cardPct = Math.round(card.bonusPct * 1000) / 10;
+    var cardBonusTxt = 'Sitting on your desk for a permanent <span class="dc-bonus-val">+' + cardPct + '%</span> to total output.';
+    if (copies > 1){
+      var dupPct = Math.round((copies - 1) * card.bonusPct * DESK_DUPLICATE_BONUS_FRACTION * 1000) / 10;
+      var totalPct = Math.round((cardPct + dupPct) * 10) / 10;
+      cardBonusTxt += ' Extra copies keep adding on top — your ' + (copies - 1) + ' duplicate' + (copies - 1 === 1 ? "" : "s") + ' chip in another <span class="dc-bonus-val">+' + dupPct + '%</span>, for <span class="dc-bonus-val">+' + totalPct + '%</span> total from this card alone.';
+    }
+    el["dc-modal-card-bonus"].innerHTML = cardBonusTxt;
+    if (set){
+      var ownedInSet = set.cards.filter(function(c){ return (state.desksUnlocked || []).indexOf(c.id) !== -1; }).length;
+      var complete = ownedInSet === set.cards.length;
+      var setPct = Math.round(DESK_SET_BONUS_PCT * 1000) / 10;
+      el["dc-modal-set-name"].innerHTML = set.name + '<span class="dc-modal-set-progress' + (complete ? " complete" : "") + '">' + ownedInSet + "/" + set.cards.length + "</span>";
+      el["dc-modal-set-bonus"].textContent = complete
+        ? "Full set! An extra +" + setPct + "% is already baked into your output, permanently."
+        : "Collect all " + set.cards.length + " pieces of " + set.name + " for an extra +" + setPct + "% to total output, on top of what each card gives on its own.";
+    } else {
+      el["dc-modal-set-name"].textContent = "";
+      el["dc-modal-set-bonus"].textContent = "";
+    }
+    el["deskcard-overlay"].hidden = false;
+  }
+  function closeDeskCardModal(){ el["deskcard-overlay"].hidden = true; }
+  el["dc-modal-close"].addEventListener("click", closeDeskCardModal);
+  el["deskcard-overlay"].addEventListener("click", function(e){ if (e.target === el["deskcard-overlay"]) closeDeskCardModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && el["deskcard-overlay"] && !el["deskcard-overlay"].hidden) closeDeskCardModal(); });
   function sparesOf(rarity){
     var out = [];
     allDeskCards().forEach(function(c){
@@ -3983,7 +4103,7 @@
   }
   function flagshipTail(next){ return state.flagshipAsked ? " " + flagshipName() + " gets folded into " + next + ". The sign stays up. Probably." : ""; }
   function anyOverlayOpen(){
-    return ["logo-intro","splash-overlay","gift-overlay","acquisition-overlay","modal-overlay","flagship-overlay","milestones-overlay"].some(function(id){ return el[id] && !el[id].hidden; });
+    return ["logo-intro","splash-overlay","gift-overlay","acquisition-overlay","modal-overlay","flagship-overlay","milestones-overlay","deskcard-overlay"].some(function(id){ return el[id] && !el[id].hidden; });
   }
   function maybePromptFlagship(){
     if (!state || !state.staff || state.flagshipAsked || !el["flagship-overlay"]) return;
