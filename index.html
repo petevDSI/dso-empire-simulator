@@ -173,6 +173,9 @@
   .xchg-skip:hover{background:var(--danger); color:var(--on-danger); border-color:var(--ink);}
   .xchg-pending{justify-content:center; opacity:0.7; border-style:dashed;}
   .xchg-pending .xchg-info{flex:none; font-weight:600;}
+  .xchg-buy-row{border-color:var(--r-legendary); background:color-mix(in srgb, var(--r-legendary) 8%, var(--surface)); grid-column:1 / -1;}
+  .xchg-buy-icon{flex:none; font-size:1.5rem; line-height:1;}
+  #xchg-buy-btn{min-width:104px;}
   .auto-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:8px; background:var(--surface);}
   .auto-row.off{opacity:.55;}
   .auto-row select{font:700 0.78rem 'Nunito',sans-serif; padding:5px 6px; border:2px solid var(--ink); border-radius:8px; background:var(--surface-2); color:var(--ink); max-width:100%;}
@@ -2159,6 +2162,7 @@
       desksUnlocked:[],
       desksCounts:{},
       xchgSlots:[],
+      xchgBuyReadyAt:0,
       seasonCheckpointsClaimed:[false,false,false,false],
       seasonCheckpointsReady:[false,false,false,false],
       exitReadyFired:false,
@@ -3824,8 +3828,22 @@
     return best;
   }
   var XCHG_SLOTS = 3;
+  var XCHG_SLOT_RARITIES = ["rare", "epic", "legendary"]; // one offer of each, pinned by slot position
   var XCHG_REFILL_MS = 8 * 60 * 1000; // how long a dismissed offer's slot stays empty before a new random one rolls in
-  var XCHG_WILDCARD_CHANCE = 0.35; // chance an offer ignores "what you need" entirely and is just a random eligible card
+  var XCHG_WILDCARD_CHANCE = 0.35; // chance an offer ignores "what you need" entirely and is just a random eligible card within its rarity
+  /* ---------- "Buy a Card" slot: a guaranteed rare-or-better pull for cash, on demand ----------
+     Priced like every other cash reward/cost in this game \u2014 in seconds of the player's own
+     current EBITDA/sec (see WINDFALL_SECONDS, SPONSOR_CASH_SECONDS, etc.) so it stays a
+     meaningful splurge at every stage instead of trivial early or unaffordable late. 6 minutes
+     of current output is enough to feel like a real purchase without being a paywall \u2014 the
+     free trade-in slots above stay the primary way to fill out the collection; this is the
+     "I want THIS now" impulse buy, with the same rare/epic/legendary odds as the trade offers
+     (never a common/uncommon dupe) and the game's normal loot-reveal moment on top. */
+  var XCHG_BUY_RARITIES = ["rare", "epic", "legendary"];
+  var XCHG_BUY_EBITDA_SECONDS = 360; // ~6 minutes of current production
+  var XCHG_BUY_CLICK_MULT = 180; // fallback for players still mostly clicking, not idling
+  var XCHG_BUY_MIN_CASH = 500; // floor so it's never a rounding error early on
+  var XCHG_BUY_COOLDOWN_MS = 90 * 1000; // brief pause after a purchase so the reveal can't be spam-clicked
   function tradeCardNeedScore(c){
     var set = deskSetOf(c);
     var owned = state.desksUnlocked || [];
@@ -3833,14 +3851,17 @@
     // skew toward whatever brings a set closest to complete, then cheaper rarities
     return (have / set.cards.length) * 100 - deskRank(c.rarity) * 3;
   }
-  function eligibleTradeCards(excludeIds){
+  function eligibleTradeCards(excludeIds, rarities){
     var owned = state.desksUnlocked || [];
     return allDeskCards().filter(function(c){
-      return owned.indexOf(c.id) === -1 && TRADE_RATES[c.rarity] && excludeIds.indexOf(c.id) === -1;
+      if (owned.indexOf(c.id) !== -1) return false;
+      if (!TRADE_RATES[c.rarity]) return false;
+      if (rarities && rarities.indexOf(c.rarity) === -1) return false;
+      return excludeIds.indexOf(c.id) === -1;
     });
   }
-  function pickRandomTradeCard(excludeIds){
-    var pool = eligibleTradeCards(excludeIds);
+  function pickRandomTradeCard(excludeIds, rarities){
+    var pool = eligibleTradeCards(excludeIds, rarities);
     if (!pool.length) return null;
     // most offers lean toward what actually helps you, but not always \u2014 keep it a little unpredictable
     if (Math.random() < XCHG_WILDCARD_CHANCE) return pool[Math.floor(Math.random() * pool.length)];
@@ -3854,27 +3875,64 @@
     var slots = state.xchgSlots || (state.xchgSlots = []);
     var owned = state.desksUnlocked || [];
     var now = Date.now();
-    // drop slots whose card got owned some other way (a pack, etc.)
-    for (var i = slots.length - 1; i >= 0; i--){
-      if (slots[i].id && owned.indexOf(slots[i].id) !== -1) slots.splice(i, 1);
+    // trim any legacy slots beyond the pinned-rarity count
+    if (slots.length > XCHG_SLOTS) slots.length = XCHG_SLOTS;
+    // clear (don't remove \u2014 rarity is pinned by index) any slot whose card got owned some
+    // other way, or that pre-dates the pinned-rarity rework and no longer matches its slot's rarity
+    for (var i = 0; i < slots.length; i++){
+      var s = slots[i];
+      if (!s.id) continue;
+      var cur = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
+      if (!cur || owned.indexOf(s.id) !== -1 || cur.rarity !== XCHG_SLOT_RARITIES[i]){
+        slots[i] = { id: null, readyAt: 0 };
+      }
     }
     var used = slots.filter(function(s){ return s.id; }).map(function(s){ return s.id; });
-    // fill any slot whose cooldown has finished
-    slots.forEach(function(s){
+    // fill any slot whose cooldown has finished, with its pinned rarity
+    slots.forEach(function(s, i){
       if (!s.id && now >= (s.readyAt || 0)){
-        var pick = pickRandomTradeCard(used);
+        var pick = pickRandomTradeCard(used, [XCHG_SLOT_RARITIES[i]]);
         if (pick){ s.id = pick.id; s.readyAt = 0; used.push(pick.id); }
       }
     });
-    // top up to XCHG_SLOTS (first run, or the pool grew)
+    // top up to XCHG_SLOTS (first run)
     while (slots.length < XCHG_SLOTS){
-      var pick2 = pickRandomTradeCard(used);
-      if (!pick2) break;
-      slots.push({ id: pick2.id, readyAt: 0 });
-      used.push(pick2.id);
+      var idx = slots.length;
+      var pick2 = pickRandomTradeCard(used, [XCHG_SLOT_RARITIES[idx]]);
+      if (pick2){ slots.push({ id: pick2.id, readyAt: 0 }); used.push(pick2.id); }
+      else slots.push({ id: null, readyAt: 0 });
     }
   }
   var xchgSig = "";
+  function xchgBuyPrice(){
+    return Math.max(computeEbitda(state) * XCHG_BUY_EBITDA_SECONDS, clickValue(state) * XCHG_BUY_CLICK_MULT, XCHG_BUY_MIN_CASH);
+  }
+  function xchgBuyPool(){ return eligibleTradeCards([], XCHG_BUY_RARITIES); }
+  function xchgBuyRowHtml(){
+    if (!xchgBuyPool().length) return "";
+    return '<div class="xchg-row xchg-buy-row" id="xchg-buy-row">' +
+      '<div class="xchg-buy-icon" aria-hidden="true">\ud83c\udf81</div>' +
+      '<div class="xchg-info">Buy a Card <span style="text-transform:capitalize;color:var(--ink-soft)">(rare or better)</span>' +
+        '<small>A guaranteed Rare, Epic, or Legendary pull \u2014 never a dupe of the common stuff. Price scales with what you\u2019re currently making.</small></div>' +
+      '<button class="row-buy" type="button" id="xchg-buy-btn"><span class="buy-label">Buy</span> <span class="buy-cost" id="xchg-buy-cost"></span></button>' +
+    '</div>';
+  }
+  function updateXchgBuyUI(){
+    var box = el["desk-exchange"];
+    if (!box) return;
+    var btn = box.querySelector("#xchg-buy-btn");
+    if (!btn) return;
+    var costEl = box.querySelector("#xchg-buy-cost");
+    var cooling = Date.now() < (state.xchgBuyReadyAt || 0);
+    var price = xchgBuyPrice();
+    if (cooling){
+      btn.disabled = true;
+      if (costEl) costEl.textContent = "wait " + formatDuration(Math.max(0, (state.xchgBuyReadyAt - Date.now()) / 1000));
+    } else {
+      btn.disabled = state.revenue < price;
+      if (costEl) costEl.textContent = fmt(price);
+    }
+  }
   function renderExchange(){
     var box = el["desk-exchange"];
     if (!box || !state) return;
@@ -3887,35 +3945,40 @@
       if (!t) return "x";
       var p = tradePlan(t);
       return t.id + ":" + p.rarity + p.have + "/" + p.n;
-    }).join("|") + "#" + (state.desksUnlocked || []).length;
-    if (sig === xchgSig) return;
-    xchgSig = sig;
-    if (!slots.length){
-      box.innerHTML = '<p class="xchg-sub">You own every card. The exchange has closed for lack of anything to sell you.</p>';
-      return;
-    }
-    var owned = state.desksUnlocked || [];
-    var html = '<p class="xchg-sub">Swap spare copies (the extras beyond your first) for a card you need. Not into an offer? Skip it &mdash; a new one rolls in after a while.</p>';
-    slots.forEach(function(s){
-      if (!s.id){
-        html += '<div class="xchg-row xchg-pending"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div>';
-        return;
+    }).join("|") + "#" + (state.desksUnlocked || []).length + "#buy" + (xchgBuyPool().length ? "1" : "0");
+    if (sig !== xchgSig){
+      xchgSig = sig;
+      var offersDone = slots.every(function(s){ return !s.id; }) && eligibleTradeCards([], XCHG_SLOT_RARITIES).length === 0;
+      var owned = state.desksUnlocked || [];
+      var html;
+      if (offersDone && !xchgBuyPool().length){
+        html = '<p class="xchg-sub">You own every card. The exchange has closed for lack of anything to sell you.</p>';
+      } else {
+        html = '<p class="xchg-sub">One Rare, one Epic, one Legendary \u2014 swap spare copies (the extras beyond your first) for whichever you need, or buy a guaranteed pull outright. Not into a trade offer? Skip it &mdash; a new one rolls in after a while.</p>';
+        slots.forEach(function(s){
+          if (!s.id){
+            html += '<div class="xchg-row xchg-pending"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div>';
+            return;
+          }
+          var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
+          if (!t) return;
+          var p = tradePlan(t), set = deskSetOf(t);
+          var have = set.cards.filter(function(x){ return owned.indexOf(x.id) !== -1; }).length;
+          var completes = have + 1 === set.cards.length;
+          html += '<div class="xchg-row' + (p.ok ? ' ready' : '') + '">' +
+            '<img class="xchg-thumb" src="' + t.img + '" alt="">' +
+            '<div class="xchg-info">' + t.name + ' <span style="text-transform:capitalize;color:var(--ink-soft)">(' + t.rarity + ')</span>' +
+              (completes ? '<span class="xchg-tag">COMPLETES SET</span>' : '') +
+              '<small>' + set.name + ' ' + have + '/' + set.cards.length + ' &middot; give ' + p.n + ' spare ' + p.rarity + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ')</small></div>' +
+            '<button class="row-buy" type="button" data-trade="' + t.id + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Trade</span></button>' +
+            '<button class="xchg-skip" type="button" data-trade-skip="' + t.id + '" title="Not interested \u2014 roll a new offer later">&times;</button>' +
+          '</div>';
+        });
+        html += xchgBuyRowHtml();
       }
-      var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
-      if (!t) return;
-      var p = tradePlan(t), set = deskSetOf(t);
-      var have = set.cards.filter(function(x){ return owned.indexOf(x.id) !== -1; }).length;
-      var completes = have + 1 === set.cards.length;
-      html += '<div class="xchg-row' + (p.ok ? ' ready' : '') + '">' +
-        '<img class="xchg-thumb" src="' + t.img + '" alt="">' +
-        '<div class="xchg-info">' + t.name + ' <span style="text-transform:capitalize;color:var(--ink-soft)">(' + t.rarity + ')</span>' +
-          (completes ? '<span class="xchg-tag">COMPLETES SET</span>' : '') +
-          '<small>' + set.name + ' ' + have + '/' + set.cards.length + ' &middot; give ' + p.n + ' spare ' + p.rarity + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ')</small></div>' +
-        '<button class="row-buy" type="button" data-trade="' + t.id + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Trade</span></button>' +
-        '<button class="xchg-skip" type="button" data-trade-skip="' + t.id + '" title="Not interested \u2014 roll a new offer later">&times;</button>' +
-      '</div>';
-    });
-    box.innerHTML = html;
+      box.innerHTML = html;
+    }
+    updateXchgBuyUI();
   }
   function xchgHasAffordableOffer(){
     if (!state) return false;
@@ -3964,11 +4027,32 @@
     renderExchange();
     saveGame();
   }
+  function buyDeskCardOffer(){
+    if (Date.now() < (state.xchgBuyReadyAt || 0)) return;
+    var price = xchgBuyPrice();
+    if (state.revenue < price) return;
+    var pick = pickRandomTradeCard([], XCHG_BUY_RARITIES);
+    if (!pick) return;
+    state.revenue -= price;
+    var already = (state.desksUnlocked || []).indexOf(pick.id) !== -1;
+    if (!already) state.desksUnlocked.push(pick.id);
+    state.desksCounts[pick.id] = deskCardCount(state, pick.id) + 1;
+    // this card is now owned — free up any trade-offer slot selling the same one
+    (state.xchgSlots || []).forEach(function(s){ if (s.id === pick.id){ s.id = null; s.readyAt = 0; } });
+    state.xchgBuyReadyAt = Date.now() + XCHG_BUY_COOLDOWN_MS;
+    xchgSig = "";
+    renderDesk(); renderStaff(); renderUpgrades();
+    checkDeskSetComplete(pick);
+    updateStats(); updateAffordability(); saveGame();
+    showGiftReveal({ icon:ICONS.card_exchange, title:"CARD PURCHASED", desc:"Spent " + fmt(price) + " on a guaranteed pull — got " + pick.name + ".", cards:[{ card: pick, isNew: !already, count: 1 }] });
+  }
   document.addEventListener("click", function(e){
     var b = e.target.closest && e.target.closest("[data-trade]");
     if (b && !b.disabled){ doTrade(b.getAttribute("data-trade")); return; }
     var s = e.target.closest && e.target.closest("[data-trade-skip]");
-    if (s) skipTradeOffer(s.getAttribute("data-trade-skip"));
+    if (s){ skipTradeOffer(s.getAttribute("data-trade-skip")); return; }
+    var buy = e.target.closest && e.target.closest("#xchg-buy-btn");
+    if (buy && !buy.disabled) buyDeskCardOffer();
   });
 
   function checkDeskSetComplete(justUnlockedCard){
