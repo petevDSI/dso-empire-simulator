@@ -3939,8 +3939,12 @@
     ensureXchgSlots();
     var slots = state.xchgSlots || [];
     var now = Date.now();
-    var sig = slots.map(function(s){
-      if (!s.id) return "pending:" + Math.ceil(((s.readyAt || 0) - now) / 5000);
+    var sig = slots.map(function(s, i){
+      if (!s.id){
+        var rarity = XCHG_SLOT_RARITIES[i];
+        if (eligibleTradeCards([], [rarity]).length === 0) return "soldout:" + rarity;
+        return "pending:" + Math.ceil(((s.readyAt || 0) - now) / 5000);
+      }
       var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
       if (!t) return "x";
       var p = tradePlan(t);
@@ -3955,9 +3959,13 @@
         html = '<p class="xchg-sub">You own every card. The exchange has closed for lack of anything to sell you.</p>';
       } else {
         html = '<p class="xchg-sub">One Rare, one Epic, one Legendary \u2014 swap spare copies (the extras beyond your first) for whichever you need, or buy a guaranteed pull outright. Not into a trade offer? Skip it &mdash; a new one rolls in after a while.</p>';
-        slots.forEach(function(s){
+        slots.forEach(function(s, i){
           if (!s.id){
-            html += '<div class="xchg-row xchg-pending"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div>';
+            var rarity = XCHG_SLOT_RARITIES[i];
+            var soldOut = eligibleTradeCards([], [rarity]).length === 0;
+            html += soldOut
+              ? '<div class="xchg-row xchg-pending"><div class="xchg-info">All ' + rarity.charAt(0).toUpperCase() + rarity.slice(1) + ' cards owned — nothing left to offer here.</div></div>'
+              : '<div class="xchg-row xchg-pending"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div>';
             return;
           }
           var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
