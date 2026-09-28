@@ -1169,6 +1169,15 @@
     background:var(--surface-2); border:1.5px solid var(--ink); border-radius:999px; padding:2px 8px; margin-left:6px; white-space:nowrap;
   }
   .dc-modal-set-progress.complete{color:var(--accent); border-color:var(--accent);}
+  #oi-modal-art{aspect-ratio:1; width:120px; display:flex; align-items:center; justify-content:center;}
+  #oi-modal-art .office-glyph{font-size:3.2rem;}
+  #oi-modal-tierdots{gap:6px;}
+  #oi-modal-tierdots .tierdot{width:9px; height:9px; border-radius:50%; background:var(--surface-2); border:2px solid var(--ink); opacity:0.5;}
+  #oi-modal-tierdots .tierdot.on{opacity:1; background:var(--r-legendary); border-color:var(--r-legendary);}
+  .office-modal-buy{width:100%; justify-content:center;}
+  .office-slot{cursor:pointer;}
+  .office-slot:hover, .office-slot:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .office-slot .office-buy-btn{cursor:pointer;}
 
   /* ---------- boot logo intro (plays once per page load, before the splash card) ---------- */
   .logo-intro{
@@ -1741,6 +1750,28 @@
       <h4 id="dc-modal-set-name"></h4>
       <p id="dc-modal-set-bonus"></p>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="office-item-overlay" hidden>
+  <div class="dc-modal" role="dialog" aria-modal="true" aria-labelledby="oi-modal-title">
+    <div class="dc-modal-head">
+      <h3 id="oi-modal-title"></h3>
+      <button class="dc-modal-close" id="oi-modal-close" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="dc-modal-art" id="oi-modal-art"></div>
+    <div class="dc-modal-stars" id="oi-modal-tierdots"></div>
+    <p class="dc-modal-rarity" id="oi-modal-status"></p>
+    <p class="dc-modal-flavor" id="oi-modal-flavor"></p>
+    <div class="dc-modal-section">
+      <h4>This piece</h4>
+      <p id="oi-modal-bonus"></p>
+    </div>
+    <div class="dc-modal-section">
+      <h4 id="oi-modal-room-name"></h4>
+      <p id="oi-modal-room-bonus"></p>
+    </div>
+    <button class="office-buy-btn office-modal-buy" type="button" id="oi-modal-buy" hidden></button>
   </div>
 </div>
 
@@ -3097,7 +3128,7 @@
     var cur = tier > 0 ? cat.tiers[tier - 1] : null;
     var next = !maxed ? cat.tiers[tier] : null;
     var glyph = EQUIP_GLYPH[cat.id] || "❓";
-    return '<div class="office-slot' + (maxed ? ' maxed' : '') + (tier === 0 ? ' empty' : '') + '">' +
+    return '<div class="office-slot' + (maxed ? ' maxed' : '') + (tier === 0 ? ' empty' : '') + '" data-office-open="' + room.id + '|' + cat.id + '" tabindex="0" role="button" aria-label="' + cat.name + ' details">' +
       '<div class="office-slot-visual"><span class="office-glyph tier-' + tier + '" title="' + (cur ? cur.name.replace(/"/g,"&quot;") : "Not yet purchased") + '">' + glyph + '</span></div>' +
       '<div class="office-slot-info">' +
         '<div class="office-slot-name">' + cat.name + '</div>' +
@@ -3174,7 +3205,7 @@
       }
       return '<div class="office-room"><div class="office-room-head"><span class="office-room-icon">' + cat.icon + '</span><span class="office-room-name">' + cat.name + '</span></div>' +
         '<div class="office-slots">' + cat.tiers.map(function(t, i){
-          return '<div class="office-slot ceo-slot"><div class="office-slot-visual"><span class="office-glyph tier-' + (i + 1) + '">' + cat.icon + '</span></div>' +
+          return '<div class="office-slot ceo-slot" data-office-open-ceo="' + cat.id + '|' + i + '" tabindex="0" role="button" aria-label="' + t.name + ' details"><div class="office-slot-visual"><span class="office-glyph tier-' + (i + 1) + '">' + cat.icon + '</span></div>' +
             '<div class="office-slot-info"><div class="office-slot-name">Tier ' + (i + 1) + '</div><div class="office-slot-tier">' + t.name + '</div>' +
             '<div class="office-slot-flavor">' + t.flavor + '</div>' +
             '<button class="office-buy-btn" type="button" disabled><span class="buy-label">Coming Soon</span></button></div></div>';
@@ -3493,6 +3524,8 @@
    "milestones-overlay","ms-modal-body","ms-modal-progress","ms-modal-close",
    "deskcard-overlay","dc-modal-title","dc-modal-close","dc-modal-art","dc-modal-stars","dc-modal-rarity-label",
    "dc-modal-flavor","dc-modal-card-bonus","dc-modal-set-name","dc-modal-set-bonus",
+   "office-item-overlay","oi-modal-title","oi-modal-close","oi-modal-art","oi-modal-tierdots","oi-modal-status",
+   "oi-modal-flavor","oi-modal-bonus","oi-modal-room-name","oi-modal-room-bonus","oi-modal-buy",
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
    "holiday-banner","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
@@ -4504,6 +4537,98 @@
   el["dc-modal-close"].addEventListener("click", closeDeskCardModal);
   el["deskcard-overlay"].addEventListener("click", function(e){ if (e.target === el["deskcard-overlay"]) closeDeskCardModal(); });
   document.addEventListener("keydown", function(e){ if (e.key === "Escape" && el["deskcard-overlay"] && !el["deskcard-overlay"].hidden) closeDeskCardModal(); });
+
+  /* ---------- office equipment / CEO luxury detail modal: click any slot for a large view + full description ---------- */
+  function oiTierDotsHtml(n, max){
+    var out = "";
+    for (var i = 1; i <= max; i++){ out += '<span class="tierdot' + (i <= n ? " on" : "") + '"></span>'; }
+    return out;
+  }
+  function oiTierArtClass(tier){
+    if (tier >= 3) return "dc-modal-art r-legendary";
+    if (tier === 2) return "dc-modal-art r-rare";
+    if (tier === 1) return "dc-modal-art r-uncommon";
+    return "dc-modal-art";
+  }
+  function openOfficeItemModal(roomId, catId){
+    if (!state) return;
+    var room = equipRoom(roomId), cat = equipCat(roomId, catId);
+    if (!room || !cat) return;
+    var tier = equipCurrentTier(state, roomId, catId);
+    var maxTier = cat.tiers.length;
+    var cur = tier > 0 ? cat.tiers[tier - 1] : null;
+    var next = tier < maxTier ? cat.tiers[tier] : null;
+    var glyph = EQUIP_GLYPH[cat.id] || "❓";
+    el["oi-modal-title"].textContent = cat.name;
+    el["oi-modal-art"].className = oiTierArtClass(tier);
+    el["oi-modal-art"].innerHTML = '<span class="office-glyph tier-' + tier + '">' + glyph + '</span>';
+    el["oi-modal-tierdots"].innerHTML = oiTierDotsHtml(tier, maxTier);
+    el["oi-modal-status"].textContent = room.name + " — " + (cur ? ("Tier " + tier + " of " + maxTier + " installed") : ("Not yet installed (" + maxTier + " tiers available)"));
+    el["oi-modal-flavor"].textContent = cur ? cur.name + ": " + cur.flavor : (next ? "Not yet purchased. " + next.name + ": " + next.flavor : "");
+    el["oi-modal-bonus"].innerHTML = cur
+      ? 'Currently installed for a permanent <span class="dc-bonus-val">+' + Math.round(cur.bonusPct * 100) + '%</span> to total output.'
+      : 'Not installed yet — no bonus from this slot until purchased.';
+    var roomComplete = equipRoomComplete(state, room);
+    var ownedInRoom = room.categories.filter(function(c){ return equipCategoryMaxed(state, room.id, c.id); }).length;
+    el["oi-modal-room-name"].textContent = room.name;
+    el["oi-modal-room-bonus"].textContent = roomComplete
+      ? "Every category in " + room.name + " is maxed — an extra +" + Math.round(EQUIP_ROOM_COMPLETE_BONUS * 100) + "% is already baked in, permanently."
+      : ownedInRoom + "/" + room.categories.length + " categories maxed in " + room.name + ". Max out every one for an extra +" + Math.round(EQUIP_ROOM_COMPLETE_BONUS * 100) + "% on top of what each piece gives on its own.";
+    if (next){
+      el["oi-modal-buy"].hidden = false;
+      el["oi-modal-buy"].disabled = !equipRoomUnlocked(state, room) || state.revenue < next.cost;
+      el["oi-modal-buy"].innerHTML = '<span class="buy-label">' + (tier === 0 ? "Buy " : "Upgrade to ") + next.name + '</span><span class="buy-cost">' + fmt(next.cost) + '</span>';
+      el["oi-modal-buy"].onclick = function(){ buyEquipTier(roomId, catId); openOfficeItemModal(roomId, catId); };
+    } else {
+      el["oi-modal-buy"].hidden = true;
+      el["oi-modal-buy"].onclick = null;
+    }
+    el["office-item-overlay"].hidden = false;
+  }
+  function openCeoItemModal(catId, tierIdx){
+    if (!state) return;
+    var cat = EQUIP_CEO.categories.filter(function(c){ return c.id === catId; })[0];
+    if (!cat) return;
+    var t = cat.tiers[tierIdx]; if (!t) return;
+    el["oi-modal-title"].textContent = t.name;
+    el["oi-modal-art"].className = oiTierArtClass(tierIdx + 1);
+    el["oi-modal-art"].innerHTML = '<span class="office-glyph tier-' + (tierIdx + 1) + '">' + cat.icon + '</span>';
+    el["oi-modal-tierdots"].innerHTML = oiTierDotsHtml(tierIdx + 1, cat.tiers.length);
+    el["oi-modal-status"].textContent = "Founder's Office — " + cat.name + " — Tier " + (tierIdx + 1) + " of " + cat.tiers.length;
+    el["oi-modal-flavor"].textContent = t.flavor;
+    el["oi-modal-bonus"].textContent = "Coming Soon — this preview shows what's ahead in the Founder's Office layer. No purchase mechanic or bonus yet; that's a future update.";
+    el["oi-modal-room-name"].textContent = cat.name;
+    el["oi-modal-room-bonus"].textContent = "Opens " + cat.unlockSeason + " seasons in.";
+    el["oi-modal-buy"].hidden = true;
+    el["oi-modal-buy"].onclick = null;
+    el["office-item-overlay"].hidden = false;
+  }
+  function closeOfficeItemModal(){ el["office-item-overlay"].hidden = true; }
+  el["oi-modal-close"].addEventListener("click", closeOfficeItemModal);
+  el["office-item-overlay"].addEventListener("click", function(e){ if (e.target === el["office-item-overlay"]) closeOfficeItemModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && el["office-item-overlay"] && !el["office-item-overlay"].hidden) closeOfficeItemModal(); });
+  document.addEventListener("click", function(e){
+    var buyBtn = e.target && e.target.closest && e.target.closest(".office-buy-btn");
+    if (buyBtn) return; // buy clicks are handled by their own listener below; never also open the modal
+    var openSlot = e.target && e.target.closest && e.target.closest("[data-office-open]");
+    if (openSlot){
+      var parts = openSlot.getAttribute("data-office-open").split("|");
+      openOfficeItemModal(parts[0], parts[1]);
+      return;
+    }
+    var openCeo = e.target && e.target.closest && e.target.closest("[data-office-open-ceo]");
+    if (openCeo){
+      var ceoParts = openCeo.getAttribute("data-office-open-ceo").split("|");
+      openCeoItemModal(ceoParts[0], parseInt(ceoParts[1], 10));
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var slot = document.activeElement && document.activeElement.closest && document.activeElement.closest("[data-office-open],[data-office-open-ceo]");
+    if (!slot) return;
+    e.preventDefault();
+    slot.click();
+  });
   function sparesOf(rarity){
     var out = [];
     allDeskCards().forEach(function(c){
@@ -5092,7 +5217,7 @@
   }
   function flagshipTail(next){ return state.flagshipAsked ? " " + flagshipName() + " gets folded into " + next + ". The sign stays up. Probably." : ""; }
   function anyOverlayOpen(){
-    return ["logo-intro","splash-overlay","gift-overlay","acquisition-overlay","modal-overlay","flagship-overlay","milestones-overlay","deskcard-overlay"].some(function(id){ return el[id] && !el[id].hidden; });
+    return ["logo-intro","splash-overlay","gift-overlay","acquisition-overlay","modal-overlay","flagship-overlay","milestones-overlay","deskcard-overlay","office-item-overlay"].some(function(id){ return el[id] && !el[id].hidden; });
   }
   function maybePromptFlagship(){
     if (!state || !state.staff || state.flagshipAsked || !el["flagship-overlay"]) return;
