@@ -945,6 +945,62 @@
   .btn-ghost, .btn-primary{padding:10px 18px; border-radius:12px; border:2.5px solid var(--ink); font-family:'Nunito', sans-serif; font-size:0.82rem; font-weight:800; cursor:pointer; box-shadow:3px 3px 0 var(--hard-shadow); transition:transform 0.08s ease, box-shadow 0.08s ease;}
   .btn-ghost{background:var(--surface-2); color:var(--ink);}
 
+  /* ---------- milestones modal: full grid of every milestone, achieved + outstanding ---------- */
+  .ms-progress-badge{cursor:pointer;}
+  .ms-progress-badge:hover{filter:brightness(1.08);}
+  .ms-block{cursor:pointer;}
+  .ms-block:hover .ms-head{color:var(--accent);}
+  .ms-modal{
+    background:var(--surface); border:3px solid var(--ink); border-radius:var(--radius);
+    box-shadow:6px 6px 0 var(--hard-shadow); padding:20px; max-width:640px; width:100%;
+    max-height:85vh; display:flex; flex-direction:column;
+  }
+  .ms-modal-head{display:flex; align-items:center; gap:10px;}
+  .ms-modal-head h3{font-family:'Fredoka', sans-serif; font-size:1.1rem; margin:0;}
+  .ms-modal-progress{
+    font-family:'Nunito', sans-serif; font-weight:800; font-size:0.76rem; color:var(--ink-soft);
+    background:var(--surface-2); border:1.5px solid var(--ink); border-radius:999px; padding:3px 10px; white-space:nowrap;
+  }
+  .ms-modal-close{
+    margin-left:auto; flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:2.5px solid var(--ink);
+    background:var(--surface-2); color:var(--ink); font-size:0.85rem; font-weight:800; cursor:pointer;
+    box-shadow:2px 2px 0 var(--hard-shadow); transition:transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .ms-modal-close:hover{transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--hard-shadow);}
+  .ms-modal-close:active{transform:translate(1px,1px); box-shadow:1px 1px 0 var(--hard-shadow);}
+  .ms-modal-sub{font-size:0.76rem; color:var(--ink-soft); font-weight:600; line-height:1.4; margin:4px 0 12px;}
+  .ms-modal-body{overflow-y:auto; padding-right:4px; margin-right:-4px;}
+  .ms-modal-tier{margin-bottom:18px;}
+  .ms-modal-tier:last-child{margin-bottom:2px;}
+  .ms-modal-tier-head{
+    display:flex; align-items:center; gap:7px; font-family:'Fredoka', sans-serif; font-weight:700;
+    font-size:0.84rem; margin-bottom:7px; padding-bottom:5px; border-bottom:2px dashed var(--line);
+  }
+  .ms-modal-tier-icon{width:20px; height:20px; flex:0 0 auto;}
+  .ms-modal-tier-icon svg{width:100%; height:100%;}
+  .ms-modal-tier-count{margin-left:auto; font-family:'Nunito', sans-serif; font-weight:800; font-size:0.66rem; color:var(--ink-soft);}
+  .ms-card-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(62px,1fr)); gap:7px;}
+  .ms-card{
+    position:relative; aspect-ratio:1/1; border-radius:10px; border:2px solid var(--ink); background:var(--surface-2);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; overflow:hidden;
+  }
+  .ms-card-icon-wrap{width:24px; height:24px; pointer-events:none;}
+  .ms-card-icon-wrap svg{width:100%; height:100%;}
+  .ms-card-n{font-family:'Nunito', sans-serif; font-weight:900; font-size:0.6rem; color:var(--ink); pointer-events:none;}
+  .ms-card.r-common{border-color:var(--r-common);}
+  .ms-card.r-uncommon{border-color:var(--r-uncommon);}
+  .ms-card.r-rare{border-color:var(--r-rare);}
+  .ms-card.r-epic{border-color:var(--r-epic);}
+  .ms-card.r-legendary{border-color:var(--r-legendary);}
+  .ms-card.locked{filter:grayscale(1) opacity(0.5);}
+  .ms-card.done{box-shadow:0 0 5px rgba(0,0,0,0.15);}
+  .ms-card-lock, .ms-card-check{position:absolute; top:2px; right:2px; font-size:0.55rem; line-height:1; pointer-events:none;}
+  .ms-card-check{left:2px; right:auto; color:var(--accent);}
+  @media (max-width: 480px){
+    .ms-modal{padding:16px; max-height:90vh;}
+    .ms-modal-sub{display:none;}
+  }
+
   /* ---------- boot logo intro (plays once per page load, before the splash card) ---------- */
   .logo-intro{
     position:fixed; inset:0; z-index:300;
@@ -1182,7 +1238,7 @@
   <section class="board">
     <div class="panel" id="panel-staff">
       <div class="panel-head-row">
-        <h2>The Roster<span class="ms-progress-badge" id="ms-progress-badge" title="Total milestones unlocked across every role"></span></h2>
+        <h2>The Roster<button type="button" class="ms-progress-badge" id="ms-progress-badge" title="See every milestone, achieved and outstanding"></button></h2>
         <button id="hire-max-toggle" class="hire-max-toggle" type="button" title="Buy as many as you can afford in one click">Hire ×1</button>
       </div>
       <p class="panel-sub">Hire staff and locations. Each hire raises the next one's price, and each role has a cap for the season — once you're fully staffed, growth comes from the next tier up, or from a bigger season. New hires pile up cash until you tap Collect — or unlock the matching Initiative to automate them.</p>
@@ -1431,6 +1487,18 @@
       <button id="modal-cancel" class="btn-ghost" type="button">Cancel</button>
       <button id="modal-confirm" class="btn-primary" type="button">Confirm</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="milestones-overlay" hidden>
+  <div class="ms-modal" role="dialog" aria-modal="true" aria-labelledby="ms-modal-title">
+    <div class="ms-modal-head">
+      <h3 id="ms-modal-title">Milestones</h3>
+      <span class="ms-modal-progress" id="ms-modal-progress"></span>
+      <button class="ms-modal-close" id="ms-modal-close" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <p class="ms-modal-sub">Own enough of a roster spot to hit a milestone &mdash; each one's a permanent output bump for that role, forever. Locked ones are greyed out until you get there.</p>
+    <div class="ms-modal-body" id="ms-modal-body"></div>
   </div>
 </div>
 
@@ -2374,7 +2442,7 @@
     }
     var head = '<div class="ms-head">Milestones' + (bonus > 0 ? ' &mdash; +' + Math.round(bonus * 100) + '% output earned' : '') +
       ' <span class="ms-progress">(' + doneList.length + '/' + list.length + ')</span></div>';
-    return '<div class="ms-block">' + head + '<div class="ms-chips">' + chips + '</div>' + (nextM ? lockProgHtml("hire:" + g.id, nextM.n) : '') + '</div>';
+    return '<div class="ms-block" data-ms-tier="' + g.id + '" title="See every milestone for this role">' + head + '<div class="ms-chips">' + chips + '</div>' + (nextM ? lockProgHtml("hire:" + g.id, nextM.n) : '') + '</div>';
   }
 
   /* ---------- synergy combos (deliberately undocumented in the UI) ---------- */
@@ -2690,6 +2758,7 @@
    "exit-topbar-stat","exit-progress-bar-top","exit-ready-sign",
    "episodes-heading","episodes-sub","exit-target-sub","exit-target-stat","exit-points",
    "achievement-rows","mascot-secret","chip-frenzy-timer","chip-sponsor-timer","chip-collect-rush-timer",
+   "milestones-overlay","ms-modal-body","ms-modal-progress","ms-modal-close",
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
    "holiday-banner","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
@@ -3856,6 +3925,7 @@
   }
   el["news-bar"].addEventListener("click", function(){ toggleNewsLog(); });
   document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !el["news-log"].hidden) toggleNewsLog(false); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && el["milestones-overlay"] && !el["milestones-overlay"].hidden) closeMilestonesModal(); });
   document.addEventListener("click", function(e){ if (!el["news-log"].hidden && !el["news"].contains(e.target)) toggleNewsLog(false); });
   renderNews();
 
@@ -3902,7 +3972,7 @@
   }
   function flagshipTail(next){ return state.flagshipAsked ? " " + flagshipName() + " gets folded into " + next + ". The sign stays up. Probably." : ""; }
   function anyOverlayOpen(){
-    return ["logo-intro","splash-overlay","gift-overlay","acquisition-overlay","modal-overlay","flagship-overlay"].some(function(id){ return el[id] && !el[id].hidden; });
+    return ["logo-intro","splash-overlay","gift-overlay","acquisition-overlay","modal-overlay","flagship-overlay","milestones-overlay"].some(function(id){ return el[id] && !el[id].hidden; });
   }
   function maybePromptFlagship(){
     if (!state || !state.staff || state.flagshipAsked || !el["flagship-overlay"]) return;
@@ -3958,6 +4028,58 @@
   el["modal-cancel"].addEventListener("click", closeModal);
   el["modal-overlay"].addEventListener("click", function(e){ if (e.target === el["modal-overlay"]) closeModal(); });
   el["modal-confirm"].addEventListener("click", function(){ var fn = pendingConfirm; closeModal(); if (fn) fn(); });
+
+  /* ---------- milestones modal: click "Milestones X/Y" (or any role's milestone block) to see
+     the full ladder for every role at once — achieved ones lit up, outstanding ones greyed out
+     and locked, same idea as the "Unlocks" screen in Adventure Capitalist. ---------- */
+  function milestoneCardHtml(g, m, unlocked){
+    var cls = "ms-card r-" + g.rarity + (unlocked ? " done" : " locked");
+    var label = unlocked
+      ? m.name + " — own " + fmtCount(m.n) + ": +" + Math.round(m.pct * 100) + "% " + g.name.split(",")[0] + " output, permanent"
+      : "Locked — own " + fmtCount(m.n) + " " + g.name.split(",")[0] + " to unlock";
+    return '<div class="' + cls + '" title="' + label.replace(/"/g, "&quot;") + '">' +
+      (unlocked
+        ? '<span class="ms-card-check" aria-hidden="true">&#10003;</span>'
+        : '<span class="ms-card-lock" aria-hidden="true">&#128274;</span>') +
+      '<div class="ms-card-icon-wrap" aria-hidden="true">' + g.svg + '</div>' +
+      '<div class="ms-card-n">' + fmtCount(m.n) + '</div>' +
+    '</div>';
+  }
+  function renderMilestonesModal(){
+    var got = state.milestonesUnlocked || [];
+    var totals = milestoneProgressTotal();
+    el["ms-modal-progress"].textContent = totals.done + " / " + totals.total;
+    var html = "";
+    STAFF.forEach(function(g){
+      var list = MILESTONES[g.id] || [];
+      if (!list.length) return;
+      var doneCount = list.filter(function(m){ return got.indexOf(m.id) !== -1; }).length;
+      html += '<div class="ms-modal-tier" id="ms-modal-tier-' + g.id + '">' +
+        '<div class="ms-modal-tier-head"><span class="ms-modal-tier-icon" aria-hidden="true">' + g.svg + '</span>' +
+        '<span>' + g.name.split(",")[0] + '</span>' +
+        '<span class="ms-modal-tier-count">' + doneCount + '/' + list.length + '</span></div>' +
+        '<div class="ms-card-grid">';
+      list.forEach(function(m){ html += milestoneCardHtml(g, m, got.indexOf(m.id) !== -1); });
+      html += '</div></div>';
+    });
+    el["ms-modal-body"].innerHTML = html;
+  }
+  function openMilestonesModal(scrollToTier){
+    renderMilestonesModal();
+    el["milestones-overlay"].hidden = false;
+    if (scrollToTier){
+      var t = document.getElementById("ms-modal-tier-" + scrollToTier);
+      if (t) setTimeout(function(){ t.scrollIntoView({block:"start"}); }, 0);
+    }
+  }
+  function closeMilestonesModal(){ el["milestones-overlay"].hidden = true; }
+  el["ms-progress-badge"].addEventListener("click", function(){ openMilestonesModal(); });
+  el["ms-modal-close"].addEventListener("click", closeMilestonesModal);
+  el["milestones-overlay"].addEventListener("click", function(e){ if (e.target === el["milestones-overlay"]) closeMilestonesModal(); });
+  el["staff-rows"].addEventListener("click", function(e){
+    var block = e.target.closest(".ms-block");
+    if (block) openMilestonesModal(block.getAttribute("data-ms-tier"));
+  });
 
   /* ---------- daily streak ---------- */
   function checkStreak(){
