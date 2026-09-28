@@ -162,7 +162,7 @@
      as a responsive grid instead of one long stacked list so the extra width gets used. */
   #desk-exchange{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:10px;}
   .xchg-sub{grid-column:1 / -1; font-size:0.78rem; color:var(--ink-soft); font-weight:600; margin:0 0 4px;}
-  .xchg-title{font-family:'Fredoka',sans-serif; font-size:1rem; margin:16px 0 2px;}
+  .xchg-title{font-family:'Fredoka',sans-serif; font-size:1rem; margin:16px 0 2px; grid-column:1 / -1;}
   .xchg-row{display:flex; align-items:center; gap:10px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:0; background:var(--surface);}
   .xchg-row.ready{box-shadow:3px 3px 0 var(--hard-shadow);}
   .xchg-thumb{width:38px; aspect-ratio:0.58; flex:none; border:2px solid var(--ink); border-radius:6px; object-fit:contain; background:var(--surface-2);}
@@ -187,6 +187,15 @@
   }
   .pack-buy-btn{background:var(--accent-2); color:var(--on-accent-2); min-width:104px;}
   .pack-buy-btn:disabled{opacity:0.6;}
+  /* v63: "Combine Up" — spend a pile of low-rarity spares for a guaranteed card one tier higher */
+  .xchg-forge-head{grid-column:1 / -1; margin:2px 0 0;}
+  .xchg-forge-row{border-style:dashed;}
+  .xchg-forge-row.ready{border-style:solid;}
+  .xchg-forge-arrow{flex:none; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800; border:2px solid var(--ink); background:var(--surface-2); color:var(--ink);}
+  .xchg-forge-arrow.r-uncommon{background:color-mix(in srgb, var(--r-uncommon) 30%, var(--surface-2)); color:var(--r-uncommon);}
+  .xchg-forge-arrow.r-rare{background:color-mix(in srgb, var(--r-rare) 30%, var(--surface-2)); color:var(--r-rare);}
+  .xchg-forge-arrow.r-epic{background:color-mix(in srgb, var(--r-epic) 30%, var(--surface-2)); color:var(--r-epic);}
+  .xchg-divider{grid-column:1 / -1; border:none; border-top:2px dashed var(--ink); opacity:0.3; margin:6px 0 0;}
   .auto-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:8px; background:var(--surface);}
   .auto-row.off{opacity:.55;}
   .auto-row select{font:700 0.78rem 'Nunito',sans-serif; padding:5px 6px; border:2px solid var(--ink); border-radius:8px; background:var(--surface-2); color:var(--ink); max-width:100%;}
@@ -4058,6 +4067,19 @@
     epic: [["common", 6], ["uncommon", 4], ["rare", 3]],
     legendary: [["rare", 4], ["epic", 3]]
   };
+  /* "Combine Up" — lets a player turn a pile of low-rarity spares into a guaranteed card one
+     tier higher, so someone starved for (say) spare Epics can grind Commons -> Uncommons ->
+     Rares -> Epics instead of being stuck waiting on lucky drops. Costs mirror the cheapest
+     matching option already in TRADE_RATES, so nothing new needed tuning: 3 spare Commons has
+     always been an Uncommon's price, 3 spare Uncommons a Rare's, 3 spare Rares an Epic's. Legendary
+     is deliberately not forgeable here — it stays the one thing only the pinned trade-offer slot
+     (or a lucky drop) can grant, so the Card Exchange keeps a purpose once combining exists. */
+  var FORGE_RATES = {
+    uncommon: { from: "common", n: 3 },
+    rare: { from: "uncommon", n: 3 },
+    epic: { from: "rare", n: 3 }
+  };
+  var FORGE_ORDER = ["uncommon", "rare", "epic"];
   function deskSetOf(card){ return DESK_SETS.filter(function(set){ return set.cards.some(function(c){ return c.id === card.id; }); })[0]; }
 
   /* ---------- desk card detail modal: large view + what the card and its set do ---------- */
@@ -4121,6 +4143,60 @@
       if (!best || score > best.score) best = { rarity: o[0], n: o[1], have: have, ok: ok, score: score };
     });
     return best;
+  }
+  function forgePlan(rarity){
+    var f = FORGE_RATES[rarity];
+    if (!f) return null;
+    var have = spareTotal(f.from);
+    return { from: f.from, n: f.n, have: have, ok: have >= f.n };
+  }
+  function forgeAffordable(){
+    return FORGE_ORDER.some(function(r){ var p = forgePlan(r); return p && p.ok; });
+  }
+  // which specific card a successful combine grants: prefer an unowned card of the target
+  // rarity (weighted toward finishing a set, same as a trade-offer roll), and only once every
+  // card of that rarity is already owned does it fall back to topping up whichever owned card
+  // of that rarity has the fewest spares — spreading duplicates out instead of stacking one.
+  function pickForgeOutput(rarity){
+    var pick = pickRandomTradeCard([], [rarity]);
+    if (pick) return { card: pick, isNew: true };
+    var pool = allDeskCards().filter(function(c){ return c.rarity === rarity; });
+    if (!pool.length) return null;
+    pool.sort(function(a, b){ return deskCardCount(state, a.id) - deskCardCount(state, b.id); });
+    return { card: pool[0], isNew: false };
+  }
+  function doForge(rarity){
+    var plan = forgePlan(rarity);
+    if (!plan || !plan.ok) return;
+    var out = pickForgeOutput(rarity);
+    if (!out) return;
+    var need = plan.n, spent = [];
+    sparesOf(plan.from).forEach(function(x){
+      if (need <= 0) return;
+      var take = Math.min(x.n, need);
+      state.desksCounts[x.card.id] = deskCardCount(state, x.card.id) - take;
+      need -= take;
+      spent.push(take + "× " + x.card.name);
+    });
+    var already = (state.desksUnlocked || []).indexOf(out.card.id) !== -1;
+    if (!already) state.desksUnlocked.push(out.card.id);
+    state.desksCounts[out.card.id] = deskCardCount(state, out.card.id) + 1;
+    (state.xchgSlots || []).forEach(function(s){ if (s.id === out.card.id){ s.id = null; s.readyAt = 0; } });
+    xchgSig = "";
+    renderDesk(); renderStaff(); renderUpgrades();
+    checkDeskSetComplete(out.card);
+    updateStats(); updateAffordability(); updateTabAlerts(); saveGame();
+    showGiftReveal({ icon:ICONS.card_exchange, title:"COMBINED UP", desc:"Combined " + spent.join(", ") + " into " + out.card.name + ".", cards:[{ card: out.card, isNew: !already, count: 1 }] });
+  }
+  function forgeRowHtml(rarity){
+    var p = forgePlan(rarity);
+    if (!p) return "";
+    return '<div class="xchg-row xchg-forge-row' + (p.ok ? ' ready' : '') + '">' +
+      '<div class="xchg-forge-arrow r-' + rarity + '" aria-hidden="true">↑</div>' +
+      '<div class="xchg-info">Combine into a ' + rarity.charAt(0).toUpperCase() + rarity.slice(1) +
+        '<small>Give ' + p.n + ' spare ' + p.from + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ') for a guaranteed ' + rarity + ' card</small></div>' +
+      '<button class="row-buy" type="button" data-forge="' + rarity + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Combine</span></button>' +
+    '</div>';
   }
   var XCHG_SLOTS = 3;
   var XCHG_SLOT_RARITIES = ["rare", "epic", "legendary"]; // one offer of each, pinned by slot position
@@ -4345,7 +4421,8 @@
       if (!t) return "x";
       var p = tradePlan(t);
       return t.id + ":" + p.rarity + p.have + "/" + p.n;
-    }).join("|") + "#" + (state.desksUnlocked || []).length + "#buy" + (xchgBuyPool().length ? "1" : "0");
+    }).join("|") + "#" + (state.desksUnlocked || []).length + "#buy" + (xchgBuyPool().length ? "1" : "0") +
+      "#forge:" + ["common", "uncommon", "rare", "epic"].map(function(r){ return spareTotal(r); }).join(",");
     if (sig !== xchgSig){
       xchgSig = sig;
       var offersDone = slots.every(function(s){ return !s.id; }) && eligibleTradeCards([], XCHG_SLOT_RARITIES).length === 0;
@@ -4354,7 +4431,11 @@
       if (offersDone && !xchgBuyPool().length){
         html = '<p class="xchg-sub">You own every trade-able card — the free exchange has closed for lack of anything left to sell you.</p>' + xchgPackRowHtml();
       } else {
-        html = '<p class="xchg-sub">One Rare, one Epic, one Legendary \u2014 swap spare copies (the extras beyond your first) for whichever you need, or buy a guaranteed pull outright. Not into a trade offer? Skip it &mdash; a new one rolls in after a while.</p>';
+        html = '<p class="xchg-sub">One Rare, one Epic, one Legendary \u2014 swap spare copies (the extras beyond your first) for whichever you need, or buy a guaranteed pull outright. Not into a trade offer? Skip it &mdash; a new one rolls in after a while.</p>' +
+          '<h3 class="xchg-title">Combine Up</h3>' +
+          '<p class="xchg-sub">Short on spares at the tier you actually need? Work your way up \u2014 combine a pile of lower-rarity spares into a guaranteed card one tier higher, then trade or combine that.</p>' +
+          FORGE_ORDER.map(forgeRowHtml).join("") +
+          '<hr class="xchg-divider">';
         slots.forEach(function(s, i){
           if (!s.id){
             var rarity = XCHG_SLOT_RARITIES[i];
@@ -4396,7 +4477,7 @@
       var p = tradePlan(t);
       if (p && p.ok) return true;
     }
-    return false;
+    return forgeAffordable();
   }
   function doTrade(id){
     var target = allDeskCards().filter(function(c){ return c.id === id; })[0];
@@ -4456,6 +4537,8 @@
     if (b && !b.disabled){ doTrade(b.getAttribute("data-trade")); return; }
     var s = e.target.closest && e.target.closest("[data-trade-skip]");
     if (s){ skipTradeOffer(s.getAttribute("data-trade-skip")); return; }
+    var f = e.target.closest && e.target.closest("[data-forge]");
+    if (f && !f.disabled){ doForge(f.getAttribute("data-forge")); return; }
     var buy = e.target.closest && e.target.closest("#xchg-buy-btn");
     if (buy && !buy.disabled) buyDeskCardOffer();
   });
