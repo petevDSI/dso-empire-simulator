@@ -537,10 +537,11 @@
     border:2.5px solid var(--ink); background:var(--gold); color:#2c1f06; font-family:'Fredoka', sans-serif;
     font-weight:700; font-size:0.76rem; cursor:pointer; box-shadow:3px 3px 0 var(--hard-shadow);
     transition:transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+    position:relative; overflow:hidden;
   }
   .row-collect:hover:not(:disabled){transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--hard-shadow);}
   .row-collect:active:not(:disabled){transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hard-shadow);}
-  .row-collect:disabled{opacity:0.45; cursor:not-allowed; box-shadow:none;}
+  .row-collect:disabled{opacity:0.7; cursor:not-allowed; box-shadow:none;}
   .row-collect.ready{animation:collectPulse 1.1s ease-in-out infinite;}
   @keyframes collectPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
   .row-collect.collected{animation:collectFlash 0.26s ease-out;}
@@ -548,6 +549,11 @@
   .row-collect .collect-label{text-transform:uppercase; letter-spacing:0.03em;}
   .row-collect .collect-amt{font-family:'Nunito', sans-serif; font-weight:900;}
   .row-collect:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
+  /* the charge meter — a thin strip along the bottom of the Collect button that fills over the
+     tier's fillSec, so the roster reads as different collection rhythms instead of one uniform loop */
+  .row-collect-track{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(44,31,6,0.18);}
+  .row-collect-fill{display:block; height:100%; width:0%; background:#2c1f06; transition:width 0.1s linear;}
+  .row-collect.ready .row-collect-track{display:none;}
 
   .row-auto{
     margin-top:7px; display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px;
@@ -1514,12 +1520,16 @@
 
   var SVG_PLATFORM = '<img class="row-icon-img" src="' + ICONS.meridian_platform + '" alt="">';
 
+  // fillSec: how long the Collect meter takes to charge for this tier — cheap/common tiers
+  // charge fast for frequent small pops, expensive/rare tiers charge slow for rarer big pops.
+  // This doesn't change total production (that still accrues every tick regardless); it only
+  // paces how often each row is "worth" clicking, so the roster doesn't all feel the same.
   var STAFF = [
-    {id:"chair", name:"Dana Whitfield, RDH", role:"The Hygienist Who's Seen Everything", rarity:"common", svg:SVG_CHAIR, flavor:"Eighteen years in this chair. She knows which doctor to book you with just from your teeth.", baseCost:15, baseProd:0.5, baseCap:30, capStep:6},
-    {id:"associate", name:"Dr. Raj Malhotra", role:"The Associate", rarity:"uncommon", svg:SVG_ASSOCIATE, flavor:"Signed a non-compete he definitely read the first page of.", baseCost:150, baseProd:5, baseCap:20, capStep:4},
-    {id:"location", name:"The Wilmington Satellite", role:"Second Location", rarity:"rare", svg:SVG_LOCATION, flavor:"Same brand, new parking lot, same PPO negotiations.", baseCost:1500, baseProd:50, baseCap:12, capStep:3},
-    {id:"acquired", name:"Cornerstone Dental Group", role:"Acquired Practice", rarity:"epic", svg:SVG_ACQUIRED, flavor:"You didn't build this one. You bought it. That's the whole strategy.", baseCost:20000, baseProd:750, baseCap:8, capStep:2},
-    {id:"platform", name:"Meridian Regional Platform", role:"Regional DSO Platform", rarity:"legendary", svg:SVG_PLATFORM, flavor:"Congratulations, you now have an org chart nobody can draw from memory.", baseCost:300000, baseProd:12000, baseCap:5, capStep:1, deskRequirement:{count:1}}
+    {id:"chair", name:"Dana Whitfield, RDH", role:"The Hygienist Who's Seen Everything", rarity:"common", svg:SVG_CHAIR, flavor:"Eighteen years in this chair. She knows which doctor to book you with just from your teeth.", baseCost:15, baseProd:0.5, baseCap:30, capStep:6, fillSec:1},
+    {id:"associate", name:"Dr. Raj Malhotra", role:"The Associate", rarity:"uncommon", svg:SVG_ASSOCIATE, flavor:"Signed a non-compete he definitely read the first page of.", baseCost:150, baseProd:5, baseCap:20, capStep:4, fillSec:2.5},
+    {id:"location", name:"The Wilmington Satellite", role:"Second Location", rarity:"rare", svg:SVG_LOCATION, flavor:"Same brand, new parking lot, same PPO negotiations.", baseCost:1500, baseProd:50, baseCap:12, capStep:3, fillSec:7.5},
+    {id:"acquired", name:"Cornerstone Dental Group", role:"Acquired Practice", rarity:"epic", svg:SVG_ACQUIRED, flavor:"You didn't build this one. You bought it. That's the whole strategy.", baseCost:20000, baseProd:750, baseCap:8, capStep:2, fillSec:20},
+    {id:"platform", name:"Meridian Regional Platform", role:"Regional DSO Platform", rarity:"legendary", svg:SVG_PLATFORM, flavor:"Congratulations, you now have an org chart nobody can draw from memory.", baseCost:300000, baseProd:12000, baseCap:5, capStep:1, deskRequirement:{count:1}, fillSec:45}
   ];
   var COST_GROWTH = 1.15;
 
@@ -1926,12 +1936,14 @@
     var staff = {}; STAFF.forEach(function(g){ staff[g.id] = 0; });
     var upg = {}; UPGRADES.forEach(function(u){ upg[u.id] = false; });
     var pending = {}; STAFF.forEach(function(g){ pending[g.id] = 0; });
+    var collectFillAt = {}; STAFF.forEach(function(g){ collectFillAt[g.id] = 0; });
     return {
       revenue:0,
       lifetimeRevenue:0,
       staff:staff,
       upgrades:upg,
       pending:pending,
+      collectFillAt:collectFillAt,
       prestigeCount:0,
       prestigePoints:0,
       episodesUnlocked:[],
@@ -2746,7 +2758,7 @@
       if (owned > 0){
         collectHtml = automated
           ? '<div class="row-auto">&#10003; Auto-collecting</div>'
-          : '<button class="row-collect" type="button" data-collect="' + g.id + '"><span class="collect-label">Collect</span><span class="collect-amt num">' + fmt(state.pending[g.id] || 0) + '</span></button>';
+          : '<button class="row-collect" type="button" data-collect="' + g.id + '"><span class="row-collect-track"><span class="row-collect-fill" style="width:' + (collectFillPct(state, g.id) * 100) + '%"></span></span><span class="collect-label">Collect</span><span class="collect-amt num">' + fmt(state.pending[g.id] || 0) + '</span></button>';
       }
       var metaText = fmt(g.baseProd * genMult(state, g.id)) + '/s each';
       if (owned > 0 && !automated) metaText += ' &mdash; piles up until collected';
@@ -2901,15 +2913,34 @@
     });
   }
 
+  // The Collect meter: each tier charges over its own fillSec (see STAFF), so the roster reads
+  // as different rhythms rather than one uniform "click when lit up" loop. Lazily starts the
+  // clock on first read (covers older saves with no collectFillAt yet) and persists it to state
+  // so the percentage is stable across ticks rather than recomputed from "now" each time.
+  function collectFillPct(s, id){
+    var g = STAFF.filter(function(x){ return x.id === id; })[0];
+    if (!g || !g.fillSec) return 1;
+    if (!s.collectFillAt) s.collectFillAt = {};
+    if (!s.collectFillAt[id]) s.collectFillAt[id] = Date.now();
+    var elapsed = (Date.now() - s.collectFillAt[id]) / 1000;
+    return Math.max(0, Math.min(1, elapsed / g.fillSec));
+  }
+  function collectReady(s, id){
+    return (s.pending[id] || 0) >= 0.005 && collectFillPct(s, id) >= 1;
+  }
   function updatePending(){
     el["staff-rows"].querySelectorAll("[data-collect]").forEach(function(btn){
       var id = btn.getAttribute("data-collect");
       var amt = state.pending[id] || 0;
       var amtEl = btn.querySelector(".collect-amt");
       if (amtEl) amtEl.textContent = fmt(amt);
-      var ready = amt >= 0.005;
+      var pct = collectFillPct(state, id);
+      var fillEl = btn.querySelector(".row-collect-fill");
+      if (fillEl) fillEl.style.width = (pct * 100) + "%";
+      var ready = collectReady(state, id);
       btn.disabled = !ready;
       btn.classList.toggle("ready", ready);
+      btn.classList.toggle("charging", !ready && amt >= 0.005);
     });
     renderMiniCollect();
   }
@@ -3395,7 +3426,7 @@
     if (rule.kind === "hire") return rule.target ? autoHire(rule.target, p) : false;
     if (rule.kind === "collect"){
       var id = rule.target; if (!id || isAutomated(state, id) || (state.staff[id] || 0) < 1) return false;
-      if ((state.pending[id] || 0) >= p * genRate(state, id) && (state.pending[id] || 0) >= 0.005){ collectGenerator(id, null); return true; }
+      if (collectReady(state, id) && (state.pending[id] || 0) >= p * genRate(state, id)){ collectGenerator(id, null); return true; }
       return false;
     }
     if (rule.kind === "init") return autoInit(p);
@@ -4092,7 +4123,11 @@
     if (state.revenue < cost) return;
     state.revenue -= cost;
     state.staff[id] = owned + n;
-    if (owned === 0) sfxAcquire(); else sfxTickSoft();
+    if (owned === 0){
+      sfxAcquire();
+      if (!state.collectFillAt) state.collectFillAt = {};
+      state.collectFillAt[id] = Date.now();
+    } else sfxTickSoft();
     var newMgr = rollManager(id);
     renderStaff();
     checkEpisodes();
@@ -4153,11 +4188,13 @@
   }
 
   function collectGenerator(id, btn){
+    if (!collectReady(state, id)) return;
     var amt = state.pending[id] || 0;
-    if (amt < 0.005) return;
     state.pending[id] = 0;
     state.revenue += amt;
     state.lifetimeRevenue += amt;
+    if (!state.collectFillAt) state.collectFillAt = {};
+    state.collectFillAt[id] = Date.now();
     if (btn && !reduceMotion){
       btn.classList.remove("ready");
       btn.classList.add("collected");
@@ -5704,8 +5741,8 @@
     var html = "";
     STAFF.forEach(function(g){
       if ((state.staff[g.id] || 0) > 0 && !isAutomated(state, g.id)){
-        var amt = state.pending[g.id] || 0;
-        if (amt >= 0.005){
+        if (collectReady(state, g.id)){
+          var amt = state.pending[g.id] || 0;
           html += '<button class="mini-collect-chip" type="button" data-mini-collect="' + g.id + '">' +
             '<span>' + g.name + '</span><span class="num">' + fmt(amt) + '</span></button>';
         }
@@ -5717,7 +5754,7 @@
   function hasActionReady(){
     var now = Date.now();
     var pendingCash = STAFF.some(function(g){
-      return (state.staff[g.id] || 0) > 0 && !isAutomated(state, g.id) && (state.pending[g.id] || 0) >= 0.005;
+      return (state.staff[g.id] || 0) > 0 && !isAutomated(state, g.id) && collectReady(state, g.id);
     });
     if (pendingCash) return true;
     if (prestigeGain() >= 1) return true;
@@ -5915,6 +5952,7 @@
       base.staff = Object.assign(defaultState().staff, initialState.staff || {});
       base.upgrades = Object.assign(defaultState().upgrades, initialState.upgrades || {});
       base.pending = Object.assign(defaultState().pending, initialState.pending || {});
+      base.collectFillAt = Object.assign(defaultState().collectFillAt, initialState.collectFillAt || {});
       base.episodesUnlocked = (initialState.episodesUnlocked || []).map(function(id){
         // pre-season saves used flat ids ("pilot", "loi", ...) — fold them into Season 1
         return EPISODE_KEYS.indexOf(id) !== -1 ? "s1-" + id : id;
