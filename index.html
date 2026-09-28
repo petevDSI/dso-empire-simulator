@@ -740,6 +740,13 @@
   /* ---------- side row: exit + sponsor + redeem ---------- */
   .side-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px;}
   .side-card.wide{grid-column:1 / -1;}
+  /* Collection tab: Desk / Bench / Trophy Case forced to 3 equal columns, spread across
+     the row with a consistent gutter, regardless of how many are currently visible. */
+  .side-row-trio{grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
+  .side-row-trio:has(#panel-bench[hidden]){grid-template-columns:repeat(2, 1fr);}
+  @media (max-width: 760px){
+    .side-row-trio, .side-row-trio:has(#panel-bench[hidden]){grid-template-columns:1fr;}
+  }
 
   /* ---------- v44: Board Room option cards (was a stack of narrow, cramped rows) ---------- */
   .board-options{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-top:10px;}
@@ -1361,22 +1368,24 @@
         <div id="desk-exchange"></div>
       </div>
 
-      <div class="side-card" id="panel-desk">
-        <h2>The Desk</h2>
-        <p class="panel-sub">Random desk clutter drops while you play. Collect it all for small permanent bonuses &mdash; complete a full set for an extra kicker. Permanent, like the Trophy Case.</p>
-        <div id="desk-grid"></div>
-      </div>
+      <div class="side-row-trio">
+        <div class="side-card" id="panel-desk">
+          <h2>The Desk</h2>
+          <p class="panel-sub">Random desk clutter drops while you play. Collect it all for small permanent bonuses &mdash; complete a full set for an extra kicker. Permanent, like the Trophy Case.</p>
+          <div id="desk-grid"></div>
+        </div>
 
-      <div class="side-card" id="panel-bench" hidden>
-        <h2>The Bench</h2>
-        <p class="panel-sub">Buy enough of a role and a specific person starts showing up under it. Purely cosmetic flavor with a small permanent bonus &mdash; nobody&rsquo;s getting fired.</p>
-        <div id="bench-body"></div>
-      </div>
+        <div class="side-card" id="panel-bench" hidden>
+          <h2>The Bench</h2>
+          <p class="panel-sub">Buy enough of a role and a specific person starts showing up under it. Purely cosmetic flavor with a small permanent bonus &mdash; nobody&rsquo;s getting fired.</p>
+          <div id="bench-body"></div>
+        </div>
 
-      <div class="side-card" id="panel-achievements">
-        <h2>Trophy Case</h2>
-        <p class="panel-sub">Small permanent bonuses for playing (and clicking) too much. They persist through every Exit and Fund Raise — only a full save reset clears them. A few are hidden until you stumble into them.</p>
-        <div class="rows" id="achievement-rows"></div>
+        <div class="side-card" id="panel-achievements">
+          <h2>Trophy Case</h2>
+          <p class="panel-sub">Small permanent bonuses for playing (and clicking) too much. They persist through every Exit and Fund Raise — only a full save reset clears them. A few are hidden until you stumble into them.</p>
+          <div class="rows" id="achievement-rows"></div>
+        </div>
       </div>
     </section>
   </div>
