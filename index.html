@@ -471,12 +471,16 @@
   .panel h2, .side-card h2, .gift-card h2, .splash-card h2{
     position:relative; display:inline-block;
     font-size:1.02rem; font-weight:700; letter-spacing:0.005em;
-    margin:-2px 0 16px; padding:11px 34px 11px 30px;
+    /* v72: per-tier text-safe padding. Each plaque art has its own face (rivets, laurels, arch, ribbon
+       curve), so --pt/--pb/--pl/--pr are set per tier below to seat the text on that plate's face. */
+    --pt:0.68em; --pb:0.7em; --pl:2.2em; --pr:2.1em;
+    line-height:1.2;
+    margin:-2px 0 16px; padding:var(--pt) var(--pr) var(--pb) var(--pl);
     background-image:url('assets/plaques/wood.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:center;
     background-color:transparent;
     color:var(--ink); text-shadow:0 1px 0 rgba(255,255,255,0.4);
     border:none; border-radius:0;
-    box-shadow:3px 3px 0 var(--hard-shadow);
+    filter:drop-shadow(3px 3px 0 var(--hard-shadow));
   }
   .panel h2::after, .side-card h2::after, .gift-card h2::after, .splash-card h2::after{
     content:''; position:absolute; top:-8px; right:-2px; width:18px; height:18px;
@@ -488,14 +492,16 @@
      Tier 0 (wood, season 0) is the unmodified base art already in the rule above. Tiers 1-8 swap
      in Pete's own illustrated plaque art, ranked plainest-to-fanciest per his instructions, one
      background-image per tier -- no filters needed now that real per-tier art exists. */
-  body.plaque-tier-1 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-1.webp'); }
-  body.plaque-tier-2 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-2.webp'); }
-  body.plaque-tier-3 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-3.webp'); }
-  body.plaque-tier-4 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-4.webp'); }
-  body.plaque-tier-5 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-5.webp'); }
-  body.plaque-tier-6 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-6.webp'); }
-  body.plaque-tier-7 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-7.webp'); filter:drop-shadow(0 0 3px rgba(255,210,110,0.35)); }
-  body.plaque-tier-8 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-8.webp'); filter:drop-shadow(0 0 6px rgba(255,215,80,0.6)); }
+  /* v72: tier art re-cropped tight (stray specks + uneven transparent margins removed) and each tier
+     carries its own text-safe padding so titles sit centered on the plate face. */
+  body.plaque-tier-1 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-1.webp'); --pt:.75em; --pb:.8em; --pl:2em; --pr:2em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)); } /* metal plate */
+  body.plaque-tier-2 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-2.webp'); --pt:.66em; --pb:1.14em; --pl:2.2em; --pr:2.2em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)); } /* riveted parchment */
+  body.plaque-tier-3 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-3.webp'); --pt:.7em; --pb:1em; --pl:2.3em; --pr:1.9em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)); } /* parchment scroll */
+  body.plaque-tier-4 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-4.webp'); --pt:1.58em; --pb:.52em; --pl:1.6em; --pr:1.6em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)); color:#fff; text-shadow:0 1px 2px rgba(0,30,25,0.85), 0 0 1px rgba(0,30,25,0.9); } /* green arch */
+  body.plaque-tier-5 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-5.webp'); --pt:.58em; --pb:.72em; --pl:2em; --pr:2em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)); } /* cream ornate */
+  body.plaque-tier-6 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-6.webp'); --pt:.64em; --pb:.86em; --pl:3.2em; --pr:3.2em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)); } /* wood & laurel */
+  body.plaque-tier-7 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-7.webp'); --pt:.62em; --pb:1.3em; --pl:3em; --pr:3em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)) drop-shadow(0 0 3px rgba(255,210,110,0.35)); } /* blue ribbon */
+  body.plaque-tier-8 :is(.panel h2, .side-card h2, .gift-card h2, .splash-card h2, .reset-link){ background-image:url('assets/plaques/tier-8.webp'); --pt:1.35em; --pb:.75em; --pl:2.3em; --pr:2.3em; filter:drop-shadow(3px 3px 0 var(--hard-shadow)) drop-shadow(0 0 6px rgba(255,215,80,0.6)); } /* gold crown */
 
   /* ---------- v53: mascot appearances beyond the splash/header (Pete's request) ---------- */
   .mascot-peek{
@@ -1153,7 +1159,9 @@
   .reset-link{
     display:inline-flex; align-items:center; gap:5px; line-height:1; background:none; border:none; font-family:'Nunito', sans-serif; font-weight:700;
     font-size:0.7rem; color:var(--ink); text-decoration:none; cursor:pointer;
-    padding:7px 16px; margin:0;
+    --pt:0.68em; --pb:0.7em; --pl:1.9em; --pr:2.1em;
+    padding:calc(var(--pt) + 2px) calc(var(--pr) * 0.85) calc(var(--pb) + 2px) calc(var(--pl) * 0.85); margin:0;
+    filter:drop-shadow(2px 2px 0 var(--hard-shadow));
     background-image:url('assets/plaques/wood.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:center;
     text-shadow:0 1px 0 rgba(255,255,255,0.4);
   }
