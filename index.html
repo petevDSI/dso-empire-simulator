@@ -2393,6 +2393,19 @@
         {id:"desk-award", rarity:"epic", name:"Anniversary Award (with Typo)", flavor:"Ten years of \"Dentai Group.\" Nobody's mentioned it. Nobody's fixing it.", bonusPct:0.04, img:CARD_IMG.deskAward},
         {id:"desk-jet", rarity:"legendary", name:"Private Jet Model", flavor:"A brass replica of the real one. The real one flies more.", bonusPct:0.08, img:CARD_IMG.deskJet}
       ]
+    },
+    {
+      // Won only in the Smile Empire: Fright Night side game, never dropped by the normal
+      // RNG (see the "!c.special" filters on the pool-building functions below) — card.special
+      // marks these so award/trade/forge/pack pools can exclude them explicitly.
+      // Art below is a placeholder pending the real illustrator pass (see claude/halloween-illustrator-brief.md).
+      id:"smile-empire-2026", name:"Smile Empire: Fright Night Prizes", special:true,
+      cards:[
+        {id:"hw-stapler", rarity:"common", name:"The Haunted Stapler", flavor:"Staples itself to last quarter's numbers. Nobody can pry it loose.", bonusPct:0.005, special:true, img:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJiZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNzAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNhMWY2NiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzFjMGYzOCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjIwIiBmaWxsPSJ1cmwoI2JnKSIvPgoKICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTUwIiByeD0iNTUiIHJ5PSIxMCIgZmlsbD0iIzAwMCIgb3BhY2l0eT0iMC4yNSIvPgogIDxyZWN0IHg9IjQ1IiB5PSI5NSIgd2lkdGg9IjExMCIgaGVpZ2h0PSIzNCIgcng9IjgiIGZpbGw9IiNlOGEzM2QiIHN0cm9rZT0iIzNhMjMwMCIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgPHJlY3QgeD0iNTUiIHk9IjcwIiB3aWR0aD0iOTAiIGhlaWdodD0iMzIiIHJ4PSIxMCIgZmlsbD0iI2Y0YzE2OCIgc3Ryb2tlPSIjM2EyMzAwIiBzdHJva2Utd2lkdGg9IjQiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4NiIgcj0iNyIgZmlsbD0iIzNhMjMwMCIvPgogIDxwYXRoIGQ9Ik03MCA2MCBRNzUgMzUgNjAgMjAgTTEzMCA2MCBRMTI1IDM1IDE0MCAyMCIgc3Ryb2tlPSIjOGI1Y2Y2IiBzdHJva2Utd2lkdGg9IjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44Ii8+CiAgPGNpcmNsZSBjeD0iNjAiIGN5PSIxOCIgcj0iNiIgZmlsbD0iIzhiNWNmNiIvPjxjaXJjbGUgY3g9IjE0MCIgY3k9IjE4IiByPSI2IiBmaWxsPSIjOGI1Y2Y2Ii8+CiAgPGcgZmlsbD0iIzFjMGYzOCI+PGVsbGlwc2UgY3g9IjE1MCIgY3k9IjQ1IiByeD0iMTAiIHJ5PSI3Ii8+PHBhdGggZD0iTTE0MCA0NSBsNiAtOCBNMTYwIDQ1IGwtNiAtOCIgc3Ryb2tlPSIjMWMwZjM4IiBzdHJva2Utd2lkdGg9IjMiLz48L2c+CiAKPC9zdmc+"},
+        {id:"hw-audit-ghost", rarity:"uncommon", name:"The Audit Ghost", flavor:"Wanders the halls asking where the receipts went. Nobody has ever answered.", bonusPct:0.01, special:true, img:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJiZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNzAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNhMmE3MCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzE2MGEyZSIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjIwIiBmaWxsPSJ1cmwoI2JnKSIvPgoKICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTYwIiByeD0iNTAiIHJ5PSI5IiBmaWxsPSIjMDAwIiBvcGFjaXR5PSIwLjI1Ii8+CiAgPHBhdGggZD0iTTYwIDE1MCBWOTUgYTQwIDQwIDAgMCAxIDgwIDAgdjU1IHEtOCAtMTQgLTE0IDAgcS04IC0xNCAtMTYgMCBxLTggLTE0IC0xNiAwIHEtOCAtMTQgLTE0IDAgcS04IC0xNCAtMjAgMCB6IiBmaWxsPSIjZjRmMWZmIiBzdHJva2U9IiM3YzNhZWQiIHN0cm9rZS13aWR0aD0iNCIvPgogIDxjaXJjbGUgY3g9IjgyIiBjeT0iMTA1IiByPSI3IiBmaWxsPSIjMWMwZjM4Ii8+PGNpcmNsZSBjeD0iMTE4IiBjeT0iMTA1IiByPSI3IiBmaWxsPSIjMWMwZjM4Ii8+CiAgPHBhdGggZD0iTTg1IDEyOCBxMTUgMTIgMzAgMCIgc3Ryb2tlPSIjMWMwZjM4IiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxyZWN0IHg9IjcwIiB5PSI0MCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjQyIiByeD0iNCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjYzI1NzBhIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8cGF0aCBkPSJNNzggNTIgaDQ0IE03OCA2MiBoNDQgTTc4IDcyIGgzMCIgc3Ryb2tlPSIjYzI1NzBhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogCjwvc3ZnPg=="},
+        {id:"hw-chair7", rarity:"rare", name:"Haunted Chair 7", flavor:"The hygienist won't say why. The chair reclines on its own at 3am.", bonusPct:0.02, special:true, img:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJiZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNzAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzVhMTgzMCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzFjMGYzOCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjIwIiBmaWxsPSJ1cmwoI2JnKSIvPgoKICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTY1IiByeD0iNTUiIHJ5PSI5IiBmaWxsPSIjMDAwIiBvcGFjaXR5PSIwLjMiLz4KICA8cmVjdCB4PSI1NSIgeT0iNjAiIHdpZHRoPSIxOCIgaGVpZ2h0PSI5MCIgcng9IjYiIGZpbGw9IiNiOThiZmYiIHN0cm9rZT0iIzNhMjMwMCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPHBhdGggZD0iTTczIDYwIFExMjAgNTAgMTQwIDkwIEwxNDAgMTUwIEwxMjAgMTUwIEwxMjAgMTAwIFExMDggODAgNzMgODUgWiIgZmlsbD0iI2Q5YzJmZiIgc3Ryb2tlPSIjM2EyMzAwIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8cmVjdCB4PSI5MCIgeT0iMTUwIiB3aWR0aD0iMTQiIGhlaWdodD0iMjAiIGZpbGw9IiM0YTJhODAiLz4KICA8cmVjdCB4PSIxMzAiIHk9IjE1MCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjIwIiBmaWxsPSIjNGEyYTgwIi8+CiAgPGNpcmNsZSBjeD0iOTciIGN5PSIzNSIgcj0iMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmOWQyZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtZGFzaGFycmF5PSI0IDUiLz4KICA8dGV4dCB4PSIxMDAiIHk9IjQxIiBmb250LXNpemU9IjE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmY5ZDJlIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiI+NzwvdGV4dD4KIAo8L3N2Zz4="},
+        {id:"hw-rollup-reaper", rarity:"legendary", name:"The Rollup Reaper", flavor:"Comes for every independent practice eventually. Wears a very nice suit.", bonusPct:0.08, special:true, img:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KPGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJiZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNzAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMGY0YSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBkMDYyMCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjIwIiBmaWxsPSJ1cmwoI2JnKSIvPgoKICA8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iMTY1IiByeD0iNTUiIHJ5PSI5IiBmaWxsPSIjMDAwIiBvcGFjaXR5PSIwLjM1Ii8+CiAgPHBhdGggZD0iTTEwMCA0MCBDNjAgNDAgNTUgOTAgNjUgMTUwIEw3NSAxNDAgTDg1IDE1MCBMOTUgMTM4IEwxMDUgMTUwIEwxMTUgMTM4IEwxMjUgMTUwIEwxMzUgOTAgQzEzMCA1NSAxMzAgNDAgMTAwIDQwIFoiIGZpbGw9IiMyNDEyMzgiIHN0cm9rZT0iI2I5OGJmZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgPHBhdGggZD0iTTc4IDg1IHEyMiAtMTQgNDQgMCIgc3Ryb2tlPSIjZmY5ZDJlIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9Ijg1IiBjeT0iODgiIHI9IjYiIGZpbGw9IiNmZjlkMmUiLz48Y2lyY2xlIGN4PSIxMTUiIGN5PSI4OCIgcj0iNiIgZmlsbD0iI2ZmOWQyZSIvPgogIDxwYXRoIGQ9Ik0xNDAgNjAgTDE2NSAzMCBNMTY1IDMwIGwtMjAgNCBNMTY1IDMwIGwyIDIwIiBzdHJva2U9IiNkOWMyZmYiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+CiAgPHBhdGggZD0iTTE1MCA0NSBRMTcwIDU1IDE2NSA5MCIgc3Ryb2tlPSIjN2MzYWVkIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogCjwvc3ZnPg=="}
+      ]
     }
   ];
   function allDeskCards(){
@@ -4921,7 +4934,7 @@
   function pickForgeOutput(rarity){
     var pick = pickRandomTradeCard([], [rarity]);
     if (pick) return { card: pick, isNew: true };
-    var pool = allDeskCards().filter(function(c){ return c.rarity === rarity; });
+    var pool = allDeskCards().filter(function(c){ return c.rarity === rarity && !c.special; });
     if (!pool.length) return null;
     pool.sort(function(a, b){ return deskCardCount(state, a.id) - deskCardCount(state, b.id); });
     return { card: pool[0], isNew: false };
@@ -4986,6 +4999,7 @@
   function eligibleTradeCards(excludeIds, rarities){
     var owned = state.desksUnlocked || [];
     return allDeskCards().filter(function(c){
+      if (c.special) return false; // Smile Empire prizes never appear in trade/forge offers
       if (owned.indexOf(c.id) !== -1) return false;
       if (!TRADE_RATES[c.rarity]) return false;
       if (rarities && rarities.indexOf(c.rarity) === -1) return false;
@@ -5077,7 +5091,7 @@
   var PACK_PRICE_DISPLAY = "$1.99";
   var PACK_CARD_COUNT = 3;
   var PACK_ODDS_PCT = Math.round(1000 / 5) / 10; // 20.0
-  function packLegendaryPool(){ return allDeskCards().filter(function(c){ return c.rarity === "legendary"; }); }
+  function packLegendaryPool(){ return allDeskCards().filter(function(c){ return c.rarity === "legendary" && !c.special; }); }
   function drawPackCard(){
     var pool = packLegendaryPool();
     return pool[Math.floor(Math.random() * pool.length)];
@@ -5335,8 +5349,8 @@
 
   function awardDeskCard(sourceLabel, silent){
     var rarity = rollDeskRarity();
-    var pool = allDeskCards().filter(function(c){ return c.rarity === rarity; });
-    if (pool.length === 0) pool = allDeskCards();
+    var pool = allDeskCards().filter(function(c){ return c.rarity === rarity && !c.special; });
+    if (pool.length === 0) pool = allDeskCards().filter(function(c){ return !c.special; });
     if (pool.length === 0) return { desc:"Nothing left to drop — the desk is already full." };
     var ownedNow = state.desksUnlocked || [];
     var wts = pool.map(function(c){ return ownedNow.indexOf(c.id) === -1 ? DESK_UNOWNED_WEIGHT : 1; });
@@ -5382,6 +5396,46 @@
       if (result.card) results.push(result);
     }
     return results;
+  }
+
+  /* =====================================================================
+     SMILE EMPIRE HAND-OFF — Smile Empire (the standalone side-games site,
+     see /smile-empire/ at the repo root) is hosted on this same domain so
+     it shares this page's localStorage origin. Reaching a Fright Night
+     milestone there writes {id, at} entries to SE_PENDING_KEY; this game
+     reads that list on boot and grants any not-yet-claimed prize for real
+     (a permanent desk card, via the "smile-empire-2026" special set
+     above), automatically — no code for the player to type anywhere.
+     Idempotent by design: state.smileEmpireClaimed tracks what's already
+     been granted, so re-reading the same pending list is always safe.
+     ===================================================================== */
+  var SE_PENDING_KEY = "smile-empire-halloween-rewards-v1";
+  function grantSpecialCard(cardId, sourceLabel){
+    var card = allDeskCards().filter(function(c){ return c.id === cardId; })[0];
+    if (!card) return null;
+    var owned = state.desksUnlocked || (state.desksUnlocked = []);
+    var counts = state.desksCounts || (state.desksCounts = {});
+    var isNew = owned.indexOf(cardId) === -1;
+    if (isNew){ owned.push(cardId); counts[cardId] = 1; }
+    else counts[cardId] = (counts[cardId] || 1) + 1;
+    renderDesk(); renderStaff(); renderUpgrades();
+    sfxForDeskCard(card);
+    showToast(sourceLabel, card.name + (isNew ? " — +" + Math.round(card.bonusPct * 100) + "% permanent. Won in Smile Empire: Fright Night." : " — another copy, from Smile Empire: Fright Night."));
+    if (isNew) checkDeskSetComplete(card);
+    return { card: card, isNew: isNew };
+  }
+  function checkSmileEmpireRewards(){
+    var pending;
+    try { pending = JSON.parse(localStorage.getItem(SE_PENDING_KEY) || "[]"); } catch(e){ pending = []; }
+    if (!pending || !pending.length) return;
+    var claimed = state.smileEmpireClaimed || (state.smileEmpireClaimed = {});
+    var any = false;
+    pending.forEach(function(r){
+      if (!r || !r.id || claimed[r.id]) return;
+      var res = grantSpecialCard(r.id, "SMILE EMPIRE: FRIGHT NIGHT");
+      if (res){ claimed[r.id] = true; any = true; }
+    });
+    if (any){ updateStats(); updateAffordability(); saveGame(); }
   }
 
   function handleDeskDropClick(){
@@ -7694,7 +7748,7 @@
     if (ACTIVE_TAB === "bonuses") renderBonuses();
   }, TICK_MS);
 
-  setInterval(function(){ state.lastSeen = Date.now(); saveGame(); }, 5000);
+  setInterval(function(){ state.lastSeen = Date.now(); saveGame(); checkSmileEmpireRewards(); }, 5000);
   document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") { state.lastSeen = Date.now(); saveGame(); } });
 
   /* ---------- boot ---------- */
@@ -7760,6 +7814,7 @@
     saveGame();
     scheduleCoffeeRun();
     scheduleDeskDrop();
+    checkSmileEmpireRewards();
 
     if (window.claude && window.claude.hot && window.claude.hot.snapshot){
       window.claude.hot.snapshot(function(){ return JSON.parse(JSON.stringify(state)); });

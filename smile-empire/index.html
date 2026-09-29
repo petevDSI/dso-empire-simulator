@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Smile Empire</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1122;--bg2:#0f1b34;--panel:#132345;--panel2:#1a2f5a;--line:#27407a;
+  --teal:#2dd4bf;--teal2:#0d9488;--gold:#fbbf24;--gold2:#f59e0b;--pink:#f472b6;--red:#ef4444;--green:#22c55e;
+  --txt:#e8f1ff;--dim:#8ea6d0;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:'Fredoka',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;overflow:hidden}
+body{background:
+  radial-gradient(1200px 600px at 50% -10%,#1b3a7a55,transparent 60%),
+  radial-gradient(800px 500px at 100% 100%,#0d948833,transparent 60%),
+  var(--bg)}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+#app{position:relative;max-width:640px;height:100%;margin:0 auto;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+header{display:flex;align-items:center;gap:10px;padding:10px 12px 6px;background:linear-gradient(180deg,#152b58,#0f1f42);border-bottom:2px solid var(--line);box-shadow:0 6px 18px #0008;position:relative;z-index:5}
+#mascot{width:64px;height:64px;flex:none;cursor:pointer;animation:bob 2.6s ease-in-out infinite;filter:drop-shadow(0 4px 6px #0008)}
+#mascot:active{transform:scale(.9)}
+@keyframes bob{50%{transform:translateY(-4px) rotate(-3deg)}}
+.cashbox{flex:1;min-width:0;text-align:center}
+.cashbox .lbl{font-size:11px;letter-spacing:3px;color:var(--dim)}
+#cash{font-family:'Lilita One','Fredoka',sans-serif;font-size:34px;line-height:1;color:var(--gold);text-shadow:0 0 14px #fbbf2466,0 3px 0 #7c4a03;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inc{font-size:13px;color:var(--teal);font-weight:600}
+.hbtns{display:flex;flex-direction:column;gap:4px}
+.hbtns button{width:38px;height:30px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:16px;line-height:1}
+.hbtns button.ready{animation:pulse 1s infinite;background:linear-gradient(#f9a8d4,#ec4899)}
+@keyframes pulse{50%{transform:scale(1.12);box-shadow:0 0 14px #f472b6}}
+#rank{display:flex;justify-content:space-between;align-items:center;padding:5px 14px;font-size:12px;background:#0c1730;color:var(--dim)}
+#rank b{color:var(--txt)}
+#lpb{color:var(--pink);font-weight:600}
+#buffs{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px;min-height:0}
+.buff{margin-top:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:linear-gradient(90deg,#f59e0b,#fbbf24);color:#3a2300;animation:pulse 1.4s infinite}
+#goal{margin:8px 12px 0;padding:6px 10px;border-radius:12px;background:linear-gradient(90deg,#1c3a72,#163060);border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:8px}
+#goal .gt{font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#goal .gb{width:90px;height:8px;border-radius:9px;background:#0a1430;overflow:hidden;flex:none}
+#goal .gb i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));width:0}
+#modes{display:flex;gap:6px;padding:8px 12px 4px}
+#modes button{flex:1;padding:6px 0;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:13px;color:var(--dim)}
+#modes button.on{background:linear-gradient(#34d399,#059669);color:#04231a;border-color:#6ee7b7;box-shadow:0 0 12px #34d39955}
+main{flex:1;min-height:0;position:relative}
+.panel{display:none;position:absolute;inset:0;overflow-y:auto;padding:6px 12px 14px;-webkit-overflow-scrolling:touch}
+.panel.on{display:block}
+.panel::-webkit-scrollbar{width:6px}.panel::-webkit-scrollbar-thumb{background:#2b4a8a;border-radius:6px}
+/* business */
+.biz{display:flex;align-items:center;gap:10px;margin:8px 0;padding:8px;border-radius:16px;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);box-shadow:0 4px 0 #0a1633,0 8px 16px #0005;position:relative;overflow:hidden}
+.biz.myst{opacity:.75;filter:grayscale(1)}
+.biz .icon{width:66px;height:66px;flex:none;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;cursor:pointer;box-shadow:inset 0 -6px 0 #0004,inset 0 3px 0 #fff4,0 3px 0 #0006;transition:transform .08s}
+.biz .icon:active{transform:scale(.92)}
+.biz .icon.idle::after{content:'TAP';position:absolute;bottom:-2px;font-size:9px;letter-spacing:1px;background:#0009;padding:0 6px;border-radius:6px;animation:pulse 1s infinite}
+.biz .own{position:absolute;top:-6px;left:-6px;min-width:26px;padding:1px 6px;text-align:center;border-radius:99px;background:#0b1430;border:2px solid var(--gold);font-size:12px;font-weight:700;color:var(--gold)}
+.biz .mid{flex:1;min-width:0}
+.biz .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{position:relative;height:22px;border-radius:99px;background:#081029;border:1px solid #2b4a8a;overflow:hidden;margin-top:2px}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(180deg,#5eead4,#0d9488);border-radius:99px}
+.bar .fill.flow{background:repeating-linear-gradient(115deg,#5eead4 0 12px,#14b8a6 12px 24px);background-size:34px 100%;animation:flow .5s linear infinite}
+@keyframes flow{to{background-position:34px 0}}
+.bar .fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#fff5,transparent 55%)}
+.bar .btxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;text-shadow:0 1px 2px #000a}
+.ms{display:flex;align-items:center;gap:6px;margin-top:4px}
+.msbar{flex:1;height:7px;border-radius:9px;background:#081029;overflow:hidden}
+.msbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f472b6,#fbbf24)}
+.mstxt{font-size:10.5px;color:var(--dim);white-space:nowrap}
+.buy{flex:none;width:104px;padding:7px 4px;border-radius:14px;background:linear-gradient(180deg,#475a86,#33436b);color:#a9b8d8;display:flex;flex-direction:column;align-items:center;box-shadow:0 4px 0 #1b2748}
+.buy .bl{font-size:11px;font-weight:600;letter-spacing:1px}
+.buy .bc{font-size:15px;font-weight:700}
+.buy.can{background:linear-gradient(180deg,#fcd34d,#f59e0b);color:#3a2300;box-shadow:0 4px 0 #a86205,0 0 14px #fbbf2455}
+.buy.can:active,.hire.can:active{transform:translateY(3px);box-shadow:0 1px 0 #a86205}
+.hire{flex:none;width:112px;padding:8px 4px;border-radius:14px;background:linear-gradient(180deg,#475a86,#33436b);color:#a9b8d8;font-weight:700;font-size:14px;box-shadow:0 4px 0 #1b2748}
+.hire.can{background:linear-gradient(180deg,#f9a8d4,#ec4899);color:#3b0421;box-shadow:0 4px 0 #9d174d,0 0 14px #f472b655}
+.hire.done{background:#16a34a33;color:#86efac;box-shadow:none}
+.row{display:flex;align-items:center;gap:10px;margin:8px 0;padding:10px;border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line)}
+.row .em{font-size:30px;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#0b1430;flex:none}
+.row .tx{flex:1;min-width:0}
+.row .tx b{display:block;font-size:14px}
+.row .tx span{font-size:12px;color:var(--dim)}
+h3{margin:14px 2px 4px;font-family:'Lilita One',sans-serif;font-weight:400;letter-spacing:1px;font-size:20px;color:var(--gold)}
+p.note{margin:4px 2px 8px;font-size:13px;color:var(--dim);line-height:1.4}
+/* unlocks */
+.utabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px}
+.utabs button{flex:none;width:44px;height:44px;border-radius:12px;background:var(--panel);border:2px solid var(--line);font-size:22px}
+.utabs button.on{border-color:var(--gold);background:var(--panel2);box-shadow:0 0 12px #fbbf2455}
+.ugrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.tile{position:relative;aspect-ratio:1;border-radius:12px;background:#dccfbd;color:#5b4a37;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;border:2px solid #b8a68c;cursor:pointer}
+.tile .e{font-size:24px;filter:grayscale(1) opacity(.55)}
+.tile .n{font-size:15px}
+.tile.got{background:linear-gradient(180deg,#fde68a,#f59e0b);border-color:#fff3;color:#3a2300;box-shadow:0 0 12px #fbbf2466}
+.tile.got .e{filter:none}
+.tile .lk{position:absolute;top:-6px;left:-6px;font-size:14px}
+#uinfo{margin:10px 0;padding:10px;border-radius:12px;background:#f8f1e4;color:#3a2a14;font-weight:600;text-align:center;font-size:14px;min-height:42px}
+/* legacy */
+.bigbtn{display:block;width:100%;padding:14px;border-radius:16px;background:linear-gradient(180deg,#f9a8d4,#ec4899);color:#3b0421;font-weight:700;font-size:17px;box-shadow:0 5px 0 #9d174d;margin:10px 0}
+.bigbtn.dis{background:#33436b;color:#8ea6d0;box-shadow:0 5px 0 #1b2748}
+.stat{display:flex;justify-content:space-between;padding:6px 4px;font-size:14px;border-bottom:1px dashed #27407a}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ach{padding:8px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-size:12px;opacity:.5}
+.ach.got{opacity:1;background:linear-gradient(180deg,#1f4a3f,#15332c);border-color:#34d399}
+.ach b{display:block;font-size:13px}
+.slider{width:100%}
+.mini{padding:8px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-weight:600;margin:4px 4px 4px 0}
+#tip{padding:5px 14px;font-size:12px;color:var(--dim);background:#0a1430;text-align:center;min-height:26px}
+nav{display:flex;background:linear-gradient(180deg,#152b58,#0d1a38);border-top:2px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;padding:7px 0 6px;background:none;font-size:20px;position:relative;color:var(--dim)}
+nav button small{display:block;font-size:10px;font-weight:600;letter-spacing:.5px}
+nav button.on{color:var(--gold);background:#ffffff0d}
+nav .dot{position:absolute;top:3px;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--red);font-size:10px;font-weight:700;color:#fff;display:none;align-items:center;justify-content:center}
+nav .dot.on{display:flex}
+/* overlays */
+#toasts{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:80;pointer-events:none}
+.toast{padding:8px 16px;border-radius:14px;background:linear-gradient(90deg,#0d9488,#2dd4bf);color:#04211d;font-weight:700;font-size:14px;box-shadow:0 6px 16px #0008;animation:tin .3s,tout .4s 3s forwards}
+.toast.gold{background:linear-gradient(90deg,#f59e0b,#fde047);color:#3a2300}
+@keyframes tin{from{transform:translateY(-30px);opacity:0}}
+@keyframes tout{to{transform:translateY(-20px);opacity:0}}
+#banner{position:fixed;left:0;right:0;top:32%;z-index:85;text-align:center;pointer-events:none;display:none}
+#banner.on{display:block;animation:bn 2.4s forwards}
+#banner .b1{font-family:'Lilita One',sans-serif;font-size:44px;color:var(--gold);text-shadow:0 4px 0 #7c4a03,0 0 30px #fbbf24aa;letter-spacing:2px}
+#banner .b2{display:inline-block;margin-top:4px;padding:6px 18px;border-radius:99px;background:#0b1430e6;border:2px solid var(--gold);font-weight:700;font-size:18px}
+@keyframes bn{0%{transform:scale(.2);opacity:0}12%{transform:scale(1.2);opacity:1}20%{transform:scale(1)}80%{opacity:1}100%{transform:scale(1.1);opacity:0}}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:70;animation:fl .5s}
+@keyframes fl{0%{opacity:.5}100%{opacity:0}}
+.shake{animation:shk .4s}
+@keyframes shk{20%{transform:translate(-4px,3px)}40%{transform:translate(4px,-3px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
+.float{position:fixed;z-index:65;font-family:'Lilita One',sans-serif;font-size:20px;color:var(--gold);text-shadow:0 2px 0 #7c4a03,0 0 8px #000;pointer-events:none;animation:up 1.1s ease-out forwards;white-space:nowrap}
+.float.big{font-size:30px;color:#fff}
+@keyframes up{from{transform:translate(-50%,0) scale(.7);opacity:1}to{transform:translate(-50%,-70px) scale(1.1);opacity:0}}
+#modal{position:fixed;inset:0;z-index:90;background:#040a18cc;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
+#modal.on{display:flex}
+.mbox{width:100%;max-width:460px;max-height:92vh;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1c3873,#12244a);border:3px solid var(--gold);padding:18px;box-shadow:0 0 40px #fbbf2444,0 20px 50px #000a;animation:pop .3s}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.mbox h2{margin:0 0 8px;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:28px;color:var(--gold);letter-spacing:1px}
+.mbox .center{text-align:center}
+.mbox .huge{font-family:'Lilita One',sans-serif;font-size:42px;color:var(--gold);text-shadow:0 3px 0 #7c4a03}
+.speaker{display:flex;gap:12px;align-items:flex-start}
+.speaker .av{font-size:44px;width:64px;height:64px;flex:none;border-radius:18px;background:#0b1430;display:flex;align-items:center;justify-content:center;border:2px solid var(--teal)}
+.speaker .say{flex:1;font-size:16px;line-height:1.45;min-height:96px}
+.speaker .who{font-weight:700;color:var(--teal);font-size:13px;letter-spacing:1px;margin-bottom:2px}
+.wheelwrap{position:relative;width:290px;height:290px;margin:8px auto}
+.wheelwrap canvas{width:290px;height:290px;border-radius:50%;box-shadow:0 0 0 6px var(--gold),0 0 30px #fbbf2466}
+.ptr{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:34px;z-index:2;filter:drop-shadow(0 3px 3px #000)}
+.hub{position:absolute;inset:0;margin:auto;width:52px;height:52px;border-radius:50%;background:radial-gradient(#fde68a,#f59e0b);border:3px solid #fff8;display:flex;align-items:center;justify-content:center;font-size:24px}
+#golden{position:fixed;z-index:75;font-size:54px;cursor:pointer;display:none;filter:drop-shadow(0 0 14px #fbbf24) drop-shadow(0 0 30px #f59e0b)}
+#golden.on{display:block;animation:gfloat 10s linear forwards}
+#golden span{display:block;animation:spin 1.6s ease-in-out infinite}
+@keyframes spin{50%{transform:rotateY(180deg) scale(1.2)}}
+@keyframes gfloat{from{left:-80px;top:var(--gy)}to{left:105vw;top:calc(var(--gy) + 60px)}}
+.credit{text-align:center;font-size:12px;color:var(--dim);margin:18px 0 6px}
+.credit a{color:var(--teal)}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="app">
+  <header>
+    <div id="mascot" title="Tap Ivory!"></div>
+    <div class="cashbox"><div class="lbl">PRACTICE CASH</div><div id="cash">$0</div><div id="inc">$0 / sec</div></div>
+    <div class="hbtns"><button id="bWheel" title="Lucky Wheel">🎡</button><button id="bSfx" title="Sound">🔊</button><button id="bMus" title="Music">🎵</button></div>
+  </header>
+  <div id="rank"><span>Rank: <b id="rankN">Dental Assistant</b></span><span id="lpb"></span></div>
+  <div id="buffs"></div>
+  <div id="goal"><span>🎯</span><span class="gt" id="goalT"></span><div class="gb"><i id="goalB"></i></div></div>
+  <div id="modes"></div>
+  <main>
+    <section class="panel on" id="p-biz"></section>
+    <section class="panel" id="p-mgr"></section>
+    <section class="panel" id="p-upg"></section>
+    <section class="panel" id="p-unl"></section>
+    <section class="panel" id="p-leg"></section>
+    <section class="panel" id="p-more"></section>
+  </main>
+  <div id="tip"></div>
+  <nav id="nav"></nav>
+</div>
+<div id="toasts"></div>
+<div id="banner"><div class="b1"></div><div class="b2"></div></div>
+<div id="modal"></div>
+<div id="golden"><span>🦷</span></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   SMILE EMPIRE — a dental idle tycoon
+   Edit BRAND to point the game at your own site.
+   ===================================================================== */
+const BRAND = { name: 'Dental Strategy Institute', url: 'https://dentalstrategyinstitute.com' };
+
+/* =====================================================================
+   THEME LAYER — Smile Empire is a small platform: the base game plus
+   holiday/side reskins selected by ?theme=. Each theme is a self-contained
+   playthrough (own save key) so a two-week event can't warp the main game.
+   Add a new theme by adding an entry here — no other code needs to change
+   for palette/copy/mascot-tint swaps.
+   ===================================================================== */
+const THEME_ID = (new URLSearchParams(location.search).get('theme') || 'base').toLowerCase();
+const THEMES = {
+  base: {
+    id:'base', title:'Smile Empire', bodyClass:'', saveSuffix:'',
+    vars:{}, mascotFilter:'none',
+    tagline:'Build your dental empire',
+  },
+  halloween: {
+    id:'halloween', title:'Smile Empire: Fright Night', bodyClass:'theme-halloween', saveSuffix:'_halloween',
+    vars:{ '--teal':'#ff9d2e', '--teal2':'#c2570a', '--gold':'#b98bff', '--gold2':'#7c3aed', '--bg':'#0d0620', '--bg2':'#160a2e', '--panel':'#1c0f38', '--panel2':'#26154a', '--line':'#4a2a80' },
+    mascotFilter:'hue-rotate(220deg) saturate(1.4) brightness(0.95)',
+    tagline:'Fright Night — win prizes that carry into DSO Empire Simulator',
+    start:'2026-10-24T00:00:00-04:00', end:'2026-11-02T00:00:00-04:00',
+  },
+};
+const THEME = THEMES[THEME_ID] || THEMES.base;
+const SAVE_KEY = 'smileEmpire_v1'+THEME.saveSuffix;
+document.title = THEME.title;
+if(THEME.bodyClass) document.body.classList.add(THEME.bodyClass);
+Object.entries(THEME.vars).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+function themeLive(){ if(!THEME.start) return true; const t=Date.now(); return t>=Date.parse(THEME.start) && t<Date.parse(THEME.end); }
+
+/* ---------- Data ---------- */
+const BIZ = [
+  { id:'hyg', name:'Hygiene Chair',            emoji:'🪥', cost:4,            rev:1,          time:1,     coef:1.07, mgr:1e3,   mgrName:'Nurse Nancy',       c:['#5eead4','#0f766e'] },
+  { id:'wht', name:'Whitening Bar',            emoji:'✨', cost:60,           rev:60,         time:3,     coef:1.15, mgr:1.5e4, mgrName:'Chloe the Aesthetician', c:['#fde68a','#d97706'] },
+  { id:'fil', name:'Restorative Suite',        emoji:'🦷', cost:720,          rev:540,        time:6,     coef:1.14, mgr:1e5,   mgrName:'Dr. Filler',        c:['#a5b4fc','#4338ca'] },
+  { id:'crn', name:'Same-Day Crown Lab',       emoji:'👑', cost:8640,         rev:4320,       time:12,    coef:1.13, mgr:5e5,   mgrName:'Tech Tomás',        c:['#fcd34d','#b45309'] },
+  { id:'ort', name:'Aligner Studio',           emoji:'😁', cost:103680,       rev:51840,      time:24,    coef:1.12, mgr:1.2e6, mgrName:'Dr. Aligna',        c:['#f9a8d4','#be185d'] },
+  { id:'imp', name:'Implant Center',           emoji:'🔩', cost:1244160,      rev:622080,     time:96,    coef:1.11, mgr:1e7,   mgrName:'Dr. Osseo',         c:['#93c5fd','#1d4ed8'] },
+  { id:'srg', name:'Oral Surgery Center',      emoji:'🏥', cost:14929920,     rev:7464960,    time:384,   coef:1.10, mgr:1.11e8,mgrName:'Dr. Scalpel',       c:['#fca5a5','#b91c1c'] },
+  { id:'grp', name:'Multi-Location Group',     emoji:'🏢', cost:179159040,    rev:89579520,   time:1536,  coef:1.09, mgr:5.55e8,mgrName:'Regional Rita',     c:['#86efac','#15803d'] },
+  { id:'dso', name:'DSO Platform',             emoji:'🚀', cost:2149908480,   rev:1074954240, time:6144,  coef:1.08, mgr:1e10,  mgrName:'COO Carlos',        c:['#c4b5fd','#6d28d9'] },
+  { id:'glb', name:'Global Oral Health Network',emoji:'🌎',cost:25798901760,  rev:12899450880,time:36864, coef:1.07, mgr:1e11,  mgrName:'Ambassador Ada',    c:['#67e8f9','#0e7490'] },
+];
+const N = BIZ.length;
+
+const MS_LIST = [25,50,75,100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1250,1500,2000,2500,3000,4000,5000];
+const SPEED_MS = new Set([25,50,100,200,300,400]);
+const X3_MS = new Set([75,250,500,700,900,1250,2000,3000,4000]);
+function msKind(m){ if(SPEED_MS.has(m)) return {type:'speed',mult:2,label:'SPEED ×2'}; const k=X3_MS.has(m)?3:2; return {type:'profit',mult:k,label:'PROFITS ×'+k}; }
+const GMS_LIST = [25,50,100,150,200,250,300,400,500,600,700,800,900,1000,1500,2000,2500,3000,4000,5000];
+const GMS_MULT = 3;
+
+const UPG_NAMES = [
+  ['Ultrasonic Scalers','Ergonomic Loupes & Light','Recall Automation'],
+  ['LED Accelerator Lamps','Take-Home Kits','Whitening Membership'],
+  ['Digital Intraoral Scanner','Bulk-Fill Composite','Isolation System'],
+  ['In-House Mill','Sintering Furnace','Design Software Suite'],
+  ['3D Printer Farm','Remote Monitoring','Teen Marketing Push'],
+  ['Guided Surgery Software','CBCT Scanner','Bone Graft Partnership'],
+  ['Sedation Certification','Hybrid OR Upgrade','Specialist Referral Network'],
+  ['Central Billing Office','Group Purchasing Deal','Shared Lab Network'],
+  ['Strategic Capital Partner','Enterprise Software','Acquisition Team'],
+  ['Global Supply Chain','AI Diagnostics','Worldwide Brand Deal'],
+];
+const U1 = [1e3,2e4,3e5,4e6,5e7,6e8,7e9,8e10,9e11,1e13];
+const UPGS = [];
+BIZ.forEach((b,i)=>{ for(let k=0;k<3;k++) UPGS.push({id:'u'+i+'_'+k, biz:i, name:UPG_NAMES[i][k], mult:3, cost:U1[i]*Math.pow(200,k), emoji:b.emoji}); });
+[['Digital Practice Management','💻'],['Patient Financing Program','💳'],['Loyalty Rewards','🎁'],['Social Media Engine','📱'],
+ ['Insurance Credentialing Team','📋'],['Premium Brand Identity','🏷️'],['AI Front Desk','🤖'],['Industry Thought Leadership','🎤']]
+ .forEach((g,k)=>UPGS.push({id:'g'+k, biz:-1, name:g[0], mult:2, cost:5e5*Math.pow(1e3,k), emoji:g[1]}));
+UPGS.sort((a,b)=>a.cost-b.cost);
+
+const PERKS = [
+  {id:'cash',  name:'Cash Cushion',        desc:'Start every run with $5,000',            cost:3,  emoji:'💵'},
+  {id:'team',  name:'Retained Team',       desc:'Keep managers for your first 3 practices',cost:5,  emoji:'🧑‍⚕️'},
+  {id:'night', name:'Night Shift',         desc:'Offline earnings cap 12h → 24h',          cost:8,  emoji:'🌙'},
+  {id:'magnet',name:'Golden Tooth Magnet', desc:'Golden Teeth appear twice as often',      cost:10, emoji:'🧲'},
+  {id:'ref',   name:'Referral Network',    desc:'All profits ×1.5',                        cost:15, emoji:'🤝'},
+  {id:'brand', name:'Legacy Brand',        desc:'All profits ×2',                          cost:40, emoji:'🏆'},
+];
+
+const RANKS = [[0,'Dental Assistant'],[1e3,'Hygienist'],[1e5,'Associate Dentist'],[1e7,'Practice Owner'],[1e9,'Multi-Site Owner'],[1e12,'Regional Director'],[1e15,'DSO Executive'],[1e19,'Industry Legend'],[1e25,'Dental Deity']];
+
+const TIPS = [
+  'Tip: “Next” buy mode takes you straight to the next milestone bonus.',
+  'Tip: Managers run practices while you\'re away — only managed practices earn offline.',
+  'Fun fact: Tooth enamel is the hardest substance in the human body.',
+  'Tip: Golden Teeth are rare. Tap them fast!',
+  'Chairside truth: ergonomic operatory design helps clinicians work comfortably for longer careers.',
+  'Tip: Selling your practice resets progress, but Legacy Points make every future run faster.',
+  'Fun fact: The ADA recommends brushing twice a day for two minutes.',
+  'Tip: Speed milestones double how fast a practice earns. Profit milestones multiply each payout.',
+  'Tip: The Lucky Wheel recharges every 4 hours. Come back for a free spin!',
+  'Tip: Daily visits build a streak — the bigger the streak, the bigger the reward.',
+  'Tip: Cash upgrades are permanent for the run — buy the cheap ones first.',
+];
+
+const STORY = [
+  { id:'intro', when:()=>true, who:'Dr. Pearl', av:'👩‍⚕️', lines:[
+    'Well, kiddo… after 42 years, the old practice is yours: one chair, one light, and a compressor that sounds like a dying walrus.',
+    'Tap that chair to treat a patient. Every dollar builds your future. Ivory here will keep you company.' ]},
+  { id:'ten', when:()=>S.own[0]>=10, who:'Ivory', av:'🦷', lines:[
+    'Ten chairs?! That\'s not a practice, that\'s a waiting-room problem!',
+    'Open the Managers tab and hire Nurse Nancy. The best schedule is the one that fills itself.' ]},
+  { id:'mgr', when:()=>S.mgr.some(x=>x), who:'Dr. Pearl', av:'👩‍⚕️', lines:[
+    'Delegation! You\'re earning while you sleep now.',
+    'Milestones are where the magic is. Hit 25 of anything and watch what happens.' ]},
+  { id:'rival', when:()=>S.life>=25000, who:'Narrator', av:'🎬', lines:[
+    'Across the street, a glossy new sign goes up: GRINDSTONE DENTAL PARTNERS.',
+    'Their motto: “Volume is Vision.” Their patients: mostly confused. Their CEO: Chad Grindstone III.' ]},
+  { id:'crown', when:()=>S.own[3]>0, who:'Tech Tomás', av:'🧑‍🔬', lines:[
+    'Same-day crowns! Patients walk in with a problem and walk out smiling. That\'s word-of-mouth you can\'t buy.' ]},
+  { id:'chad', when:()=>S.life>=1e6, who:'Chad Grindstone III', av:'😎', lines:[
+    'Congrats on your first million. We\'ve sent a fruit basket. It comes with a non-compete.',
+    'Ivory ate the fruit. Ivory kept the non-compete for kindling.' ]},
+  { id:'implant', when:()=>S.own[5]>0, who:'Dr. Osseo', av:'🧑‍⚕️', lines:[
+    'Implants are precision and patience. Rush them and you\'ll regret it. Plan them and you\'ll change lives.' ]},
+  { id:'group', when:()=>S.own[7]>0, who:'Regional Rita', av:'👩‍💼', lines:[
+    'Multiple locations! Systems beat heroics every time. Standardize the good stuff, protect what makes each office special.' ]},
+  { id:'sell', when:()=>pendingLP()>=1, who:'Dr. Pearl', av:'👩‍⚕️', lines:[
+    'You can sell to a strategic buyer now and start fresh — but you keep the wisdom as Legacy Points.',
+    'Every point makes your next practice grow faster. Check the Legacy tab whenever you feel ready.' ]},
+  { id:'dso', when:()=>S.own[8]>0, who:'Chad Grindstone III', av:'😎', lines:[
+    'Fine. You\'re bigger than us. We\'d like to acquire you.',
+    'Ivory declined on your behalf. Ivory then bit him. Ivory has no regrets.' ]},
+  { id:'resale', when:()=>S.stats.sales>=1 && S.run<1e4, who:'Dr. Pearl', av:'👩‍⚕️', lines:[
+    'Round two. Same chair. Different you.', 'Watch how fast it goes this time.' ]},
+  { id:'finale', when:()=>S.own[9]>0, who:'Dr. Pearl', av:'👩‍⚕️', lines:[
+    'A healthy smile on every continent. Your grandfather would\'ve cried… then asked about the margins.',
+    'But the story isn\'t over, kiddo. Keep climbing.' ]},
+];
+
+/* ---------- State ---------- */
+function newState(){
+  return { v:1, cash:0, run:0, life:0, own:BIZ.map((_,i)=>i===0?1:0), mgr:BIZ.map(()=>false), prog:BIZ.map(()=>0), running:BIZ.map(()=>false),
+    upg:{}, lp:0, lpTotal:0, perks:{}, buffs:[], ach:{}, story:{}, gmsSeen:0,
+    stats:{taps:0,golden:0,spins:0,sales:0,ms:0}, daily:{last:'',streak:0}, wheelAt:0, savedAt:Date.now(), startedAt:Date.now(),
+    settings:{sfx:0.8,music:0.4,musicOn:false,sfxOn:true}, buyMode:'1', nextGolden:0, hwGranted:{} };
+}
+let S = newState();
+function load(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY); if(!raw) return false;
+    const d = JSON.parse(raw), base = newState();
+    for(const k in base){ if(d[k]!==undefined) base[k] = (typeof base[k]==='object' && !Array.isArray(base[k]) && base[k]!==null) ? Object.assign(base[k], d[k]) : d[k]; }
+    ['own','mgr','prog','running'].forEach(k=>{ if(!Array.isArray(base[k])||base[k].length!==N) base[k]=newState()[k]; });
+    S = base; return true;
+  }catch(e){ console.warn('load failed',e); return false; }
+}
+function save(){ try{ S.savedAt=Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- Utils ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>Array.from(el.querySelectorAll(s));
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const SUF = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td'];
+function fmt(n){
+  if(!isFinite(n)) return '∞';
+  if(n<0) return '-'+fmt(-n);
+  if(n<1000) return Math.abs(n-Math.round(n))<0.005 ? String(Math.round(n)) : n.toFixed(n<10?2:1).replace(/\.0$/,'');
+  let idx = Math.floor(Math.log10(n)/3);
+  if(idx>=SUF.length) return n.toExponential(2).replace('+','');
+  let v = n/Math.pow(1000,idx);
+  if(v.toFixed(2).startsWith('1000') && idx+1<SUF.length){ idx++; v=n/Math.pow(1000,idx); }
+  return v.toFixed(2)+SUF[idx];
+}
+const $$$ = n=>'$'+fmt(n);
+function fmtTime(s){
+  if(s<1) return s.toFixed(1)+'s';
+  s=Math.ceil(s); if(s<60) return s+'s';
+  if(s<3600) return Math.floor(s/60)+'m '+(s%60)+'s';
+  if(s<86400) return Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m';
+  return Math.floor(s/86400)+'d '+Math.floor(s%86400/3600)+'h';
+}
+function dayKey(d=new Date()){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* ---------- Derived numbers ---------- */
+const G = { rev:[], cyc:[], rps:[], inc:0, global:1, speedN:[], profitN:[] };
+function lpBonus(){ return 1 + 0.02*S.lp; }
+function achBonus(){ return 1 + 0.01*Object.keys(S.ach).length; }
+function minOwn(){ return Math.min(...S.own); }
+function recalc(){
+  const now = Date.now();
+  S.buffs = S.buffs.filter(b=>b.until>now);
+  let g = achBonus()*lpBonus();
+  if(S.perks.ref) g*=1.5; if(S.perks.brand) g*=2;
+  S.buffs.forEach(b=>g*=b.mult);
+  const mo = minOwn(); GMS_LIST.forEach(m=>{ if(mo>=m) g*=GMS_MULT; });
+  UPGS.forEach(u=>{ if(S.upg[u.id] && u.biz===-1) g*=u.mult; });
+  G.global = g; G.inc = 0;
+  for(let i=0;i<N;i++){
+    const b=BIZ[i]; let m=1, sp=0;
+    MS_LIST.forEach(ms=>{ if(S.own[i]>=ms){ const k=msKind(ms); if(k.type==='speed') sp++; else m*=k.mult; }});
+    UPGS.forEach(u=>{ if(u.biz===i && S.upg[u.id]) m*=u.mult; });
+    let raw = b.time/Math.pow(2,sp), cyc = Math.max(0.25, raw);
+    if(raw<0.25) m*=0.25/raw;
+    G.cyc[i]=cyc; G.rev[i]=b.rev*S.own[i]*m*g; G.rps[i]=G.rev[i]/cyc;
+    if(S.mgr[i]) G.inc += G.rps[i];
+  }
+}
+function costFor(i,n){ const b=BIZ[i], r=b.coef; return b.cost*Math.pow(r,S.own[i])*(Math.pow(r,n)-1)/(r-1); }
+function maxAff(i){
+  const b=BIZ[i], c0=b.cost*Math.pow(b.coef,S.own[i]);
+  let n=Math.floor(Math.log(1+S.cash*(b.coef-1)/c0)/Math.log(b.coef));
+  if(!isFinite(n)||n<0) n=0;
+  while(n>0 && costFor(i,n)>S.cash) n--;
+  return n;
+}
+function nextMs(i){ return MS_LIST.find(m=>m>S.own[i]); }
+function buyCount(i){
+  const m=S.buyMode;
+  if(m==='max') return maxAff(i);
+  if(m==='next'){ const nx=nextMs(i); return nx?nx-S.own[i]:1; }
+  return parseInt(m,10);
+}
+function pendingLP(){ return Math.floor(10*Math.sqrt(S.run/1e10)); }
+function minutesIncome(m){ return Math.max(G.inc*60*m, m*30 + S.run*0.002*m); }
+
+/* =====================================================================
+   AUDIO — synthesized casino-style sound design (Web Audio, no files)
+   ===================================================================== */
+const SFX = (()=>{
+  let ctx, master, sfx, music, noiseBuf, mTimer=null, nextT=0, step=0;
+  const PENT=[523.25,587.33,659.25,783.99,880,1046.5,1174.66,1318.5];
+  function init(){
+    if(ctx) return;
+    const AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    ctx=new AC(); master=ctx.createGain(); const comp=ctx.createDynamicsCompressor();
+    master.connect(comp); comp.connect(ctx.destination);
+    sfx=ctx.createGain(); sfx.gain.value=S.settings.sfxOn?S.settings.sfx:0; sfx.connect(master);
+    music=ctx.createGain(); music.gain.value=S.settings.music*0.5; music.connect(master);
+    noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  }
+  function resume(){ init(); if(ctx && ctx.state==='suspended') ctx.resume(); }
+  function tone(f,d=0.15,type='sine',v=0.2,at=0,slide=0,dest){
+    if(!ctx||!S.settings.sfxOn&&!dest) return;
+    const t=ctx.currentTime+at, o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(20,f*slide),t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(dest||sfx); o.start(t); o.stop(t+d+0.03);
+  }
+  function noise(d=0.1,v=0.1,freq=3000,at=0){
+    if(!ctx||!S.settings.sfxOn) return;
+    const t=ctx.currentTime+at, s=ctx.createBufferSource(), f=ctx.createBiquadFilter(), g=ctx.createGain();
+    s.buffer=noiseBuf; f.type='highpass'; f.frequency.value=freq;
+    g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    s.connect(f); f.connect(g); g.connect(sfx); s.start(t); s.stop(t+d+0.02);
+  }
+  const api = {
+    resume,
+    click(c=0){ tone(280+Math.min(c,24)*35,.08,'square',.06); tone(560+Math.min(c,24)*70,.06,'triangle',.05,.01); },
+    coin(i=0){ const f=PENT[i%8]*2; tone(f,.14,'triangle',.11); tone(f*1.5,.2,'sine',.06,.035); },
+    ching(){ noise(.05,.12,6000); tone(1568,.3,'triangle',.14); tone(2093,.6,'triangle',.14,.09); tone(2637,.7,'sine',.07,.09); },
+    buy(n=1){ const b=440*Math.pow(1.03,Math.min(n,20)); tone(b,.08,'triangle',.14); tone(b*1.5,.12,'triangle',.14,.06); },
+    hire(){ [392,494,587,784].forEach((f,k)=>tone(f,.18,'triangle',.13,k*.07)); this.ching(); },
+    upgrade(){ [523,659,784].forEach((f,k)=>tone(f,.2,'sine',.14,k*.06)); tone(1047,.4,'triangle',.1,.2); },
+    milestone(){
+      [523,659,784,1047,1319,1568,2093].forEach((f,k)=>{ tone(f,.3,'triangle',.14,k*.06); tone(f/2,.3,'sine',.08,k*.06); });
+      noise(.7,.08,7000,.35); tone(130,.6,'sine',.2,0,.5);
+    },
+    win(){ [523,659,784,1047].forEach((f,k)=>tone(f,.3,'triangle',.13,k*.09)); },
+    jackpot(){
+      for(let k=0;k<32;k++) tone(PENT[k%8]*(1+Math.floor(k/8)*.5),.14,'triangle',.11,k*.045);
+      for(let k=0;k<14;k++) this.coinAt(1.0+k*.06, k);
+      [523,659,784,1047].forEach(f=>tone(f,1.4,'sine',.14,1.5)); noise(1,.1,5000,1.5);
+    },
+    coinAt(at,i){ const f=PENT[i%8]*2; tone(f,.14,'triangle',.09,at); tone(f*1.5,.2,'sine',.05,at+.03); },
+    tick(){ tone(1300,.025,'square',.05); },
+    err(){ tone(170,.16,'sawtooth',.07,0,.6); },
+    appear(){ tone(500,.5,'sine',.1,0,3); [1568,2093,2637,3136].forEach((f,k)=>tone(f,.15,'sine',.05,.15+k*.07)); },
+    rank(){ [392,523,659,784,1047].forEach((f,k)=>tone(f,.25,'triangle',.13,k*.08)); },
+    type(){ tone(900+Math.random()*200,.02,'square',.025); },
+    setSfx(){ if(sfx) sfx.gain.value=S.settings.sfxOn?S.settings.sfx:0; },
+    setMusicVol(){ if(music) music.gain.value=S.settings.music*0.5; },
+    musicOn(){
+      resume(); if(!ctx||mTimer) return;
+      nextT=ctx.currentTime+.1; step=0; mTimer=setInterval(sched,150); sched();
+    },
+    musicOff(){ clearInterval(mTimer); mTimer=null; },
+  };
+  const CH=[[261.6,329.6,392,493.9],[220,261.6,329.6,392],[174.6,220,261.6,329.6],[196,246.9,293.7,392]];
+  function sched(){
+    while(nextT<ctx.currentTime+.7){
+      const ch=CH[Math.floor(step/8)%4], at=nextT-ctx.currentTime;
+      if(step%8===0){ ch.forEach(f=>tone(f/2,2.7,'sine',.05,at,0,music)); tone(ch[0]/4,2.6,'sine',.09,at,0,music); }
+      const n=ch[[0,1,2,3,2,1,2,3][step%8]]*2;
+      tone(n,.5,'triangle',.05,at,0,music);
+      if(step%4===2) tone(n*2,.25,'sine',.02,at+.16,0,music);
+      nextT+=.3333; step++;
+    }
+  }
+  return api;
+})();
+
+/* =====================================================================
+   FX — confetti, coins, floating numbers
+   ===================================================================== */
+const fx = $('#fx'), fctx = fx.getContext('2d'); let parts=[];
+function resizeFx(){ fx.width=innerWidth*devicePixelRatio; fx.height=innerHeight*devicePixelRatio; fctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+addEventListener('resize',resizeFx); resizeFx();
+const CONF=['#fbbf24','#2dd4bf','#f472b6','#60a5fa','#a78bfa','#fb7185','#fff'];
+function burst(x,y,n=30,kind='conf'){
+  for(let i=0;i<n && parts.length<400;i++){
+    const a=rnd(0,Math.PI*2), sp=rnd(3,kind==='coin'?11:9);
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(kind==='coin'?6:3),g:kind==='coin'?.35:.22,life:rnd(50,95),kind,c:CONF[i%CONF.length],r:rnd(4,9),rot:rnd(0,6),vr:rnd(-.3,.3)});
+  }
+}
+function rain(n=80){ for(let i=0;i<n && parts.length<420;i++) parts.push({x:rnd(0,innerWidth),y:rnd(-200,-10),vx:rnd(-1,1),vy:rnd(2,6),g:.05,life:rnd(110,190),kind:Math.random()<.5?'coin':'conf',c:CONF[i%CONF.length],r:rnd(5,10),rot:0,vr:rnd(-.2,.2)}); }
+function drawFx(){
+  fctx.clearRect(0,0,innerWidth,innerHeight);
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.vx*=.99; p.rot+=p.vr; p.life--;
+    if(p.life<=0||p.y>innerHeight+40){ parts.splice(i,1); continue; }
+    fctx.globalAlpha=Math.min(1,p.life/25);
+    if(p.kind==='coin'){ fctx.font=(p.r*3)+'px serif'; fctx.textAlign='center'; fctx.fillText('🪙',p.x,p.y); }
+    else { fctx.save(); fctx.translate(p.x,p.y); fctx.rotate(p.rot); fctx.fillStyle=p.c; fctx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2); fctx.restore(); }
+  }
+  fctx.globalAlpha=1;
+}
+let floatCount=0;
+function floatText(x,y,text,big){
+  if(floatCount>24) return; floatCount++;
+  const d=document.createElement('div'); d.className='float'+(big?' big':''); d.textContent=text; d.style.left=x+'px'; d.style.top=y+'px';
+  document.body.appendChild(d); setTimeout(()=>{d.remove();floatCount--;},1100);
+}
+function floatAt(el,text,big){ const r=el.getBoundingClientRect(); floatText(r.left+r.width/2+rnd(-14,14), r.top+rnd(0,10), text, big); }
+function toast(msg,gold){ const t=document.createElement('div'); t.className='toast'+(gold?' gold':''); t.textContent=msg; $('#toasts').appendChild(t); setTimeout(()=>t.remove(),3500); while($('#toasts').children.length>3) $('#toasts').firstChild.remove(); }
+function banner(t1,t2){ const b=$('#banner'); $('.b1',b).textContent=t1; $('.b2',b).textContent=t2; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); }
+function flash(){ const f=document.createElement('div'); f.className='flash'; document.body.appendChild(f); setTimeout(()=>f.remove(),600); }
+function shake(){ const a=$('#app'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); }
+function celebrate(big){ flash(); shake(); const cx=innerWidth/2; burst(cx,innerHeight*.4,big?90:50); burst(cx,innerHeight*.4,big?30:14,'coin'); if(big) rain(70); }
+
+/* =====================================================================
+   Modals
+   ===================================================================== */
+const modal = $('#modal'); let modalQ=[]; let modalOpen=false;
+function openModal(html){ modal.innerHTML='<div class="mbox">'+html+'</div>'; modal.classList.add('on'); modalOpen=true; }
+function closeModal(){ modal.classList.remove('on'); modal.innerHTML=''; modalOpen=false; setTimeout(()=>{ const f=modalQ.shift(); if(f) f(); },150); }
+function queueModal(fn){ if(modalOpen) modalQ.push(fn); else fn(); }
+modal.addEventListener('click',e=>{ if(e.target===modal && modal.dataset.dismiss==='1'){ closeModal(); } });
+
+/* ---------- Story ---------- */
+let storyTimer=null;
+function checkStory(){
+  for(const s of STORY){ if(!S.story[s.id] && s.when()){ S.story[s.id]=Date.now(); queueModal(()=>openStory(s)); break; } }
+}
+function openStory(s, replay){
+  let li=0;
+  openModal(`<div class="speaker"><div class="av">${s.av}</div><div style="flex:1"><div class="who">${s.who.toUpperCase()}</div><div class="say" id="say"></div></div></div>
+    <button class="bigbtn" id="stNext" style="background:linear-gradient(#5eead4,#0d9488);box-shadow:0 5px 0 #0a5c54;color:#03211d">Next ▶</button>`);
+  modal.dataset.dismiss='0';
+  const say=$('#say'), btn=$('#stNext'); let full=false, idx=0, txt='';
+  function start(){
+    txt=s.lines[li]; idx=0; full=false; say.textContent=''; clearInterval(storyTimer);
+    storyTimer=setInterval(()=>{ idx++; say.textContent=txt.slice(0,idx); if(idx%3===0) SFX.type(); if(idx>=txt.length){ clearInterval(storyTimer); full=true; btn.textContent = li>=s.lines.length-1?'Got it ✔':'Next ▶'; } },22);
+    btn.textContent='Skip ⏩';
+  }
+  btn.onclick=()=>{
+    SFX.resume();
+    if(!full){ clearInterval(storyTimer); say.textContent=txt; full=true; btn.textContent = li>=s.lines.length-1?'Got it ✔':'Next ▶'; return; }
+    if(li<s.lines.length-1){ li++; start(); } else { clearInterval(storyTimer); closeModal(); }
+  };
+  start();
+}
+
+/* ---------- Offline / daily ---------- */
+function offlineEarn(){
+  const now=Date.now(); let secs=(now-S.savedAt)/1000;
+  if(secs<60) return;
+  const cap=(S.perks.night?24:12)*3600; secs=Math.min(secs,cap);
+  recalc(); const amt=G.inc*secs;
+  if(amt<=0) return;
+  queueModal(()=>{
+    openModal(`<h2>Welcome Back!</h2><div class="center" style="color:var(--dim)">Your team kept the chairs busy for <b style="color:#fff">${fmtTime(secs)}</b></div>
+      <div class="center huge" id="offAmt" style="margin:14px 0">$0</div><div class="center" style="color:var(--dim);font-size:13px">${secs>=cap?'Offline cap reached — Night Shift extends it!':'Managed practices earn while you\'re away.'}</div>
+      <button class="bigbtn" id="offBtn" style="background:linear-gradient(#fcd34d,#f59e0b);box-shadow:0 5px 0 #a86205;color:#3a2300">Collect!</button>`);
+    let t0=performance.now(), done=false, lastSnd=0;
+    (function anim(t){
+      const el=$('#offAmt'); if(!el) return;
+      const p=Math.min(1,(t-t0)/1800), e=1-Math.pow(1-p,3);
+      el.textContent=$$$(amt*e);
+      if(t-lastSnd>90 && p<1){ SFX.coin(Math.floor(p*16)); lastSnd=t; }
+      if(p<1) requestAnimationFrame(anim); else if(!done){ done=true; SFX.ching(); burst(innerWidth/2,innerHeight/2,30,'coin'); }
+    })(t0);
+    $('#offBtn').onclick=()=>{ S.cash+=amt; S.run+=amt; S.life+=amt; SFX.ching(); celebrate(false); closeModal(); };
+  });
+}
+function dailyCheck(){
+  const today=dayKey(), yest=dayKey(new Date(Date.now()-864e5));
+  if(S.daily.last===today) return;
+  let broken=false;
+  if(S.daily.last===yest) S.daily.streak++; else { broken=S.daily.streak>1; S.daily.streak=1; }
+  S.daily.last=today;
+  const st=S.daily.streak;
+  queueModal(()=>{
+    const amt=minutesIncome(15*Math.min(st,7))*(st%7===0?4:1) + 250*st;
+    let cal=''; for(let d=1;d<=7;d++){ const cur=((st-1)%7)+1; cal+=`<div style="flex:1;text-align:center;padding:8px 0;border-radius:10px;background:${d<=cur?'linear-gradient(#fcd34d,#f59e0b)':'#0b1430'};color:${d<=cur?'#3a2300':'#8ea6d0'};font-weight:700;font-size:12px">${d===7?'🎁':'Day'}<br>${d}</div>`; }
+    openModal(`<h2>Daily Bonus</h2><div class="center" style="color:var(--dim)">🔥 Streak: <b style="color:#fff">${st} day${st>1?'s':''}</b></div>
+      <div style="display:flex;gap:5px;margin:12px 0">${cal}</div>
+      ${broken?'<div class="center" style="color:#fca5a5;font-size:13px">Your streak was reset — visit every day to keep it going!</div>':'<div class="center" style="color:var(--dim);font-size:13px">Come back tomorrow to keep your streak alive!</div>'}
+      <div class="center huge" style="margin:10px 0">${$$$(amt)}</div>
+      <button class="bigbtn" id="dBtn" style="background:linear-gradient(#fcd34d,#f59e0b);box-shadow:0 5px 0 #a86205;color:#3a2300">Claim Reward</button>`);
+    $('#dBtn').onclick=()=>{ SFX.resume(); S.cash+=amt; S.run+=amt; S.life+=amt; SFX.ching(); celebrate(st%7===0); closeModal(); };
+  });
+}
+
+/* ---------- Lucky Wheel ---------- */
+const WHEEL = [
+  {t:'5 MIN\nINCOME', w:20, c:'#0d9488', kind:'inc', v:5},
+  {t:'PROFIT\n×2 · 3m', w:14, c:'#7c3aed', kind:'buff', v:2, s:180},
+  {t:'15 MIN\nINCOME', w:14, c:'#2563eb', kind:'inc', v:15},
+  {t:'GOLDEN\nTOOTH', w:8, c:'#d97706', kind:'gold'},
+  {t:'5 MIN\nINCOME', w:20, c:'#be185d', kind:'inc', v:5},
+  {t:'PROFIT\n×3 · 60s', w:10, c:'#059669', kind:'buff', v:3, s:60},
+  {t:'30 MIN\nINCOME', w:10, c:'#dc2626', kind:'inc', v:30},
+  {t:'JACKPOT\n2 HOURS', w:2, c:'#f59e0b', kind:'inc', v:120, jp:true},
+];
+const WHEEL_CD = 4*3600e3;
+function wheelReady(){ return Date.now()>=S.wheelAt; }
+function openWheel(){
+  if(modalOpen) return;
+  const ready=wheelReady();
+  openModal(`<h2>Lucky Prophy Wheel</h2><div class="center" style="color:var(--dim);font-size:13px">One free spin every 4 hours. No purchase necessary — it's all pretend money!</div>
+    <div class="wheelwrap"><div class="ptr">🔻</div><canvas id="wc" width="580" height="580"></canvas><div class="hub">🦷</div></div>
+    <div class="center" id="wres" style="min-height:30px;font-weight:700;font-size:18px;color:var(--gold)"></div>
+    <button class="bigbtn" id="wBtn" style="background:linear-gradient(#f9a8d4,#ec4899)">${ready?'SPIN!':'Next spin in '+fmtTime((S.wheelAt-Date.now())/1000)}</button>
+    <button class="mini" id="wClose" style="width:100%">Close</button>`);
+  modal.dataset.dismiss='0';
+  const cv=$('#wc'), c=cv.getContext('2d'), R=290, seg=Math.PI*2/WHEEL.length;
+  WHEEL.forEach((s,k)=>{
+    c.beginPath(); c.moveTo(R,R); c.arc(R,R,R-4,-Math.PI/2+k*seg,-Math.PI/2+(k+1)*seg); c.closePath();
+    c.fillStyle=s.c; c.fill(); c.strokeStyle='#fff8'; c.lineWidth=4; c.stroke();
+    c.save(); c.translate(R,R); c.rotate(-Math.PI/2+(k+.5)*seg); c.fillStyle='#fff'; c.font='bold 30px Fredoka,sans-serif'; c.textAlign='right';
+    s.t.split('\n').forEach((ln,j)=>c.fillText(ln,R-40,(j-.3)*32)); c.restore();
+  });
+  if(!ready) $('#wBtn').classList.add('dis');
+  $('#wClose').onclick=closeModal;
+  let spinning=false;
+  $('#wBtn').onclick=()=>{
+    SFX.resume(); if(spinning||!wheelReady()){ SFX.err(); return; }
+    spinning=true; $('#wClose').style.display='none'; $('#wBtn').classList.add('dis'); $('#wBtn').textContent='Spinning…';
+    S.wheelAt=Date.now()+WHEEL_CD; S.stats.spins++;
+    const tot=WHEEL.reduce((a,s)=>a+s.w,0); let r=Math.random()*tot, k=0; for(;k<WHEEL.length;k++){ r-=WHEEL[k].w; if(r<=0) break; } k=Math.min(k,WHEEL.length-1);
+    const per=360/WHEEL.length, target=360*7+(360-(k*per+per/2))+rnd(-per*.38,per*.38), dur=5200, t0=performance.now(); let lastSeg=-1;
+    (function anim(t){
+      const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,4), ang=target*e;
+      cv.style.transform='rotate('+ang+'deg)';
+      const sg=Math.floor(ang/per); if(sg!==lastSeg){ lastSeg=sg; SFX.tick(); }
+      if(p<1) requestAnimationFrame(anim); else finish(k);
+    })(t0);
+  };
+  function finish(k){
+    const s=WHEEL[k]; let msg='';
+    if(s.kind==='inc'){ const a=minutesIncome(s.v); S.cash+=a; S.run+=a; S.life+=a; msg='+'+$$$(a); }
+    else if(s.kind==='buff'){ addBuff('wheel'+Date.now(),'Wheel ×'+s.v,s.v,s.s); msg='Profits ×'+s.v+' for '+fmtTime(s.s); }
+    else { setTimeout(()=>spawnGolden(true),600); msg='A Golden Tooth is coming!'; }
+    $('#wres').textContent=msg;
+    if(s.jp){ SFX.jackpot(); celebrate(true); } else { SFX.ching(); celebrate(false); }
+    $('#wBtn').textContent='Awesome!'; $('#wBtn').classList.remove('dis'); $('#wBtn').onclick=closeModal; save();
+  }
+}
+
+/* ---------- Buffs & Golden Tooth ---------- */
+function addBuff(id,name,mult,secs){ S.buffs.push({id,name,mult,until:Date.now()+secs*1000}); recalc(); }
+let goldenEl=$('#golden'), goldenTO=null;
+function scheduleGolden(){ const base=rnd(55,120)*(S.perks.magnet?.5:1); S.nextGolden=Date.now()+base*1000; }
+function spawnGolden(force){
+  if(goldenEl.classList.contains('on')) return;
+  goldenEl.style.setProperty('--gy', rnd(18,55)+'vh'); goldenEl.classList.remove('on'); void goldenEl.offsetWidth; goldenEl.classList.add('on');
+  SFX.appear(); clearTimeout(goldenTO); goldenTO=setTimeout(()=>goldenEl.classList.remove('on'),10200);
+}
+goldenEl.addEventListener('click',()=>{
+  SFX.resume(); const r=goldenEl.getBoundingClientRect(); goldenEl.classList.remove('on'); clearTimeout(goldenTO);
+  S.stats.golden++; const x=r.left+r.width/2, y=r.top+r.height/2, roll=Math.random();
+  if(roll<.42){ const a=minutesIncome(10); S.cash+=a; S.run+=a; S.life+=a; banner('INSURANCE CHECK!','+'+$$$(a)); SFX.ching(); burst(x,y,30,'coin'); }
+  else if(roll<.76){ addBuff('frenzy','Golden Frenzy ×7',7,77); banner('GOLDEN FRENZY!','Profits ×7 for 77 seconds'); SFX.milestone(); burst(x,y,50); }
+  else if(roll<.93){ addBuff('rush','Chairside Rush ×3',3,120); const a=minutesIncome(3); S.cash+=a; S.run+=a; S.life+=a; banner('PACKED SCHEDULE!','×3 profits for 2 min + '+$$$(a)); SFX.win(); burst(x,y,40); }
+  else { const a=minutesIncome(60); S.cash+=a; S.run+=a; S.life+=a; banner('★ JACKPOT ★','+'+$$$(a)); SFX.jackpot(); celebrate(true); }
+  recalc(); scheduleGolden();
+});
+
+/* =====================================================================
+   Core actions
+   ===================================================================== */
+let combo=0, comboT=0, lastCoinSnd=0;
+function earn(amt){ S.cash+=amt; S.run+=amt; S.life+=amt; }
+function runBiz(i){
+  SFX.resume();
+  if(S.own[i]<=0) return;
+  if(S.mgr[i]) { SFX.click(0); return; }
+  if(S.running[i]) return;
+  S.running[i]=true; S.stats.taps++;
+  const now=performance.now(); combo = now-comboT<1400 ? combo+1 : 1; comboT=now;
+  SFX.click(combo);
+}
+function buy(i){
+  SFX.resume();
+  const n=Math.max(1,buyCount(i)); const cost=costFor(i,n);
+  if(S.cash<cost){ SFX.err(); const el=$('#buy'+i); el.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:180}); return; }
+  const old=S.own[i]; S.cash-=cost; S.own[i]+=n;
+  if(old===0){ toast('🎉 Opened: '+BIZ[i].name,true); SFX.win(); }
+  else SFX.buy(n);
+  recalc();
+  let hit=[]; MS_LIST.forEach(m=>{ if(old<m && S.own[i]>=m) hit.push(m); });
+  const mo=minOwn(); if(GMS_LIST.filter(m=>mo>=m).length>S.gmsSeen){ S.gmsSeen=GMS_LIST.filter(m=>mo>=m).length; S.stats.ms++; setTimeout(()=>{ banner('ALL PRACTICES ×'+(GMS_MULT),'Every practice reached '+GMS_LIST.filter(m=>mo>=m).pop()+' — PROFITS ×'+GMS_MULT+' EVERYWHERE!'); SFX.milestone(); celebrate(true); },hit.length?1800:0); }
+  if(hit.length){
+    S.stats.ms+=hit.length; const m=hit[hit.length-1], k=msKind(m);
+    banner(BIZ[i].name.toUpperCase()+' '+m+'!', k.label+(hit.length>1?'  (+'+(hit.length-1)+' more!)':''));
+    SFX.milestone(); celebrate(m>=200); toast('🔓 '+BIZ[i].name+' × '+m+' → '+k.label,true);
+  }
+  checkStory(); updateAll(true);
+}
+function hire(i){
+  SFX.resume(); const b=BIZ[i];
+  if(S.mgr[i]) return; if(S.cash<b.mgr){ SFX.err(); return; }
+  S.cash-=b.mgr; S.mgr[i]=true; S.running[i]=false; recalc(); SFX.hire(); toast('🧑‍⚕️ Hired '+b.mgrName+'!'); burst(innerWidth/2,innerHeight*.5,25); checkStory(); renderManagers(); updateAll(true);
+}
+function buyUpg(id){
+  SFX.resume(); const u=UPGS.find(x=>x.id===id); if(!u||S.upg[id]) return;
+  if(S.cash<u.cost){ SFX.err(); return; }
+  S.cash-=u.cost; S.upg[id]=true; recalc(); SFX.upgrade(); toast('⚙️ '+u.name+' → ×'+u.mult+(u.biz>=0?' '+BIZ[u.biz].name:' ALL'),true); burst(innerWidth/2,innerHeight*.5,20); renderUpgrades(); updateAll(true);
+}
+function buyPerk(id){
+  const p=PERKS.find(x=>x.id===id); if(S.perks[id]||S.lp<p.cost){ SFX.err(); return; }
+  S.lp-=p.cost; S.perks[id]=true; recalc(); SFX.upgrade(); toast('🏆 '+p.name+' unlocked!',true); renderLegacy(); updateAll(true);
+}
+function doSell(){
+  const gain=pendingLP(); if(gain<1) return;
+  S.lp+=gain; S.lpTotal+=gain; S.stats.sales++;
+  const keepTeam=S.perks.team;
+  S.cash=S.perks.cash?5000:0; S.run=0; S.own=BIZ.map((_,i)=>i===0?1:0); S.prog=BIZ.map(()=>0); S.running=BIZ.map(()=>false);
+  S.mgr=S.mgr.map((m,i)=>keepTeam&&i<3?m:false); S.upg={}; S.gmsSeen=0; S.buffs=[];
+  recalc(); SFX.jackpot(); celebrate(true); banner('PRACTICE SOLD!','+'+gain+' Legacy Points'); toast('Legacy Points: +'+gain,true);
+  renderAll(); checkStory(); save();
+}
+
+/* =====================================================================
+   Achievements & ranks
+   ===================================================================== */
+const ACH=[];
+BIZ.forEach((b,i)=>ACH.push({id:'own'+i,ic:b.emoji,name:'Grand Opening',desc:'Open a '+b.name,t:()=>S.own[i]>0}));
+[1e3,1e6,1e9,1e12,1e15,1e18,1e21,1e30].forEach(v=>ACH.push({id:'life'+v,ic:'💰',name:'Earned $'+fmt(v),desc:'Lifetime earnings of $'+fmt(v),t:()=>S.life>=v}));
+[[5,'Team Builder'],[10,'Fully Staffed']].forEach(([n,nm])=>ACH.push({id:'mgr'+n,ic:'🧑‍⚕️',name:nm,desc:'Hire '+n+' managers',t:()=>S.mgr.filter(x=>x).length>=n}));
+[1,10,50].forEach(v=>ACH.push({id:'gold'+v,ic:'🌟',name:'Tooth Fairy ×'+v,desc:'Catch '+v+' Golden Tooth'+(v>1?'s':''),t:()=>S.stats.golden>=v}));
+[1,10].forEach(v=>ACH.push({id:'spin'+v,ic:'🎡',name:'Lucky ×'+v,desc:'Spin the wheel '+v+' time'+(v>1?'s':''),t:()=>S.stats.spins>=v}));
+[1,3,10].forEach(v=>ACH.push({id:'sale'+v,ic:'🏆',name:'Exit Strategy ×'+v,desc:'Sell your practice '+v+' time'+(v>1?'s':''),t:()=>S.stats.sales>=v}));
+[3,7,30].forEach(v=>ACH.push({id:'str'+v,ic:'🔥',name:v+'-Day Streak',desc:'Visit '+v+' days in a row',t:()=>S.daily.streak>=v}));
+[10,50,150].forEach(v=>ACH.push({id:'ms'+v,ic:'🔓',name:'Milestone Hunter ×'+v,desc:'Unlock '+v+' milestones',t:()=>S.stats.ms>=v}));
+ACH.push({id:'c100',ic:'💯',name:'Century Club',desc:'Own 100 of any practice',t:()=>Math.max(...S.own)>=100});
+ACH.push({id:'c1000',ic:'🪑',name:'Chair Empire',desc:'Own 1000 Hygiene Chairs',t:()=>S.own[0]>=1000});
+let lastRank='';
+function checkAch(){
+  let got=false;
+  ACH.forEach(a=>{ if(!S.ach[a.id] && a.t()){ S.ach[a.id]=Date.now(); got=true; toast('🏅 '+a.name+' — +1% profits',true); SFX.win(); } });
+  if(got){ recalc(); if($('#p-more').classList.contains('on')) renderMore(); }
+  const rk=RANKS.filter(r=>S.life>=r[0]).pop()[1];
+  if(lastRank && rk!==lastRank){ banner('PROMOTED!',rk); SFX.rank(); celebrate(false); }
+  lastRank=rk; $('#rankN').textContent=rk;
+}
+
+/* =====================================================================
+   HALLOWEEN PRIZE TIERS — real, permanent items in DSO Empire Simulator,
+   unlocked automatically the deeper you get here. Both games are hosted
+   on the same domain (see the theme layer above), so this just writes to
+   a small shared localStorage key that the main game reads on its own
+   boot — no code for the player to type, no account, nothing to copy.
+   Each tier is strictly harder than the last; reaching one also implies
+   every easier one, so the list always ends up fully granted in order.
+   ===================================================================== */
+const SE_PENDING_KEY = 'smile-empire-halloween-rewards-v1';
+const HW_TIERS = [
+  { id:'hw-stapler',       name:'The Haunted Stapler', need:S=>S.own[0]>=25,      hint:'Grow your first practice to 25' },
+  { id:'hw-audit-ghost',   name:'The Audit Ghost',     need:S=>minOwn()>=25,      hint:'Get every practice to 25' },
+  { id:'hw-chair7',        name:'Haunted Chair 7',     need:S=>S.life>=1e6,       hint:'Earn $1,000,000 lifetime' },
+  { id:'hw-rollup-reaper', name:'The Rollup Reaper',   need:S=>S.life>=1e9,       hint:'Earn $1,000,000,000 lifetime' },
+];
+function checkHalloween(){
+  if(THEME.id!=='halloween') return;
+  let newly=[];
+  HW_TIERS.forEach(t=>{
+    if(S.hwGranted[t.id]) return;
+    if(t.need(S)){ S.hwGranted[t.id]=Date.now(); newly.push(t); }
+  });
+  if(!newly.length) return;
+  let pending=[];
+  try{ pending=JSON.parse(localStorage.getItem(SE_PENDING_KEY)||'[]'); }catch(e){}
+  newly.forEach(t=>{ if(!pending.some(p=>p.id===t.id)) pending.push({id:t.id, at:Date.now()}); });
+  try{ localStorage.setItem(SE_PENDING_KEY, JSON.stringify(pending)); }catch(e){}
+  newly.forEach(t=>{
+    banner('PRIZE UNLOCKED!', t.name+' — waiting for you in DSO Empire Simulator');
+    toast('🎃 '+t.name+' unlocked — permanent item in DSO Empire Simulator!', true);
+  });
+  SFX.jackpot(); celebrate(true); save();
+}
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+const SVG_MASCOT=`<svg viewBox="0 0 100 100"><defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cfe8ff"/></linearGradient></defs>
+<path d="M50 12C30 0 8 10 12 36C15 56 22 62 25 85C27 98 38 96 41 80C43 69 57 69 59 80C62 96 73 98 75 85C78 62 85 56 88 36C92 10 70 0 50 12Z" fill="url(#tg)" stroke="#5aa2e6" stroke-width="3"/>
+<ellipse cx="38" cy="42" rx="6" ry="8" fill="#12244a"/><ellipse cx="62" cy="42" rx="6" ry="8" fill="#12244a"/><circle cx="40" cy="39" r="2.4" fill="#fff"/><circle cx="64" cy="39" r="2.4" fill="#fff"/>
+<path d="M36 58Q50 72 64 58" fill="none" stroke="#12244a" stroke-width="4" stroke-linecap="round"/><ellipse cx="29" cy="54" rx="5" ry="3" fill="#f9a8d4" opacity=".8"/><ellipse cx="71" cy="54" rx="5" ry="3" fill="#f9a8d4" opacity=".8"/>
+<path d="M78 14l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#fbbf24"/></svg>`;
+$('#mascot').innerHTML=SVG_MASCOT;
+
+const bizEls=[];
+function renderBiz(){
+  const p=$('#p-biz'); p.innerHTML='';
+  BIZ.forEach((b,i)=>{
+    const d=document.createElement('div'); d.className='biz'; d.id='biz'+i;
+    d.innerHTML=`<div class="icon" id="ic${i}" style="background:linear-gradient(160deg,${b.c[0]},${b.c[1]})">${b.emoji}<span class="own" id="own${i}">0</span></div>
+      <div class="mid"><div class="nm" id="nm${i}">${b.name}</div>
+        <div class="bar"><div class="fill" id="fill${i}"></div><div class="btxt" id="btxt${i}"></div></div>
+        <div class="ms"><div class="msbar"><i id="msb${i}"></i></div><span class="mstxt" id="mst${i}"></span></div></div>
+      <button class="buy" id="buy${i}"><span class="bl" id="bl${i}">BUY</span><span class="bc" id="bc${i}"></span></button>`;
+    p.appendChild(d);
+    $('#ic'+i).onclick=()=>{ runBiz(i); if(S.running[i]) { const r=$('#ic'+i).getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,4,'coin'); } };
+    $('#buy'+i).onclick=()=>buy(i);
+    bizEls[i]=d;
+  });
+  const foot=document.createElement('div'); foot.className='credit'; foot.innerHTML='Powered by <a href="'+BRAND.url+'" target="_blank" rel="noopener">'+BRAND.name+'</a>'; p.appendChild(foot);
+}
+function renderModes(){
+  const m=$('#modes'); m.innerHTML='';
+  [['1','×1'],['10','×10'],['100','×100'],['next','NEXT'],['max','MAX']].forEach(([k,l])=>{
+    const b=document.createElement('button'); b.textContent=l; b.className=S.buyMode===k?'on':''; b.onclick=()=>{ SFX.resume(); SFX.click(2); S.buyMode=k; renderModes(); updateAll(true); }; m.appendChild(b);
+  });
+}
+function renderManagers(){
+  const p=$('#p-mgr'); p.innerHTML='<h3>Managers</h3><p class="note">A manager runs a practice on autopilot — and keeps earning while you\'re away.</p>';
+  BIZ.forEach((b,i)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div class="em" style="background:linear-gradient(160deg,${b.c[0]},${b.c[1]})">${b.emoji}</div><div class="tx"><b>${b.mgrName}</b><span>Runs your ${b.name}</span></div>
+      <button class="hire ${S.mgr[i]?'done':''}" id="hire${i}" data-cost="${b.mgr}">${S.mgr[i]?'HIRED ✔':'HIRE<br>'+$$$(b.mgr)}</button>`;
+    p.appendChild(r); $('#hire'+i).onclick=()=>hire(i);
+  });
+}
+function renderUpgrades(){
+  const p=$('#p-upg'); p.innerHTML='<h3>Upgrades</h3><p class="note">One-time purchases that multiply profits for this run.</p>';
+  const avail=UPGS.filter(u=>!S.upg[u.id]);
+  if(!avail.length) p.innerHTML+='<p class="note">Every upgrade purchased. Legendary!</p>';
+  avail.slice(0,14).forEach(u=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div class="em">${u.emoji}</div><div class="tx"><b>${u.name}</b><span>${u.biz>=0?BIZ[u.biz].name:'ALL practices'} profits ×${u.mult}</span></div>
+      <button class="hire" data-cost="${u.cost}" id="up_${u.id}">${$$$(u.cost)}</button>`;
+    p.appendChild(r); $('#up_'+u.id).onclick=()=>buyUpg(u.id);
+  });
+  if(avail.length>14) p.innerHTML+='<p class="note">…and '+(avail.length-14)+' more to discover.</p>';
+  // re-bind after innerHTML+= wipes handlers
+  avail.slice(0,14).forEach(u=>{ const b=$('#up_'+u.id); if(b) b.onclick=()=>buyUpg(u.id); });
+}
+let uTab='all';
+function renderUnlocks(){
+  const p=$('#p-unl'); let total=0,got=0;
+  BIZ.forEach((b,i)=>MS_LIST.forEach(m=>{ total++; if(S.own[i]>=m) got++; })); const mo=minOwn(); GMS_LIST.forEach(m=>{ total++; if(mo>=m) got++; });
+  let tabs=`<button data-t="all" class="${uTab==='all'?'on':''}">🌟</button>`+BIZ.map((b,i)=>`<button data-t="${i}" class="${uTab===String(i)?'on':''}">${b.emoji}</button>`).join('');
+  let tiles='';
+  if(uTab==='all') GMS_LIST.forEach(m=>tiles+=`<div class="tile ${mo>=m?'got':''}" data-info="All practices at ${m} → PROFITS ×${GMS_MULT} on everything!"><span class="lk">${mo>=m?'':'🔒'}</span><span class="e">🌟</span><span class="n">${m}</span></div>`);
+  else { const i=+uTab; MS_LIST.forEach(m=>{ const k=msKind(m); tiles+=`<div class="tile ${S.own[i]>=m?'got':''}" data-info="${BIZ[i].name} ×${m} → ${k.label}!"><span class="lk">${S.own[i]>=m?'':'🔒'}</span><span class="e">${BIZ[i].emoji}</span><span class="n">${m}</span></div>`; }); }
+  p.innerHTML=`<h3>Unlocks ${got}/${total}</h3><p class="note">Want to maximize your profits? Push each practice to these quotas to unlock sweet bonuses!</p>
+    <div class="utabs">${tabs}</div><div class="ugrid">${tiles}</div><div id="uinfo">Tap a tile to see its reward</div>`;
+  $$('.utabs button',p).forEach(b=>b.onclick=()=>{ uTab=b.dataset.t; SFX.click(3); renderUnlocks(); });
+  $$('.tile',p).forEach(t=>t.onclick=()=>{ $('#uinfo').textContent=t.dataset.info; SFX.click(5); });
+}
+function renderLegacy(){
+  const p=$('#p-leg'), gain=pendingLP();
+  p.innerHTML=`<h3>Legacy</h3><p class="note">Sell your practices to a strategic buyer and start fresh. You keep <b>Legacy Points</b> — each unspent point gives <b>+2% profits</b> forever.</p>
+    <div class="stat"><span>Legacy Points</span><b style="color:var(--pink)">${S.lp}</b></div>
+    <div class="stat"><span>Current bonus</span><b>+${Math.round((lpBonus()-1)*100)}%</b></div>
+    <div class="stat"><span>Earned this run</span><b>${$$$(S.run)}</b></div>
+    <button class="bigbtn ${gain<1?'dis':''}" id="sellBtn">${gain>=1?'SELL PRACTICE → +'+gain+' LP':'Earn $100M this run to sell (1 LP)'}</button>
+    <h3>Legacy Perks</h3><p class="note">Spending LP removes its 2% bonus, so choose wisely.</p>`;
+  PERKS.forEach(pk=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div class="em">${pk.emoji}</div><div class="tx"><b>${pk.name}</b><span>${pk.desc}</span></div><button class="hire ${S.perks[pk.id]?'done':S.lp>=pk.cost?'can':''}" id="pk_${pk.id}">${S.perks[pk.id]?'OWNED ✔':pk.cost+' LP'}</button>`;
+    p.appendChild(r); $('#pk_'+pk.id).onclick=()=>buyPerk(pk.id);
+  });
+  $('#sellBtn').onclick=()=>{
+    if(pendingLP()<1){ SFX.err(); return; }
+    openModal(`<h2>Sell Your Practice?</h2><div class="center" style="line-height:1.5">You'll receive <b style="color:var(--pink)">${pendingLP()} Legacy Points</b> (+${pendingLP()*2}% profits).<br>Cash, practices and upgrades reset. Legacy, achievements and story stay.</div>
+      <button class="bigbtn" id="yes">Sell & Start Fresh</button><button class="mini" style="width:100%" id="no">Not yet</button>`);
+    $('#yes').onclick=()=>{ closeModal(); doSell(); }; $('#no').onclick=closeModal;
+  };
+}
+function renderMore(){
+  const p=$('#p-more'), n=Object.keys(S.ach).length;
+  const played=Math.max(1,Math.round((Date.now()-S.startedAt)/60000));
+  let h='';
+  if(THEME.id==='halloween'){
+    const got=HW_TIERS.filter(t=>S.hwGranted[t.id]).length;
+    h+=`<h3>🎃 Fright Night Prizes ${got}/${HW_TIERS.length}</h3><p class="note">Real, permanent items in DSO Empire Simulator — granted automatically the moment you reach each one, no code to enter.</p><div class="agrid">`;
+    HW_TIERS.forEach(t=>h+=`<div class="ach ${S.hwGranted[t.id]?'got':''}"><b>🏆 ${t.name}</b>${S.hwGranted[t.id]?'Unlocked — check DSO Empire Simulator!':t.hint}</div>`);
+    h+='</div>';
+  }
+  h+=`<h3>Achievements ${n}/${ACH.length}</h3><p class="note">Each achievement permanently adds +1% to all profits.</p><div class="agrid">`;
+  ACH.forEach(a=>h+=`<div class="ach ${S.ach[a.id]?'got':''}"><b>${a.ic} ${a.name}</b>${a.desc}</div>`); h+='</div>';
+  h+='<h3>Story Journal</h3>'; STORY.forEach(s=>{ if(S.story[s.id]) h+=`<div class="row" data-s="${s.id}" style="cursor:pointer"><div class="em">${s.av}</div><div class="tx"><b>${s.who}</b><span>${s.lines[0].slice(0,70)}…</span></div></div>`; });
+  h+=`<h3>Stats</h3><div class="stat"><span>Lifetime earnings</span><b>${$$$(S.life)}</b></div><div class="stat"><span>Taps</span><b>${fmt(S.stats.taps)}</b></div><div class="stat"><span>Golden Teeth</span><b>${S.stats.golden}</b></div><div class="stat"><span>Practices sold</span><b>${S.stats.sales}</b></div><div class="stat"><span>Milestones</span><b>${S.stats.ms}</b></div><div class="stat"><span>Daily streak</span><b>🔥 ${S.daily.streak}</b></div><div class="stat"><span>Minutes played</span><b>${played}</b></div>
+    <h3>Settings</h3><div style="margin:6px 0">Sound effects <input class="slider" id="vS" type="range" min="0" max="1" step=".05" value="${S.settings.sfx}"></div>
+    <div style="margin:6px 0">Music <input class="slider" id="vM" type="range" min="0" max="1" step=".05" value="${S.settings.music}"></div>
+    <button class="mini" id="exp">Export save</button><button class="mini" id="imp">Import save</button><button class="mini" id="rst" style="color:#fca5a5">Reset game</button>
+    <div class="credit">Powered by <a href="${BRAND.url}" target="_blank" rel="noopener">${BRAND.name}</a>${THEME.id==='halloween'?' · <a href="/">← Play DSO Empire Simulator</a>':''}</div>`;
+  p.innerHTML=h;
+  $$('[data-s]',p).forEach(e=>e.onclick=()=>{ if(!modalOpen) openStory(STORY.find(s=>s.id===e.dataset.s),true); });
+  $('#vS').oninput=e=>{ S.settings.sfx=+e.target.value; SFX.setSfx(); SFX.click(4); };
+  $('#vM').oninput=e=>{ S.settings.music=+e.target.value; SFX.setMusicVol(); };
+  $('#exp').onclick=()=>{ save(); const code=btoa(unescape(encodeURIComponent(JSON.stringify(S)))); openModal('<h2>Export Save</h2><p class="note">Copy this code somewhere safe:</p><textarea id="ta" style="width:100%;height:120px;user-select:text;-webkit-user-select:text">'+code+'</textarea><button class="bigbtn" id="ok" style="background:linear-gradient(#5eead4,#0d9488);color:#03211d">Close</button>'); $('#ok').onclick=closeModal; $('#ta').select(); };
+  $('#imp').onclick=()=>{ openModal('<h2>Import Save</h2><textarea id="ta" style="width:100%;height:120px;user-select:text;-webkit-user-select:text" placeholder="Paste save code"></textarea><button class="bigbtn" id="ok" style="background:linear-gradient(#5eead4,#0d9488);color:#03211d">Load</button><button class="mini" style="width:100%" id="no">Cancel</button>'); $('#no').onclick=closeModal;
+    $('#ok').onclick=()=>{ try{ const d=JSON.parse(decodeURIComponent(escape(atob($('#ta').value.trim())))); localStorage.setItem(SAVE_KEY,JSON.stringify(d)); location.reload(); }catch(e){ SFX.err(); toast('Invalid save code'); } }; };
+  $('#rst').onclick=()=>{ openModal('<h2>Reset Everything?</h2><div class="center">This permanently deletes your save.</div><button class="bigbtn" id="yes" style="background:linear-gradient(#fca5a5,#ef4444);color:#fff">Delete Save</button><button class="mini" style="width:100%" id="no">Cancel</button>'); $('#no').onclick=closeModal; $('#yes').onclick=()=>{ localStorage.removeItem(SAVE_KEY); location.reload(); }; };
+}
+function renderAll(){ renderBiz(); renderModes(); renderManagers(); renderUpgrades(); renderUnlocks(); renderLegacy(); renderMore(); }
+
+/* ---------- Nav ---------- */
+const TABS=[['biz','🏥','Practice'],['mgr','🧑‍⚕️','Managers'],['upg','⚙️','Upgrades'],['unl','🔓','Unlocks'],['leg','🏆','Legacy'],['more','☰','More']];
+function buildNav(){
+  const n=$('#nav'); n.innerHTML='';
+  TABS.forEach(([k,ic,l],idx)=>{ const b=document.createElement('button'); b.dataset.k=k; b.innerHTML=ic+'<small>'+l+'</small><span class="dot" id="dot-'+k+'"></span>'; if(idx===0) b.className='on';
+    b.onclick=()=>{ SFX.resume(); SFX.click(3); showTab(k); }; n.appendChild(b); });
+}
+function showTab(k){
+  $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k)); $$('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));
+  if(k==='unl') renderUnlocks(); if(k==='leg') renderLegacy(); if(k==='more') renderMore(); if(k==='upg') renderUpgrades(); if(k==='mgr') renderManagers();
+}
+
+/* ---------- Per-frame UI ---------- */
+const cache={};
+function setT(id,v){ if(cache[id]!==v){ cache[id]=v; const e=document.getElementById(id); if(e) e.textContent=v; } }
+function setH(id,v){ if(cache['h'+id]!==v){ cache['h'+id]=v; const e=document.getElementById(id); if(e) e.innerHTML=v; } }
+function setCls(el,cls,on){ if(el.classList.contains(cls)!==on) el.classList.toggle(cls,on); }
+function mostUnlocked(){ let h=0; for(let i=0;i<N;i++) if(S.own[i]>0) h=i; return h; }
+let goalTarget=null;
+function updateAll(force){
+  setT('cash',$$$(S.cash));
+  const nonMgr=S.mgr.some(x=>x);
+  setT('inc', nonMgr? $$$(G.inc)+' / sec' : 'Tap a practice to earn!');
+  setT('lpb', S.lp>0 ? '💎 '+S.lp+' LP (+'+Math.round((lpBonus()-1)*100)+'%)':'');
+  const hi=mostUnlocked();
+  for(let i=0;i<N;i++){
+    const d=bizEls[i]; if(!d) continue;
+    const vis = i<=hi+2; d.style.display = vis?'':'none'; if(!vis) continue;
+    const myst = i===hi+2; setCls(d,'myst',myst);
+    const owned=S.own[i]>0;
+    if(myst){ setT('nm'+i,'???'); setT('btxt'+i,'Keep growing to reveal'); setT('bl'+i,'LOCKED'); setT('bc'+i,''); setT('own'+i,'?'); setT('mst'+i,''); $('#fill'+i).style.width='0'; setCls($('#buy'+i),'can',false); $('#msb'+i).style.width='0'; continue; }
+    setT('nm'+i,BIZ[i].name); setT('own'+i,S.own[i]);
+    const fill=$('#fill'+i);
+    if(owned){
+      const flow = S.mgr[i] && G.cyc[i]<0.4;
+      setCls(fill,'flow',flow);
+      fill.style.width = flow?'100%':(S.prog[i]*100).toFixed(1)+'%';
+      const active=S.mgr[i]||S.running[i];
+      setT('btxt'+i, active && !flow ? fmtTime((1-S.prog[i])*G.cyc[i])+'  •  '+$$$(G.rev[i]) : $$$(G.rev[i])+(flow?' / cycle':''));
+      setCls($('#ic'+i),'idle',!S.mgr[i] && !S.running[i]);
+    } else { fill.style.width='0'; setT('btxt'+i,'Not yet opened'); setCls($('#ic'+i),'idle',false); }
+    const nx=nextMs(i), prev=[0,...MS_LIST].filter(m=>m<=S.own[i]).pop();
+    if(nx){ const k=msKind(nx); $('#msb'+i).style.width=((S.own[i]-prev)/(nx-prev)*100).toFixed(1)+'%'; setT('mst'+i,S.own[i]+'/'+nx+' → '+k.label); }
+    else { $('#msb'+i).style.width='100%'; setT('mst'+i,'All milestones unlocked!'); }
+    const n=Math.max(1,buyCount(i)), cost=costFor(i,n), can=S.cash>=cost;
+    setT('bl'+i, !owned?'OPEN': S.buyMode==='max'?'MAX ×'+buyCount(i): S.buyMode==='next'?'NEXT ×'+n:'BUY ×'+n); setT('bc'+i,$$$(cost)); setCls($('#buy'+i),'can',can);
+  }
+  // goal chip
+  let best=null,bf=-1;
+  for(let i=0;i<N;i++){ if(S.own[i]<=0) continue; const nx=nextMs(i); if(!nx) continue; const f=S.own[i]/nx; if(f>bf){bf=f;best=i;} }
+  if(best!==null){ const nx=nextMs(best); goalTarget=best; setT('goalT',BIZ[best].name+' '+S.own[best]+'/'+nx+' → '+msKind(nx).label); $('#goalB').style.width=(bf*100)+'%'; } else { goalTarget=null; setT('goalT','Tap your chair to treat a patient!'); }
+  // buffs
+  const now=Date.now(); setH('buffs',S.buffs.filter(b=>b.until>now).map(b=>'<span class="buff">'+b.name+' · '+fmtTime((b.until-now)/1000)+'</span>').join(''));
+  // wheel btn
+  setCls($('#bWheel'),'ready',wheelReady());
+  // list affordability
+  $$('#p-mgr .hire').forEach(b=>{ if(b.classList.contains('done')) return; setCls(b,'can',S.cash>=+b.dataset.cost); });
+  $$('#p-upg .hire').forEach(b=>setCls(b,'can',S.cash>=+b.dataset.cost));
+  // nav badges
+  const mAff=BIZ.filter((b,i)=>!S.mgr[i]&&S.cash>=b.mgr&&S.own[i]>0).length; const uAff=UPGS.filter(u=>!S.upg[u.id]).slice(0,14).filter(u=>S.cash>=u.cost).length;
+  [['mgr',mAff],['upg',uAff],['leg',pendingLP()>=1?'!':0]].forEach(([k,v])=>{ const e=$('#dot-'+k); e.textContent=v; e.classList.toggle('on',!!v); });
+}
+$('#goal').onclick=()=>{ if(goalTarget===null) return; const i=goalTarget, n=nextMs(i)-S.own[i], cost=costFor(i,n);
+  if(S.cash>=cost){ const m=S.buyMode; S.buyMode='next'; buy(i); S.buyMode=m; } else { SFX.err(); toast('Need '+$$$(cost)+' to hit the next milestone'); } };
+$('#mascot').onclick=()=>{ SFX.resume(); const a=Math.max(1,G.inc*0.5); earn(a); SFX.coin(Math.floor(rnd(0,8))); const r=$('#mascot').getBoundingClientRect(); floatText(r.left+r.width/2,r.top+10,'+'+$$$(a)); burst(r.left+r.width/2,r.top+r.height/2,5,'coin'); S.stats.taps++; };
+$('#bWheel').onclick=()=>{ SFX.resume(); SFX.click(6); openWheel(); };
+$('#bSfx').onclick=()=>{ SFX.resume(); S.settings.sfxOn=!S.settings.sfxOn; SFX.setSfx(); $('#bSfx').textContent=S.settings.sfxOn?'🔊':'🔇'; if(S.settings.sfxOn) SFX.click(4); };
+$('#bMus').onclick=()=>{ SFX.resume(); S.settings.musicOn=!S.settings.musicOn; $('#bMus').style.opacity=S.settings.musicOn?1:.4; S.settings.musicOn?SFX.musicOn():SFX.musicOff(); };
+
+/* =====================================================================
+   Main loop
+   ===================================================================== */
+let last=performance.now(), acc=0, sec=0, saveT=0, tipI=0, tipT=0;
+function tick(dt){
+  for(let i=0;i<N;i++){
+    if(S.own[i]<=0) continue;
+    if(S.mgr[i]){
+      S.prog[i]+=dt/G.cyc[i];
+      if(S.prog[i]>=1){ const c=Math.floor(S.prog[i]); S.prog[i]-=c; const a=c*G.rev[i]; earn(a); collectFx(i,a,false); }
+    } else if(S.running[i]){
+      S.prog[i]+=dt/G.cyc[i];
+      if(S.prog[i]>=1){ S.prog[i]=0; S.running[i]=false; earn(G.rev[i]); collectFx(i,G.rev[i],true); }
+    }
+  }
+}
+function collectFx(i,a,manual){
+  const now=performance.now(); if(document.hidden) return;
+  if(manual){ SFX.coin(Math.min(combo,12)); floatAt($('#ic'+i),'+'+$$$(a), a>G.inc*30&&G.inc>0); if(a>=1e3) SFX.ching(); }
+  else if(now-lastCoinSnd>140 && $('#p-biz').classList.contains('on')){ lastCoinSnd=now; SFX.coin(i); if(G.cyc[i]>.6) floatAt($('#ic'+i),'+'+$$$(a)); }
+}
+function frame(now){
+  let dt=(now-last)/1000; last=now; if(dt>3600) dt=3600; if(dt<0) dt=0;
+  tick(dt); sec+=dt; saveT+=dt; tipT+=dt;
+  if(sec>=1){ sec=0; recalc(); checkAch(); checkStory(); checkHalloween(); if(Date.now()>S.nextGolden && !modalOpen) { spawnGolden(); scheduleGolden(); } if(document.getElementById('p-leg').classList.contains('on')) updateLegacyLive(); }
+  if(saveT>=5){ saveT=0; save(); }
+  if(tipT>=14){ tipT=0; tipI=(tipI+1)%TIPS.length; setT('tip',TIPS[tipI]); }
+  updateAll(); drawFx();
+  requestAnimationFrame(frame);
+}
+function updateLegacyLive(){ const b=$('#sellBtn'); if(!b) return; const g=pendingLP(); b.textContent=g>=1?'SELL PRACTICE → +'+g+' LP':'Earn $100M this run to sell (1 LP)'; b.classList.toggle('dis',g<1); }
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) save(); else last=performance.now(); });
+addEventListener('beforeunload',save);
+addEventListener('pointerdown',()=>SFX.resume(),{once:false,passive:true});
+
+/* ---------- Boot ---------- */
+(function boot(){
+  const had=load();
+  buildNav(); renderAll(); recalc();
+  $('#bSfx').textContent=S.settings.sfxOn?'🔊':'🔇'; $('#bMus').style.opacity=S.settings.musicOn?1:.4;
+  if(!S.nextGolden || S.nextGolden<Date.now()-1e9) scheduleGolden();
+  checkAch(); setT('tip',TIPS[0]);
+  if(had) offlineEarn();
+  dailyCheck(); checkStory();
+  if(S.settings.musicOn){ const start=()=>{ SFX.musicOn(); removeEventListener('pointerdown',start); }; addEventListener('pointerdown',start); }
+  window.__game={S:()=>S,buy,hire,recalc,tick,renderAll,fmt,pendingLP,doSell,openWheel,spawnGolden};
+  requestAnimationFrame(t=>{ last=t; requestAnimationFrame(frame); });
+})();
+</script>
+</body>
+</html>
