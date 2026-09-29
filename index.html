@@ -635,10 +635,8 @@
   .row-buy:disabled{cursor:not-allowed; border-image-source:var(--btn-buy-disabled); filter:none; color:var(--ink-soft);}
   .row-buy:disabled::before{filter:grayscale(1) opacity(0.55);}
   .row-buy.hire-btn:disabled{border-image-source:var(--btn-hire-disabled);}
-  .row-buy.owned-btn{border-image:none; border-width:2.5px; border-radius:12px; border-color:var(--ink); background:var(--surface-2); color:var(--ink-soft); cursor:default; filter:none; padding:8px 10px;}
-  .row-buy.owned-btn::before, .row-buy.capped-btn::before, .row-buy.locked-btn::before{content:none;}
-  .row-buy.capped-btn{border-image:none; border-width:2.5px; border-radius:12px; border-color:var(--ink); opacity:0.7; background:var(--surface-2); color:var(--ink-soft); cursor:not-allowed; filter:none; min-width:96px; padding:8px 10px;}
-  .row-buy.locked-btn{border-image:none; border-width:2.5px; border-radius:12px; opacity:0.85; background:var(--surface-2); color:var(--ink-soft); cursor:not-allowed; filter:none; min-width:96px; border-color:var(--gold); padding:8px 10px;}
+  .row-buy.owned-btn{cursor:default;}
+  .row-buy.capped-btn, .row-buy.locked-btn{opacity:0.9;}
   .row.desk-locked{opacity:0.85;}
 
   /* ---------- locked-with-progress teasers ---------- */
