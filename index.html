@@ -796,6 +796,23 @@
     white-space:nowrap;
   }
 
+  /* ---------- Halloween event skin (body.theme-halloween, set by applyHolidayTheme) ----------
+     Deliberately light: the banner, the bonus token and a faint vignette. Nothing here changes
+     layout, and the global color variables are left alone so text contrast is untouched. */
+  body.theme-halloween .holiday-banner{
+    background:linear-gradient(135deg, #5b2a86, #e8731a); color:#fff7ea;
+  }
+  body.theme-halloween .holiday-banner .holiday-bonus{background:rgba(0,0,0,0.28); border-color:rgba(255,247,234,0.5);}
+  body.theme-halloween .coffee-run{
+    background:radial-gradient(circle at 32% 26%, #ffd9a0 0%, #f0801e 58%, #8a3b06 100%);
+  }
+  body.theme-halloween .coffee-run::after{border-color:#8a4bd0;}
+  body.theme-halloween::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(60,20,90,0.22) 100%);
+  }
+  @media (prefers-reduced-motion:reduce){ body.theme-halloween .coffee-run{animation:none;} }
+
   /* ---------- boost banner ---------- */
   .boost-banner{display:flex; gap:8px; flex-wrap:wrap;}
   .boost-chip{
@@ -6268,14 +6285,17 @@
     };
   }
   function handleCoffeeRunClick(){
+    var hev = activeHolidayEvent();
+    var skin = hev && hev.bonusSkin;
+    var title = skin ? skin.label : "COFFEE RUN";
     if (Math.random() < 0.5){
       state.frenzyUntil = Date.now() + FRENZY_MS;
-      showToast("COFFEE RUN", "Frenzy! " + FRENZY_MULT + "× production for " + Math.round(FRENZY_MS/1000) + " seconds.");
+      showToast(title, (skin ? hev.frenzyText : "") + "Frenzy! " + FRENZY_MULT + "× production for " + Math.round(FRENZY_MS/1000) + " seconds.");
     } else {
       var windfall = computeEbitda(state) * WINDFALL_SECONDS;
       state.revenue += windfall;
       state.lifetimeRevenue += windfall;
-      showToast("COFFEE RUN", "Windfall! +" + fmt(windfall) + " straight to the till.");
+      showToast(title, (skin ? hev.windfallText + "a windfall of " : "Windfall! ") + "+" + fmt(windfall) + " straight to the till.");
     }
     updateStats();
     updateBoostBanner();
@@ -6596,8 +6616,43 @@
       end: "12-31",
       bonusPct: 0.12,
       blurb: "Company-wide bonus season. Nobody's quite sure where the money comes from."
+    },
+    {
+      id: "fright-night",
+      name: "Compliance Fright Night",
+      emoji: "\uD83C\uDF83",
+      start: "10-24",
+      end: "11-01",
+      bonusPct: 0.13,
+      blurb: "The audit committee is haunting the break room. Every chair is somehow still billing.",
+      theme: "halloween",
+      // The random Coffee Run token is reskinned as a trick-or-treater while this event is live.
+      // Same mechanic and same rewards as the normal Coffee Run (no new random system, and no
+      // "trick" ever costs the player anything), only the skin and the words change.
+      bonusSkin: { emoji: "\uD83C\uDF6C", label: "TRICK OR TREAT", aria: "Trick or treat bonus" },
+      frenzyText: "TREAT! Sugar rush. ",
+      windfallText: "TREAT! A full-size candy bar and ",
+      news: [
+        ["GHOST PATIENTS", "are haunting the AR aging report. They owe nothing and appear everywhere."],
+        ["ZOMBIE ROLL-UP", "refuses to die after its fourth failed integration. Investors call it \u201Cresilient.\u201D"],
+        ["HAUNTED OPERATORY", "Chair 7 reclines on its own. Facilities has filed it under \u201Cfeatures.\u201D"],
+        ["VAMPIRE LENDER", "demands blood covenants. Term sheet is signed in red."],
+        ["TRICK-OR-TREATERS", "hit the lobby. Hygiene schedule fills up for the first week of November."],
+        ["THE CONSULTANT", "dressed as a value-creation plan this year. Nobody could tell."],
+        ["SPOOKY SYNERGY", "the mission statement now glows in the dark. HR is looking into it."]
+      ]
     }
   ];
+  // Preview switch for testing: adding ?event=fright-night to the URL forces that event on, but
+  // ONLY on hosts other than the live domain, so no player can use it to take the bonus early.
+  function previewEventId(){
+    try {
+      var host = location.hostname;
+      if (host === "empire.dentalstrategyinstitute.com") return null;
+      var m = /[?&]event=([a-z0-9-]+)/i.exec(location.search || "");
+      return m ? m[1].toLowerCase() : null;
+    } catch(e){ return null; }
+  }
   // Turns "MM-DD" plus a year into a real Date at local midnight.
   function holidayDateInYear(mmdd, year){
     var parts = mmdd.split("-");
@@ -6606,6 +6661,12 @@
   // Returns the currently-active holiday event object, or null. Pure date math — no state, no
   // server round-trip, nothing to keep in sync; it's simply true or false at any given moment.
   function activeHolidayEvent(){
+    var forced = previewEventId();
+    if (forced){
+      for (var f = 0; f < HOLIDAY_EVENTS.length; f++){
+        if (HOLIDAY_EVENTS[f].id === forced) return HOLIDAY_EVENTS[f];
+      }
+    }
     var now = new Date();
     var year = now.getFullYear();
     for (var i = 0; i < HOLIDAY_EVENTS.length; i++){
@@ -6634,10 +6695,34 @@
   function saveHolidayAnnounced(obj){
     try { localStorage.setItem(HOLIDAY_ANNOUNCED_KEY, JSON.stringify(obj)); } catch(e){}
   }
+  // Toggles the event's look: a body class for the CSS, plus the reskinned bonus token.
+  var lastThemeApplied = "";
+  function applyHolidayTheme(ev){
+    var theme = (ev && ev.theme) || "";
+    if (theme === lastThemeApplied) return;
+    lastThemeApplied = theme;
+    document.body.classList.remove("theme-halloween");
+    if (theme) document.body.classList.add("theme-" + theme);
+    var coin = el["coffee-run"];
+    if (coin){
+      var skin = ev && ev.bonusSkin;
+      coin.textContent = skin ? skin.emoji : "\u2615";
+      coin.setAttribute("aria-label", skin ? skin.aria : "Coffee run bonus");
+    }
+  }
+  // While an event with headlines is live, drop one themed line on the ticker now and then.
+  // Low-frequency on purpose (about one a minute and a half) so it stays flavor, not noise.
+  function pushHolidayHeadline(){
+    var ev = activeHolidayEvent();
+    if (!ev || !ev.news || !ev.news.length) return;
+    var h = ev.news[Math.floor(Math.random() * ev.news.length)];
+    pushNews(ev.emoji + " " + h[0], h[1]);
+  }
   function updateHolidayBanner(){
     var banner = el["holiday-banner"];
     if (!banner) return;
     var ev = activeHolidayEvent();
+    applyHolidayTheme(ev);
     if (!ev){
       banner.classList.remove("active");
       return;
@@ -7752,6 +7837,7 @@
     saveGame();
     scheduleCoffeeRun();
     scheduleDeskDrop();
+    setInterval(pushHolidayHeadline, 95000);
 
     if (window.claude && window.claude.hot && window.claude.hot.snapshot){
       window.claude.hot.snapshot(function(){ return JSON.parse(JSON.stringify(state)); });
