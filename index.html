@@ -864,6 +864,8 @@
     padding:4px 10px; border:2px solid var(--ink); border-radius:999px; background:var(--accent-2); color:#fff;
     box-shadow:2px 2px 0 var(--hard-shadow); white-space:nowrap; transition:transform 0.1s ease;
   }
+  .desk-combine-hint{font-family:'Nunito', sans-serif; font-weight:700; font-size:0.66rem; line-height:1.35; color:var(--ink-soft); margin:2px 0 6px;}
+  .desk-combine-hint.ready{color:var(--accent);}
   .desk-combine-btn:not(:disabled):hover{transform:translateY(-1px);}
   .desk-combine-btn:disabled{background:var(--surface-2); color:var(--ink-soft); cursor:not-allowed; box-shadow:none; opacity:0.75;}
   .desk-card{
@@ -2540,7 +2542,16 @@
     // either metric satisfies it: merely owning that many complete sets (the original,
     // pre-combine behavior — kept so no existing save or requirement regresses), or having
     // combined that many times total, which is the only way past 5 (the total set count).
-    return Math.max(completedDeskSetCount(s), totalDeskCombines(s)) >= req.count;
+    return Math.max(completedDeskSetCount(s), totalDeskCombines(s)) >= deskReqCount(s, req);
+  }
+  /* v74: desk requirements climb with the season. Every DESK_REQ_SEASONS_PER_STEP completed seasons adds
+     one more set to every desk-gated Initiative, up to season DESK_REQ_MAX_SEASON (the planned 100-season
+     run), so as seasons get harder it takes more and more sets (or repeat combines) to unlock them. */
+  var DESK_REQ_SEASONS_PER_STEP = 10;
+  var DESK_REQ_MAX_SEASON = 100;
+  function deskReqCount(s, req){
+    var seasons = Math.min((s && s.seasonsCompleted) || 0, DESK_REQ_MAX_SEASON);
+    return ((req && req.count) || 0) + Math.floor(seasons / DESK_REQ_SEASONS_PER_STEP);
   }
 
   /* ---------- trophy case: permanent, cross-season achievements ---------- */
@@ -3603,8 +3614,8 @@
       "• Keep DSO Health balanced — Clinical Quality and Integration Strain (see the Board Room panel) net " +
       "straight into this multiplier, so growing fast without oversight can quietly cost you more than it earns.\n\n" +
       "HOW TO GROW THE MULTIPLE (right now: " + mult.toFixed(1) + "×)\n" +
-      "• Two Initiatives add it permanently: Centralize Billing (+1.5×, needs 2 complete Desk Sets) and " +
-      "Pass a Compliance Audit (+1.5×, needs 3 complete Desk Sets).\n" +
+      "• Two Initiatives add it permanently: Centralize Billing (+1.5×, needs " + deskReqCount(state, {count:2}) + " Desk Sets) and " +
+      "Pass a Compliance Audit (+1.5×, needs " + deskReqCount(state, {count:3}) + " Desk Sets). Combined sets count, and the requirement grows every " + DESK_REQ_SEASONS_PER_STEP + " seasons.\n" +
       "• After you go public, the Analyst Coverage IPO perk adds +0.5× per rank purchased.";
   }
 
@@ -3729,7 +3740,7 @@
   function buyButtonState(g){
     if (g.deskRequirement && !meetsDeskRequirement(state, g.deskRequirement)){
       var have = completedDeskSetCount(state);
-      var need = g.deskRequirement.count;
+      var need = deskReqCount(state, g.deskRequirement);
       return { label:"🔒 Locked", cost:0, disabled:true, capped:false, deskLocked:true };
     }
     var owned = state.staff[g.id] || 0;
@@ -3898,7 +3909,7 @@
   function deskLockHtml(need){
     return '<div class="lock-req">&#128274; Requires ' + need + ' complete Desk Set' + (need > 1 ? 's' : '') + '</div>' +
       lockProgHtml("desk", need) +
-      '<div class="lock-hint">Desk cards drop from &#128230; Desk Drops and rewards. Finish a whole set to unlock.</div>';
+      '<div class="lock-hint">Desk cards drop from &#128230; Desk Drops and rewards. Finish a set (or combine one) to count. The bar rises by 1 every ' + DESK_REQ_SEASONS_PER_STEP + ' seasons.</div>';
   }
   function futureGateHtml(){
     return '<div class="lock-teaser">&#128302; ??? &mdash; something about this gets locked in later seasons.</div>';
@@ -3928,7 +3939,7 @@
       if (owned > 0 && !automated) metaText += ' &mdash; piles up until collected';
       if (bs.capped) metaText += ' &mdash; fully staffed for this season, growth caps climb next season';
       var lockHtml = '';
-      if (bs.deskLocked) lockHtml = deskLockHtml(g.deskRequirement.count);
+      if (bs.deskLocked) lockHtml = deskLockHtml(deskReqCount(state, g.deskRequirement));
       else if (g.deskRequirement && !deskGateActive(state)) lockHtml = futureGateHtml();
       var buyHtml = (bs.capped || bs.deskLocked)
         ? '<button class="row-buy hire-btn ' + (bs.deskLocked ? 'locked-btn' : 'capped-btn') + '" type="button" data-gen="' + g.id + '" disabled><span class="buy-label">' + bs.label + '</span></button>'
@@ -3963,7 +3974,7 @@
       row.className = "row" + (bought ? " owned" : "") + (deskLocked ? " desk-locked" : "");
       var flavorHtml = '<div class="row-flavor">' + u.flavor + '</div>';
       if (deskLocked){
-        flavorHtml += deskLockHtml(u.deskRequirement.count);
+        flavorHtml += deskLockHtml(deskReqCount(state, u.deskRequirement));
       } else if (!bought && u.deskRequirement && !deskGateActive(state)){
         flavorHtml += futureGateHtml();
       }
@@ -4508,7 +4519,7 @@
     state.deskCombinesBySet[setId] = n;
     var total = totalDeskCombines(state);
     xchgSig = "";
-    showToast("SET COMBINED", set.name + " combined (×" + n + ") for a permanent bonus. Its slots are empty again — collect all " + set.cards.length + " to combine it once more. " + total + " total combine" + (total === 1 ? "" : "s") + " so far — counts toward higher-tier initiatives.");
+    showToast("SET COMBINED", set.name + " combined (×" + n + "). Its slots are empty again — collect all " + set.cards.length + " to combine it once more. " + total + " total combine" + (total === 1 ? "" : "s") + " so far — counts toward higher-tier initiatives.");
     sfxMilestoneBrass();
     renderDesk(); renderStaff(); renderUpgrades();
     updateStats();
@@ -4527,17 +4538,28 @@
       var combined = deskCombineCount(state, set.id);
       var cost = deskCombineCost(state, set.id);
       var canCombine = complete && canCombineSet(state, set.id);
+      var need = cost + 1; // copies of every card the next combine consumes (all copies are cleared)
+      var short = 0;
+      if (complete && cost > 0) set.cards.forEach(function(c){ short += Math.max(0, need - deskCardCount(state, c.id)); });
       var head = document.createElement("div");
       head.className = "desk-set-head";
       head.innerHTML = '<span>' + set.name + '</span>' +
         '<span class="desk-set-count">' + ownedCount + '/' + set.cards.length + '</span>' +
         (combined > 0 ? '<span class="desk-set-combined-badge">Combined ×' + combined + '</span>' : '') +
         (complete ? '<button class="desk-combine-btn" type="button" data-combine="' + set.id + '"' + (canCombine ? '' : ' disabled') +
-          ' title="' + (cost === 0 ? 'Combine this completed set for a permanent bonus — its 5 cards go back to locked, so you’ll need to collect them all again to combine it once more.' : (canCombine ? 'Combine using ' + cost + ' spare copies of each card — the set goes back to locked, so you’ll need to collect it all again to combine it once more.' : 'Need ' + cost + ' spare of each card to combine again')) + '">' +
-          (cost === 0 ? 'Combine Set' : 'Combine (' + cost + ' spares ea.)') + '</button>' : '');
+          ' title="' + (cost === 0 ? 'Combine this completed set — it counts toward Initiative requirements. Its cards go back to locked, so you\u2019ll need to collect them all again to combine it once more.' : 'Combining again uses ' + need + ' copies of every card in this set, and the set goes back to locked.') + '">' +
+          (cost === 0 ? 'Combine Set' : (canCombine ? 'Combine (' + need + ' of each)' : 'Need ' + need + ' of each')) + '</button>' : '');
       var combineBtn = head.querySelector(".desk-combine-btn");
       if (combineBtn) combineBtn.addEventListener("click", function(){ doCombineSet(set.id); });
       el["desk-grid"].appendChild(head);
+      if (complete && cost > 0){
+        var hint = document.createElement("div");
+        hint.className = "desk-combine-hint" + (canCombine ? " ready" : "");
+        hint.textContent = canCombine
+          ? "Ready \u2014 combining uses " + need + " of every card in this set."
+          : "Next combine needs " + need + " of every card \u2014 you\u2019re short " + short + " card" + (short === 1 ? "" : "s") + ". Check the \u00d7 badges.";
+        el["desk-grid"].appendChild(hint);
+      }
       var grid = document.createElement("div");
       grid.className = "desk-set-grid";
       set.cards.forEach(function(c){
