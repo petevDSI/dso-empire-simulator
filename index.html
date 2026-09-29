@@ -830,6 +830,18 @@
   .hire-max-toggle.active{background:var(--accent); color:var(--on-accent);}
 
   /* ---------- holiday events (rare, calendar-driven promo banner) ---------- */
+  /* v77: Fright Night side-game switch (header link + banner button). No transforms: Safari click safety. */
+  .fn-link{text-decoration:none; display:inline-block; white-space:nowrap; background:#2a1450; color:#ffd9a0; border-color:#ff9d2e;}
+  .fn-link[hidden], .holiday-play[hidden]{display:none;}
+  .fn-link:hover{transform:none; box-shadow:3.5px 3.5px 0 var(--hard-shadow); filter:brightness(1.12);}
+  .fn-link:active{transform:none;}
+  .fn-link.soon{background:var(--surface-2); color:var(--ink-soft); border-style:dashed; border-color:var(--ink-soft); cursor:pointer;}
+  .fn-link.live{background:linear-gradient(#ff9d2e,#e07410); color:#2a0f00; border-color:#2a0f00; animation:fnGlow 2s ease-in-out infinite;}
+  @keyframes fnGlow{0%,100%{box-shadow:2.5px 2.5px 0 var(--hard-shadow);} 50%{box-shadow:2.5px 2.5px 0 var(--hard-shadow), 0 0 10px 2px rgba(255,157,46,0.85);}}
+  @media (prefers-reduced-motion: reduce){ .fn-link.live{animation:none;} }
+  .holiday-play{flex:0 0 auto; text-decoration:none; font:900 0.78rem 'Nunito',sans-serif; padding:7px 12px; border-radius:999px; background:#fff7ea; color:#3a1a00; border:2.5px solid #3a1a00; box-shadow:2.5px 2.5px 0 rgba(0,0,0,0.45);}
+  .holiday-play:hover{filter:brightness(1.06);}
+  body.mini-mode .fn-link{display:none;}
   .holiday-banner{
     display:none; align-items:center; gap:14px; flex-wrap:wrap;
     padding:12px 18px; margin-bottom:2px;
@@ -1646,6 +1658,7 @@
     <button id="sfx-toggle" class="mini-toggle" type="button" title="Toggle sound effects">&#128266; Sound on</button>
     <button id="music-toggle" class="mini-toggle" type="button" title="Toggle background music">&#127925; Music on</button>
     <button id="mini-toggle" class="mini-toggle" type="button" title="Pin a compact view in the corner while you do other things"><span id="mini-toggle-label">&#8862; Mini mode</span><span class="mini-alert-dot" id="mini-alert-dot" aria-label="Action available"></span></button>
+    <a id="fn-link" class="mini-toggle fn-link" href="/smile-empire/?theme=halloween&amp;from=dso" hidden></a>
 
     <div class="news" id="news">
       <button class="news-bar" id="news-bar" type="button" aria-expanded="false" aria-controls="news-log" title="Click for the last 10 announcements">
@@ -1680,6 +1693,7 @@
       <span class="holiday-blurb" id="holiday-blurb"></span>
     </span>
     <span class="holiday-bonus" id="holiday-bonus"></span>
+    <a class="holiday-play" id="holiday-play" href="/smile-empire/?theme=halloween&amp;from=dso" hidden>Play Smile Empire &rarr;</a>
   </div>
 
   <div class="boost-banner" id="boost-banner">
@@ -3927,7 +3941,7 @@
    "oi-modal-flavor","oi-modal-bonus","oi-modal-room-name","oi-modal-room-bonus","oi-modal-buy",
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
-   "holiday-banner","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
+   "holiday-banner","fn-link","holiday-play","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
    "stat-networth","exit-networth",
    "logo-intro","intro-office","intro-logo","intro-sparks","intro-tag","intro-enter",
    "office-viewer","office-viewer-scroll","office-viewer-close","office-viewer-hint","office-view-btn",
@@ -6945,7 +6959,37 @@
     var h = ev.news[Math.floor(Math.random() * ev.news.length)];
     pushNews(ev.emoji + " " + h[0], h[1]);
   }
+  /* ---------- Fright Night side game (Smile Empire) link: hidden -> "coming soon" (Sep 1-Oct 23) -> live (Oct 24-Nov 1) -> hidden ---------- */
+  function fnUrl(){ return "/smile-empire/?theme=halloween&from=dso" + (previewEventId() === "fright-night" ? "&event=fright-night" : ""); }
+  function fnPhase(){
+    if (previewEventId() === "fright-night") return "live";
+    var now = new Date(), y = now.getFullYear();
+    if (now < new Date(y, 8, 1)) return "hidden";
+    if (now < new Date(y, 9, 24)) return "soon";
+    if (now <= new Date(y, 10, 1, 23, 59, 59, 999)) return "live";
+    return "hidden";
+  }
+  var fnShown = "";
+  function updateSideGameLink(){
+    var a = el["fn-link"]; if (!a) return;
+    var ph = fnPhase();
+    if (ph !== fnShown){
+      fnShown = ph;
+      a.classList.toggle("soon", ph === "soon"); a.classList.toggle("live", ph === "live");
+      a.hidden = (ph === "hidden");
+      if (ph === "soon"){ a.textContent = "\uD83C\uDF83 Fright Night \u00B7 Coming Oct 24"; a.setAttribute("href", "#"); }
+      if (ph === "live"){ a.textContent = "\uD83C\uDF83 Play Fright Night"; a.setAttribute("href", fnUrl()); }
+    }
+    if (el["holiday-play"]){ el["holiday-play"].hidden = (ph !== "live"); el["holiday-play"].setAttribute("href", fnUrl()); }
+  }
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest("#fn-link.soon");
+    if (!a) return;
+    e.preventDefault();
+    showToast("\uD83C\uDF83 FRIGHT NIGHT \u00B7 OCT 24", "Smile Empire: Fright Night opens Oct 24. Play it to win permanent desk cards that carry into this game.");
+  });
   function updateHolidayBanner(){
+    updateSideGameLink();
     var banner = el["holiday-banner"];
     if (!banner) return;
     var ev = activeHolidayEvent();
@@ -7283,6 +7327,11 @@
     var intro = el["logo-intro"];
     if (!intro) return;
     if (miniMode){ intro.hidden = true; return; }
+    if (/[?&]from=smile/.test(location.search) && loadSplashSeen()){ // coming back from a side game: no title sequence
+      intro.hidden = true;
+      try { history.replaceState(null, "", location.pathname); } catch(e){}
+      return;
+    }
     intro.classList.add("js-live");
     var logo = el["intro-logo"], office = el["intro-office"], sparks = el["intro-sparks"], tag = el["intro-tag"];
     var lockup = document.querySelector(".brand-lockup");

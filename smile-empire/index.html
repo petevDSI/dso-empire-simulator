@@ -18,6 +18,12 @@ body{background:
   radial-gradient(800px 500px at 100% 100%,#0d948833,transparent 60%),
   var(--bg)}
 button{font-family:inherit;color:inherit;cursor:pointer;border:0}
+#dsoBack{position:fixed;left:8px;bottom:calc(62px + env(safe-area-inset-bottom));z-index:95;padding:7px 12px;border-radius:99px;background:#1c0f38ee;border:1.5px solid #ff9d2e;color:#ffd9a0;font:700 12px 'Nunito',system-ui,sans-serif;text-decoration:none;box-shadow:0 2px 10px #000a}
+#dsoBack:hover{background:#2c1656}
+#gate{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:radial-gradient(900px 500px at 50% 0,#3a1a70,#0d0620 70%);color:#ffe9c4}
+#gate h1{font-family:'Lilita One',sans-serif;font-size:34px;margin:0;color:#ff9d2e;text-shadow:0 3px 0 #5a2a00}
+#gate p{max-width:420px;margin:0;font-size:16px;line-height:1.45;color:#e9d9ff}
+#gate a{display:inline-block;margin-top:6px;padding:12px 22px;border-radius:14px;background:linear-gradient(#ff9d2e,#e07410);color:#2a0f00;font:800 16px 'Nunito',system-ui,sans-serif;text-decoration:none;border:2px solid #2a0f00}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
 #app{position:relative;max-width:640px;height:100%;margin:0 auto;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 header{display:flex;align-items:center;gap:10px;padding:10px 12px 6px;background:linear-gradient(180deg,#152b58,#0f1f42);border-bottom:2px solid var(--line);box-shadow:0 6px 18px #0008;position:relative;z-index:5}
@@ -1256,7 +1262,7 @@ function renderMore(){
     <h3>Settings</h3><div style="margin:6px 0">Sound effects <input class="slider" id="vS" type="range" min="0" max="1" step=".05" value="${S.settings.sfx}"></div>
     <div style="margin:6px 0">Music <input class="slider" id="vM" type="range" min="0" max="1" step=".05" value="${S.settings.music}"></div>
     <button class="mini" id="exp">Export save</button><button class="mini" id="imp">Import save</button><button class="mini" id="rst" style="color:#fca5a5">Reset game</button>
-    <div class="credit">Powered by <a href="${BRAND.url}" target="_blank" rel="noopener">${BRAND.name}</a>${THEME.id==='halloween'?' · <a href="/">← Play DSO Empire Simulator</a>':''}</div>`;
+    <div class="credit">Powered by <a href="${BRAND.url}" target="_blank" rel="noopener">${BRAND.name}</a>${THEME.id==='halloween'?' · <a href="'+DSO_HOME+'">← Play DSO Empire Simulator</a>':''}</div>`;
   p.innerHTML=h;
   $$('[data-s]',p).forEach(e=>e.onclick=()=>{ if(!modalOpen) openStory(STORY.find(s=>s.id===e.dataset.s),true); });
   $('#vS').oninput=e=>{ S.settings.sfx=+e.target.value; SFX.setSfx(); SFX.click(4); };
@@ -1386,8 +1392,26 @@ addEventListener('beforeunload',save);
 // musicOn() itself is a safe no-op if music is already playing.
 addEventListener('pointerdown',()=>{ SFX.resume(); if(S.settings.musicOn) SFX.musicOn(); },{once:false,passive:true});
 
+/* ---------- Side-game switch: back link to DSO Empire + event-window gate ---------- */
+const PREVIEW = (()=>{ try{ return location.hostname!=='empire.dentalstrategyinstitute.com' && /[?&]event=fright-night/i.test(location.search); }catch(e){ return false; } })();
+const DSO_HOME = '/?from=smile'+(PREVIEW?'&event=fright-night':'');
+function eventOpen(){ return THEME.id!=='halloween' || PREVIEW || themeLive(); }
+function showGate(){
+  const before = THEME.start && Date.now()<Date.parse(THEME.start);
+  const g=document.createElement('div'); g.id='gate';
+  g.innerHTML = before
+    ? '<div style="font-size:64px">🎃</div><h1>Fright Night opens Oct 24</h1><p>Play Smile Empire: Fright Night for one week only and win permanent desk cards that carry straight into DSO Empire Simulator.</p><a href="'+DSO_HOME+'">← Back to DSO Empire</a>'
+    : '<div style="font-size:64px">👻</div><h1>Fright Night has ended</h1><p>The haunted practice is closed until next year. Your prizes are safe in DSO Empire Simulator.</p><a href="'+DSO_HOME+'">← Back to DSO Empire</a>';
+  document.body.appendChild(g);
+}
+function addBackLink(){
+  const a=document.createElement('a'); a.id='dsoBack'; a.href=DSO_HOME; a.textContent='← DSO Empire'; document.body.appendChild(a);
+}
+
 /* ---------- Boot ---------- */
 (function boot(){
+  if(!eventOpen()){ showGate(); return; }
+  if(THEME.id==='halloween') addBackLink();
   const had=load();
   buildNav(); renderAll(); recalc();
   // Halloween office-scene background: shows in the letterboxed margins around
