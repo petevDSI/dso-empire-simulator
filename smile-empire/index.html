@@ -236,10 +236,12 @@ function fmt(n){
 }
 const CUR = THEME.currency || { symbol:'$', name:'Dollars', prefix:true };
 const $$$ = n=> CUR.prefix ? CUR.symbol+fmt(n) : fmt(n)+' '+CUR.symbol;
+// The tap-for-a-bonus collectible ("Golden Tooth") gets its own theme skin too.
+const GOLD = THEME.id==='halloween' ? { name:'Phantom Fang', namePl:'Phantom Fangs', emoji:'👻' } : { name:'Golden Tooth', namePl:'Golden Teeth', emoji:'🦷' };
 
 /* ---------- Data ---------- */
 const BIZ = [
-  { id:'hyg', name:'Hygiene Chair',            emoji:'🪥', cost:4,            rev:1,          time:1,     coef:1.07, mgr:1e3,   mgrName:'Nurse Nancy',       c:['#5eead4','#0f766e'] },
+  { id:'hyg', name:'Hygiene Chair',            emoji:'🪥', cost:4,            rev:1,          time:1,     coef:1.07, mgr:1e3,   mgrName:'Susan Supreme, RDH', c:['#5eead4','#0f766e'] },
   { id:'wht', name:'Whitening Bar',            emoji:'✨', cost:60,           rev:60,         time:3,     coef:1.15, mgr:1.5e4, mgrName:'Chloe the Aesthetician', c:['#fde68a','#d97706'] },
   { id:'fil', name:'Restorative Suite',        emoji:'🦷', cost:720,          rev:540,        time:6,     coef:1.14, mgr:1e5,   mgrName:'Dr. Filler',        c:['#a5b4fc','#4338ca'] },
   { id:'crn', name:'Same-Day Crown Lab',       emoji:'👑', cost:8640,         rev:4320,       time:12,    coef:1.13, mgr:5e5,   mgrName:'Tech Tomás',        c:['#fcd34d','#b45309'] },
@@ -251,6 +253,26 @@ const BIZ = [
   { id:'glb', name:'Global Oral Health Network',emoji:'🌎',cost:25798901760,  rev:12899450880,time:36864, coef:1.07, mgr:1e11,  mgrName:'Ambassador Ada',    c:['#67e8f9','#0e7490'] },
 ];
 const N = BIZ.length;
+
+/* ---------- Theme content overlay ----------
+   The palette/currency swap above only re-skins numbers. A theme also gets
+   to rename/re-emoji every business, manager, upgrade, perk, rank and story
+   beat — same mechanics (cost/rev/time/coef untouched), new flavor. Add a
+   new theme's overlay here; base theme applies none and stays exactly as
+   written above. */
+const HALLOWEEN_BIZ = [
+  { name:'The Haunted Hygiene Chair', emoji:'🦴', mgrName:'Zombie Susan, RDH' },
+  { name:"Witch's Whitening Bar",     emoji:'🔮', mgrName:'Ghost Chloe' },
+  { name:'Phantom Restorative Suite', emoji:'👻', mgrName:'Phantom Dr. Filler' },
+  { name:'Vampire Crown Lab',         emoji:'🧛', mgrName:'Skeleton Tomás' },
+  { name:'Nightmare Aligner Studio',  emoji:'😈', mgrName:'Witchy Dr. Aligna' },
+  { name:'The Implant Crypt',         emoji:'⚰️', mgrName:'Crypt-Keeper Dr. Osseo' },
+  { name:'Midnight Surgery Ward',     emoji:'🕯️', mgrName:'Dr. Scalpel, After Hours' },
+  { name:'The Coven Collective',      emoji:'🕸️', mgrName:'Coven Leader Rita' },
+  { name:'DSO Underworld',            emoji:'🌑', mgrName:'Vampire COO Carlos' },
+  { name:'Global Ghoul Network',      emoji:'🌕', mgrName:'Phantom Ambassador Ada' },
+];
+if(THEME.id==='halloween') BIZ.forEach((b,i)=>{ const o=HALLOWEEN_BIZ[i]; if(o){ b.name=o.name; b.emoji=o.emoji; b.mgrName=o.mgrName; } });
 
 const MS_LIST = [25,50,75,100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1250,1500,2000,2500,3000,4000,5000];
 const SPEED_MS = new Set([25,50,100,200,300,400]);
@@ -271,30 +293,57 @@ const UPG_NAMES = [
   ['Strategic Capital Partner','Enterprise Software','Acquisition Team'],
   ['Global Supply Chain','AI Diagnostics','Worldwide Brand Deal'],
 ];
+const HALLOWEEN_UPG_NAMES = [
+  ['Cursed Ultrasonic Scalers','Spectral Loupes & Light','Ghost Recall Automation'],
+  ['Jack-o\'-LED Accelerator Lamps','Trick-or-Treat Kits','Coven Whitening Membership'],
+  ['Spectral Intraoral Scanner','Cauldron-Fill Composite','Séance Isolation System'],
+  ['The Haunted Mill','Hellfire Furnace','Phantom Design Suite'],
+  ['Zombie 3D Printer Farm','Ghost-Eye Monitoring','Midnight Marketing Push'],
+  ['Necromancer Guided Software','Crypt CBCT Scanner','Bone Graveyard Partnership'],
+  ['Sleepy Hollow Sedation Cert','Haunted OR Upgrade','Spooky Specialist Network'],
+  ['Coven Billing Office',"Witches' Purchasing Deal",'Shared Crypt Network'],
+  ['Vampire Capital Partner','Underworld Enterprise Software','Reaper Acquisition Team'],
+  ['Global Ghoul Supply Chain','Phantom AI Diagnostics','Worldwide Fright Brand Deal'],
+];
+if(THEME.id==='halloween') UPG_NAMES.forEach((row,i)=>{ const o=HALLOWEEN_UPG_NAMES[i]; if(o) for(let k=0;k<3;k++) row[k]=o[k]; });
 const U1 = [1e3,2e4,3e5,4e6,5e7,6e8,7e9,8e10,9e11,1e13];
 const UPGS = [];
 BIZ.forEach((b,i)=>{ for(let k=0;k<3;k++) UPGS.push({id:'u'+i+'_'+k, biz:i, name:UPG_NAMES[i][k], mult:3, cost:U1[i]*Math.pow(200,k), emoji:b.emoji}); });
-[['Digital Practice Management','💻'],['Patient Financing Program','💳'],['Loyalty Rewards','🎁'],['Social Media Engine','📱'],
- ['Insurance Credentialing Team','📋'],['Premium Brand Identity','🏷️'],['AI Front Desk','🤖'],['Industry Thought Leadership','🎤']]
- .forEach((g,k)=>UPGS.push({id:'g'+k, biz:-1, name:g[0], mult:2, cost:5e5*Math.pow(1e3,k), emoji:g[1]}));
+const GLOBAL_UPGS = [['Digital Practice Management','💻'],['Patient Financing Program','💳'],['Loyalty Rewards','🎁'],['Social Media Engine','📱'],
+ ['Insurance Credentialing Team','📋'],['Premium Brand Identity','🏷️'],['AI Front Desk','🤖'],['Industry Thought Leadership','🎤']];
+const HALLOWEEN_GLOBAL_UPGS = [['Spectral Practice Management','🕯️'],['Fright-Financing Program','🎫'],['Trick-or-Treat Rewards','🍬'],['Séance Social Engine','🔮'],
+ ['Ghoul Credentialing Team','📜'],['Premium Coven Identity','🏷️'],['Phantom Front Desk','👻'],['Industry Nightmare Leadership','🎤']];
+if(THEME.id==='halloween') GLOBAL_UPGS.forEach((g,k)=>{ const o=HALLOWEEN_GLOBAL_UPGS[k]; if(o){ g[0]=o[0]; g[1]=o[1]; } });
+GLOBAL_UPGS.forEach((g,k)=>UPGS.push({id:'g'+k, biz:-1, name:g[0], mult:2, cost:5e5*Math.pow(1e3,k), emoji:g[1]}));
 UPGS.sort((a,b)=>a.cost-b.cost);
 
 const PERKS = [
   {id:'cash',  name:'Cash Cushion',        desc:'Start every run with '+$$$(5000),        cost:3,  emoji:'💵'},
   {id:'team',  name:'Retained Team',       desc:'Keep managers for your first 3 practices',cost:5,  emoji:'🧑‍⚕️'},
   {id:'night', name:'Night Shift',         desc:'Offline earnings cap 12h → 24h',          cost:8,  emoji:'🌙'},
-  {id:'magnet',name:'Golden Tooth Magnet', desc:'Golden Teeth appear twice as often',      cost:10, emoji:'🧲'},
+  {id:'magnet',name:GOLD.name+' Magnet',   desc:GOLD.namePl+' appear twice as often',      cost:10, emoji:'🧲'},
   {id:'ref',   name:'Referral Network',    desc:'All profits ×1.5',                        cost:15, emoji:'🤝'},
   {id:'brand', name:'Legacy Brand',        desc:'All profits ×2',                          cost:40, emoji:'🏆'},
 ];
+const HALLOWEEN_PERKS = {
+  cash:   { name:'Cauldron Cushion',   desc:'Start every run with '+$$$(5000), emoji:'🪤' },
+  team:   { name:'Undying Team',       desc:'Keep managers for your first 3 practices', emoji:'🧟' },
+  night:  { name:'Witching Hour Shift',desc:'Offline earnings cap 12h → 24h', emoji:'🌘' },
+  magnet: { name:'Phantom Fang Magnet',desc:'Phantom Fangs appear twice as often', emoji:'🧲' },
+  ref:    { name:'Coven Network',      desc:'All profits ×1.5', emoji:'🤝' },
+  brand:  { name:'Immortal Brand',     desc:'All profits ×2', emoji:'🏆' },
+};
+if(THEME.id==='halloween') PERKS.forEach(p=>{ const o=HALLOWEEN_PERKS[p.id]; if(o){ p.name=o.name; p.desc=o.desc; p.emoji=o.emoji; } });
 
 const RANKS = [[0,'Dental Assistant'],[1e3,'Hygienist'],[1e5,'Associate Dentist'],[1e7,'Practice Owner'],[1e9,'Multi-Site Owner'],[1e12,'Regional Director'],[1e15,'DSO Executive'],[1e19,'Industry Legend'],[1e25,'Dental Deity']];
+const HALLOWEEN_RANKS = ['Fledgling Ghoul','Junior Witch','Associate Vampire','Haunted Practice Owner','Multi-Crypt Owner','Regional Reaper','DSO Overlord','Legend of the Underworld','Dental Deity, Undead Edition'];
+if(THEME.id==='halloween') RANKS.forEach((r,i)=>{ if(HALLOWEEN_RANKS[i]) r[1]=HALLOWEEN_RANKS[i]; });
 
 const TIPS = [
   'Tip: “Next” buy mode takes you straight to the next milestone bonus.',
   'Tip: Managers run practices while you\'re away — only managed practices earn offline.',
   'Fun fact: Tooth enamel is the hardest substance in the human body.',
-  'Tip: Golden Teeth are rare. Tap them fast!',
+  'Tip: '+GOLD.namePl+' are rare. Tap them fast!',
   'Chairside truth: ergonomic operatory design helps clinicians work comfortably for longer careers.',
   'Tip: Selling your practice resets progress, but Legacy Points make every future run faster.',
   'Fun fact: The ADA recommends brushing twice a day for two minutes.',
@@ -310,7 +359,7 @@ const STORY = [
     'Tap that chair to treat a patient. Every dollar builds your future. Ivory here will keep you company.' ]},
   { id:'ten', when:()=>S.own[0]>=10, who:'Ivory', av:'🦷', lines:[
     'Ten chairs?! That\'s not a practice, that\'s a waiting-room problem!',
-    'Open the Managers tab and hire Nurse Nancy. The best schedule is the one that fills itself.' ]},
+    'Open the Managers tab and hire '+BIZ[0].mgrName+'. The best schedule is the one that fills itself.' ]},
   { id:'mgr', when:()=>S.mgr.some(x=>x), who:'Dr. Pearl', av:'👩‍⚕️', lines:[
     'Delegation! You\'re earning while you sleep now.',
     'Milestones are where the magic is. Hit 25 of anything and watch what happens.' ]},
@@ -338,6 +387,41 @@ const STORY = [
     'A healthy smile on every continent. Your grandfather would\'ve cried… then asked about the margins.',
     'But the story isn\'t over, kiddo. Keep climbing.' ]},
 ];
+const HALLOWEEN_STORY = {
+  intro:   { who:'Granny Pearl', av:'🧙‍♀️', lines:[
+    'Well, kiddo… after 42 years — and one very persuasive curse — the old practice is yours: one chair, one flickering candle, and a compressor that moans like something in the walls.',
+    'Tap that chair to treat a patient. Every fang you earn builds your empire. Ivory here will keep you company — she doesn\'t sleep anymore anyway.' ]},
+  ten:     { who:'Ivory', av:'🧛', lines:[
+    'Ten chairs?! That\'s not a practice, that\'s a coven with a waiting room!',
+    'Open the Managers tab and hire '+BIZ[0].mgrName+'. The best schedule is the one that fills itself — even the undead one.' ]},
+  mgr:     { who:'Granny Pearl', av:'🧙‍♀️', lines:[
+    'Delegation! You\'re earning while you sleep — or whatever it is we do now.',
+    'Milestones are where the real magic is. Hit 25 of anything and watch what happens.' ]},
+  rival:   { who:'Narrator', av:'🎬', lines:[
+    'Across the street, a sign flickers to life in cold purple neon: GRINDSTONE DENTAL PARTNERS.',
+    'Their motto: "Volume is Vision." Their patients: mostly confused. Their CEO: Chad Grindstone, Corporate Vampire.' ]},
+  crown:   { who:'Skeleton Tomás', av:'💀', lines:[
+    'Same-day crowns! Patients walk in with a problem and walk out grinning ear to ear — mine doesn\'t move, but you get the idea.' ]},
+  chad:    { who:'Chad Grindstone, Corporate Vampire', av:'🧛‍♂️', lines:[
+    'Congrats on your first billion Fangs. We\'ve sent a fruit basket. It comes with a non-compete.',
+    'Ivory drained the fruit. Ivory kept the non-compete for kindling.' ]},
+  implant: { who:'Crypt-Keeper Dr. Osseo', av:'⚰️', lines:[
+    'Implants are precision and patience. Rush them and you\'ll regret it. Plan them and you\'ll raise the dead — professionally speaking.' ]},
+  group:   { who:'Coven Leader Rita', av:'🔮', lines:[
+    'Multiple locations! Systems beat heroics every time. Standardize the good stuff, protect what makes each coven special.' ]},
+  sell:    { who:'Granny Pearl', av:'🧙‍♀️', lines:[
+    'You can sell to a strategic buyer now and start fresh — but you keep the wisdom as Legacy Points. Some things outlive even us.',
+    'Every point makes your next practice grow faster. Check the Legacy tab whenever you feel ready.' ]},
+  dso:     { who:'Chad Grindstone, Corporate Vampire', av:'🧛‍♂️', lines:[
+    'Fine. You\'re bigger than us now. We\'d like to acquire you.',
+    'Ivory declined on your behalf. Ivory then bit him. Ivory has no regrets.' ]},
+  resale:  { who:'Granny Pearl', av:'🧙‍♀️', lines:[
+    'Round two. Same chair, same curse. Different you.', 'Watch how fast it goes this time.' ]},
+  finale:  { who:'Granny Pearl', av:'🧙‍♀️', lines:[
+    'A haunted smile on every continent. Your grandfather would\'ve cried… then asked about the margins, then haunted the accountant.',
+    'But the story isn\'t over, kiddo. Keep climbing.' ]},
+};
+if(THEME.id==='halloween') STORY.forEach(s=>{ const o=HALLOWEEN_STORY[s.id]; if(o){ s.who=o.who; s.av=o.av; s.lines=o.lines; } });
 
 /* ---------- State ---------- */
 function newState(){
@@ -651,7 +735,7 @@ function openWheel(){
     const s=WHEEL[k]; let msg='';
     if(s.kind==='inc'){ const a=minutesIncome(s.v); S.cash+=a; S.run+=a; S.life+=a; msg='+'+$$$(a); }
     else if(s.kind==='buff'){ addBuff('wheel'+Date.now(),'Wheel ×'+s.v,s.v,s.s); msg='Profits ×'+s.v+' for '+fmtTime(s.s); }
-    else { setTimeout(()=>spawnGolden(true),600); msg='A Golden Tooth is coming!'; }
+    else { setTimeout(()=>spawnGolden(true),600); msg='A '+GOLD.name+' is coming!'; }
     $('#wres').textContent=msg;
     if(s.jp){ SFX.jackpot(); celebrate(true); } else { SFX.ching(); celebrate(false); }
     $('#wBtn').textContent='Awesome!'; $('#wBtn').classList.remove('dis'); $('#wBtn').onclick=closeModal; save();
@@ -661,6 +745,7 @@ function openWheel(){
 /* ---------- Buffs & Golden Tooth ---------- */
 function addBuff(id,name,mult,secs){ S.buffs.push({id,name,mult,until:Date.now()+secs*1000}); recalc(); }
 let goldenEl=$('#golden'), goldenTO=null;
+goldenEl.querySelector('span').textContent=GOLD.emoji;
 function scheduleGolden(){ const base=rnd(55,120)*(S.perks.magnet?.5:1); S.nextGolden=Date.now()+base*1000; }
 function spawnGolden(force){
   if(goldenEl.classList.contains('on')) return;
@@ -739,13 +824,13 @@ const ACH=[];
 BIZ.forEach((b,i)=>ACH.push({id:'own'+i,ic:b.emoji,name:'Grand Opening',desc:'Open a '+b.name,t:()=>S.own[i]>0}));
 [1e3,1e6,1e9,1e12,1e15,1e18,1e21,1e30].forEach(v=>ACH.push({id:'life'+v,ic:'💰',name:'Earned '+$$$(v),desc:'Lifetime earnings of '+$$$(v),t:()=>S.life>=v}));
 [[5,'Team Builder'],[10,'Fully Staffed']].forEach(([n,nm])=>ACH.push({id:'mgr'+n,ic:'🧑‍⚕️',name:nm,desc:'Hire '+n+' managers',t:()=>S.mgr.filter(x=>x).length>=n}));
-[1,10,50].forEach(v=>ACH.push({id:'gold'+v,ic:'🌟',name:'Tooth Fairy ×'+v,desc:'Catch '+v+' Golden Tooth'+(v>1?'s':''),t:()=>S.stats.golden>=v}));
+[1,10,50].forEach(v=>ACH.push({id:'gold'+v,ic:'🌟',name:(THEME.id==='halloween'?'Fang Phantom ×':'Tooth Fairy ×')+v,desc:'Catch '+v+' '+(v>1?GOLD.namePl:GOLD.name),t:()=>S.stats.golden>=v}));
 [1,10].forEach(v=>ACH.push({id:'spin'+v,ic:'🎡',name:'Lucky ×'+v,desc:'Spin the wheel '+v+' time'+(v>1?'s':''),t:()=>S.stats.spins>=v}));
 [1,3,10].forEach(v=>ACH.push({id:'sale'+v,ic:'🏆',name:'Exit Strategy ×'+v,desc:'Sell your practice '+v+' time'+(v>1?'s':''),t:()=>S.stats.sales>=v}));
 [3,7,30].forEach(v=>ACH.push({id:'str'+v,ic:'🔥',name:v+'-Day Streak',desc:'Visit '+v+' days in a row',t:()=>S.daily.streak>=v}));
 [10,50,150].forEach(v=>ACH.push({id:'ms'+v,ic:'🔓',name:'Milestone Hunter ×'+v,desc:'Unlock '+v+' milestones',t:()=>S.stats.ms>=v}));
 ACH.push({id:'c100',ic:'💯',name:'Century Club',desc:'Own 100 of any practice',t:()=>Math.max(...S.own)>=100});
-ACH.push({id:'c1000',ic:'🪑',name:'Chair Empire',desc:'Own 1000 Hygiene Chairs',t:()=>S.own[0]>=1000});
+ACH.push({id:'c1000',ic:'🪑',name:THEME.id==='halloween'?'Haunted Empire':'Chair Empire',desc:'Own 1000 '+BIZ[0].name+'s',t:()=>S.own[0]>=1000});
 let lastRank='';
 function checkAch(){
   let got=false;
@@ -900,7 +985,7 @@ function renderMore(){
   h+=`<h3>Achievements ${n}/${ACH.length}</h3><p class="note">Each achievement permanently adds +1% to all profits.</p><div class="agrid">`;
   ACH.forEach(a=>h+=`<div class="ach ${S.ach[a.id]?'got':''}"><b>${a.ic} ${a.name}</b>${a.desc}</div>`); h+='</div>';
   h+='<h3>Story Journal</h3>'; STORY.forEach(s=>{ if(S.story[s.id]) h+=`<div class="row" data-s="${s.id}" style="cursor:pointer"><div class="em">${s.av}</div><div class="tx"><b>${s.who}</b><span>${s.lines[0].slice(0,70)}…</span></div></div>`; });
-  h+=`<h3>Stats</h3><div class="stat"><span>Lifetime earnings</span><b>${$$$(S.life)}</b></div><div class="stat"><span>Taps</span><b>${fmt(S.stats.taps)}</b></div><div class="stat"><span>Golden Teeth</span><b>${S.stats.golden}</b></div><div class="stat"><span>Practices sold</span><b>${S.stats.sales}</b></div><div class="stat"><span>Milestones</span><b>${S.stats.ms}</b></div><div class="stat"><span>Daily streak</span><b>🔥 ${S.daily.streak}</b></div><div class="stat"><span>Minutes played</span><b>${played}</b></div>
+  h+=`<h3>Stats</h3><div class="stat"><span>Lifetime earnings</span><b>${$$$(S.life)}</b></div><div class="stat"><span>Taps</span><b>${fmt(S.stats.taps)}</b></div><div class="stat"><span>${GOLD.namePl}</span><b>${S.stats.golden}</b></div><div class="stat"><span>Practices sold</span><b>${S.stats.sales}</b></div><div class="stat"><span>Milestones</span><b>${S.stats.ms}</b></div><div class="stat"><span>Daily streak</span><b>🔥 ${S.daily.streak}</b></div><div class="stat"><span>Minutes played</span><b>${played}</b></div>
     <h3>Settings</h3><div style="margin:6px 0">Sound effects <input class="slider" id="vS" type="range" min="0" max="1" step=".05" value="${S.settings.sfx}"></div>
     <div style="margin:6px 0">Music <input class="slider" id="vM" type="range" min="0" max="1" step=".05" value="${S.settings.music}"></div>
     <button class="mini" id="exp">Export save</button><button class="mini" id="imp">Import save</button><button class="mini" id="rst" style="color:#fca5a5">Reset game</button>
