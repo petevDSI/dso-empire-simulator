@@ -880,7 +880,29 @@
      .desk-silhouette rule below; this rule (which only ever matches the real unlocked <img>,
      since the silhouette gets the more specific selector) goes back to no extra scale so the
      full card art sits centered and uncropped inside the frame. */
-  .desk-card img{width:100%; height:100%; object-fit:contain;}
+  .desk-card > img{width:100%; height:100%; object-fit:contain;}
+  /* v75: card face = rarity-colour card + a clean ornate frame at its natural proportions, with the art
+     shown whole inside the frame's window. (Before: the frame PNGs had opaque white backgrounds, stray
+     neighbour slivers and were forced to object-fit:contain, so the frame covered the art's edges.)
+     Frame window geometry per rarity comes from the cleaned assets/frames/*.png. */
+  .desk-card{background:var(--fill, var(--surface-2));}
+  .desk-card.r-common{--fill:#8b97c2; --fa:0.96; --wl:14.6%; --wt:21%; --ww:70.8%; --wh:69%;}
+  .desk-card.r-uncommon{--fill:#1ebe83; --fa:0.894; --wl:15.1%; --wt:24%; --ww:69.8%; --wh:65.4%;}
+  .desk-card.r-rare{--fill:#3d8df7; --fa:0.852; --wl:14.1%; --wt:27.8%; --ww:70.7%; --wh:61.1%;}
+  .desk-card.r-epic{--fill:#b15cf0; --fa:0.853; --wl:15.1%; --wt:28.4%; --ww:69.8%; --wh:60.6%;}
+  .desk-card.r-legendary{--fill:#feb100; --fa:0.982; --wl:14%; --wt:26.6%; --ww:72%; --wh:63.3%;}
+  .desk-card-face{position:absolute; left:0; right:0; top:44%; transform:translateY(-50%); aspect-ratio:var(--fa); pointer-events:none;}
+  .desk-card-window{
+    position:absolute; left:var(--wl); top:var(--wt); width:var(--ww); height:var(--wh);
+    background-color:var(--fill); background-repeat:no-repeat; background-size:100% auto; background-position:50% 50%;
+  }
+  /* the first set's art is a complete baked card (own border + label): show just its illustrated panel */
+  .desk-card-face.art-baked .desk-card-window{background-size:112% auto; background-position:50% 47%;}
+  .desk-card-rarity{
+    position:absolute; left:6%; bottom:5%; max-width:64%; padding:1px 6px; border-radius:6px;
+    background:rgba(20,18,45,0.42); color:#fff; font:800 0.5rem/1.5 'Nunito', sans-serif; letter-spacing:0.08em; text-transform:uppercase;
+    pointer-events:none;
+  }
   .desk-card.locked{background:var(--surface-2);}
   .desk-card.poke{cursor:pointer; -webkit-tap-highlight-color:transparent;}
   .desk-card.wobble{animation:deskWobble 0.35s ease;}
@@ -2423,7 +2445,7 @@
   var DESK_RARITY_WEIGHTS = [["common",55],["uncommon",27],["rare",12],["epic",5],["legendary",1]];
   var DESK_SETS = [
     {
-      id:"executive-desk", name:"The Executive Desk",
+      id:"executive-desk", name:"The Executive Desk", art:"baked",
       cards:[
         {id:"desk-mug", rarity:"common", name:"World's Okayest Regional Manager Mug", flavor:"A chipped ceramic mug. Somehow still the nicest thing on the desk.", bonusPct:0.005, img:CARD_IMG.deskMug},
         {id:"desk-tooth", rarity:"uncommon", name:"Stress Ball Molar", flavor:"Squeezed flat sometime around the last board call.", bonusPct:0.01, img:CARD_IMG.deskTooth},
@@ -4569,7 +4591,7 @@
         cell.className = "desk-card" + (unlocked ? " r-" + c.rarity : " locked");
         cell.title = unlocked ? (c.name + " — " + c.flavor + (copies > 1 ? " (×" + copies + " owned)" : "")) : "???";
         cell.innerHTML = unlocked
-          ? '<img src="' + c.img + '" alt="' + c.name + '">' + deskFrameHtml(c.rarity) + deskStarsHtml(c.rarity) + (copies > 1 ? '<div class="desk-card-count">×' + copies + '</div>' : '')
+          ? '<div class="desk-card-face' + (set.art === "baked" ? ' art-baked' : '') + '"><div class="desk-card-window" role="img" aria-label="' + c.name + '" style="background-image:url(' + c.img + ')"></div>' + deskFrameHtml(c.rarity) + '</div>' + deskStarsHtml(c.rarity) + '<div class="desk-card-rarity">' + c.rarity + '</div>' + (copies > 1 ? '<div class="desk-card-count">×' + copies + '</div>' : '')
           : '<img class="desk-silhouette" src="' + c.img + '" alt="" aria-hidden="true" draggable="false">';
         if (!unlocked) cell.setAttribute("aria-label", "Undiscovered desk card");
         else {
