@@ -567,6 +567,29 @@ function buyCount(i){
   if(m==='next'){ const nx=nextMs(i); return nx?nx-S.own[i]:1; }
   return parseInt(m,10);
 }
+/* =====================================================================
+   LEVEL CAP — Halloween-only experiment. Each unmanaged practice can only
+   be bought up to its next unreached milestone (25, then 50, then 75...);
+   past that the buy button locks until you hire that practice's manager,
+   which uncaps it for good. This turns "hire the manager" from a nice-to-
+   have into the thing that actually keeps growth moving — pure unit-
+   stacking stalls out on its own once every practice hits its ceiling,
+   so cash piles up with nowhere productive to go until you reinvest in
+   managers instead of just buying more. Scoped to the Halloween theme
+   only for now (an experiment, not a change to the base game's economy).
+   ===================================================================== */
+function levelCapped(i){ return THEME.id==='halloween' && !S.mgr[i]; }
+// The current bracket's ceiling: smallest milestone >= what's owned right
+// now. Uses >= (not nextMs's strictly-greater) so landing EXACTLY on a
+// milestone holds the cap there instead of jumping straight to the next
+// one — nextMs(25) is 50 (the next thing to aim for, for display), but
+// the cap at own=25 needs to stay 25 until the manager lifts it.
+function levelCap(i){ return MS_LIST.find(m=>m>=S.own[i]); } // null once past the top milestone
+function effectiveBuyCount(i){
+  let n=Math.max(1,buyCount(i));
+  if(levelCapped(i)){ const cap=levelCap(i); if(cap!=null) n=Math.min(n, Math.max(0,cap-S.own[i])); }
+  return n;
+}
 function pendingLP(){ return Math.floor(10*Math.sqrt(S.run/1e10)); }
 function minutesIncome(m){ return Math.max(G.inc*60*m, m*30 + S.run*0.002*m); }
 
@@ -920,7 +943,15 @@ function runBiz(i){
 }
 function buy(i){
   SFX.resume();
-  const n=Math.max(1,buyCount(i)); const cost=costFor(i,n);
+  if(levelCapped(i)){
+    const cap=levelCap(i);
+    if(cap!=null && S.own[i]>=cap){
+      SFX.err(); toast('🔒 '+BIZ[i].name+' capped at '+cap+' — hire the manager to unlock more capacity');
+      const el=$('#buy'+i); el.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:180});
+      return;
+    }
+  }
+  const n=effectiveBuyCount(i); const cost=costFor(i,n);
   if(S.cash<cost){ SFX.err(); const el=$('#buy'+i); el.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:180}); return; }
   const old=S.own[i]; S.cash-=cost; S.own[i]+=n;
   if(old===0){ toast('🎉 Opened: '+BIZ[i].name,true); SFX.win(); }
@@ -1280,10 +1311,16 @@ function updateAll(force){
       setCls($('#ic'+i),'idle',!S.mgr[i] && !S.running[i]);
     } else { fill.style.width='0'; setT('btxt'+i,'Not yet opened'); setCls($('#ic'+i),'idle',false); }
     const nx=nextMs(i), prev=[0,...MS_LIST].filter(m=>m<=S.own[i]).pop();
-    if(nx){ const k=msKind(nx); $('#msb'+i).style.width=((S.own[i]-prev)/(nx-prev)*100).toFixed(1)+'%'; setT('mst'+i,S.own[i]+'/'+nx+' → '+k.label); }
+    const cap=levelCap(i), capped = owned && levelCapped(i) && cap!=null && S.own[i]>=cap;
+    if(nx){ const k=msKind(nx); $('#msb'+i).style.width=((S.own[i]-prev)/(nx-prev)*100).toFixed(1)+'%';
+      setT('mst'+i, capped ? '🔒 Capped at '+cap+' — hire manager to unlock more' : S.own[i]+'/'+nx+' → '+k.label); }
     else { $('#msb'+i).style.width='100%'; setT('mst'+i,'All milestones unlocked!'); }
-    const n=Math.max(1,buyCount(i)), cost=costFor(i,n), can=S.cash>=cost;
-    setT('bl'+i, !owned?'OPEN': S.buyMode==='max'?'MAX ×'+buyCount(i): S.buyMode==='next'?'NEXT ×'+n:'BUY ×'+n); setT('bc'+i,$$$(cost)); setCls($('#buy'+i),'can',can);
+    if(capped){
+      setT('bl'+i,'🔒 CAPPED'); setT('bc'+i,'Hire manager'); setCls($('#buy'+i),'can',false);
+    } else {
+      const n=effectiveBuyCount(i), cost=costFor(i,n), can=S.cash>=cost;
+      setT('bl'+i, !owned?'OPEN': S.buyMode==='max'?'MAX ×'+n: S.buyMode==='next'?'NEXT ×'+n:'BUY ×'+n); setT('bc'+i,$$$(cost)); setCls($('#buy'+i),'can',can);
+    }
   }
   // goal chip
   let best=null,bf=-1;
