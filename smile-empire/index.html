@@ -202,6 +202,7 @@ const THEMES = {
     id:'base', title:'Smile Empire', bodyClass:'', saveSuffix:'',
     vars:{}, mascotFilter:'none',
     tagline:'Build your dental empire',
+    currency:{ symbol:'$', name:'Dollars', prefix:true },
   },
   halloween: {
     id:'halloween', title:'Smile Empire: Fright Night', bodyClass:'theme-halloween', saveSuffix:'_halloween',
@@ -209,6 +210,9 @@ const THEMES = {
     mascotFilter:'hue-rotate(220deg) saturate(1.4) brightness(0.95)',
     tagline:'Fright Night — win prizes that carry into DSO Empire Simulator',
     start:'2026-10-24T00:00:00-04:00', end:'2026-11-02T00:00:00-04:00',
+    // Dental + Halloween double-meaning: a "Fang" is both a vampire's tooth
+    // and, well, a tooth — so the whole cast is earning Fangs instead of dollars.
+    currency:{ symbol:'🦷', name:'Fangs', prefix:false },
   },
 };
 const THEME = THEMES[THEME_ID] || THEMES.base;
@@ -217,6 +221,21 @@ document.title = THEME.title;
 if(THEME.bodyClass) document.body.classList.add(THEME.bodyClass);
 Object.entries(THEME.vars).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
 function themeLive(){ if(!THEME.start) return true; const t=Date.now(); return t>=Date.parse(THEME.start) && t<Date.parse(THEME.end); }
+
+/* ---------- Number/currency formatting (defined early: theme data below quotes prices with it) ---------- */
+const SUF = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td'];
+function fmt(n){
+  if(!isFinite(n)) return '∞';
+  if(n<0) return '-'+fmt(-n);
+  if(n<1000) return Math.abs(n-Math.round(n))<0.005 ? String(Math.round(n)) : n.toFixed(n<10?2:1).replace(/\.0$/,'');
+  let idx = Math.floor(Math.log10(n)/3);
+  if(idx>=SUF.length) return n.toExponential(2).replace('+','');
+  let v = n/Math.pow(1000,idx);
+  if(v.toFixed(2).startsWith('1000') && idx+1<SUF.length){ idx++; v=n/Math.pow(1000,idx); }
+  return v.toFixed(2)+SUF[idx];
+}
+const CUR = THEME.currency || { symbol:'$', name:'Dollars', prefix:true };
+const $$$ = n=> CUR.prefix ? CUR.symbol+fmt(n) : fmt(n)+' '+CUR.symbol;
 
 /* ---------- Data ---------- */
 const BIZ = [
@@ -261,7 +280,7 @@ BIZ.forEach((b,i)=>{ for(let k=0;k<3;k++) UPGS.push({id:'u'+i+'_'+k, biz:i, name
 UPGS.sort((a,b)=>a.cost-b.cost);
 
 const PERKS = [
-  {id:'cash',  name:'Cash Cushion',        desc:'Start every run with $5,000',            cost:3,  emoji:'💵'},
+  {id:'cash',  name:'Cash Cushion',        desc:'Start every run with '+$$$(5000),        cost:3,  emoji:'💵'},
   {id:'team',  name:'Retained Team',       desc:'Keep managers for your first 3 practices',cost:5,  emoji:'🧑‍⚕️'},
   {id:'night', name:'Night Shift',         desc:'Offline earnings cap 12h → 24h',          cost:8,  emoji:'🌙'},
   {id:'magnet',name:'Golden Tooth Magnet', desc:'Golden Teeth appear twice as often',      cost:10, emoji:'🧲'},
@@ -343,18 +362,6 @@ function save(){ try{ S.savedAt=Date.now(); localStorage.setItem(SAVE_KEY, JSON.
 const $ = (s,el=document)=>el.querySelector(s);
 const $$ = (s,el=document)=>Array.from(el.querySelectorAll(s));
 const rnd = (a,b)=>a+Math.random()*(b-a);
-const SUF = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td'];
-function fmt(n){
-  if(!isFinite(n)) return '∞';
-  if(n<0) return '-'+fmt(-n);
-  if(n<1000) return Math.abs(n-Math.round(n))<0.005 ? String(Math.round(n)) : n.toFixed(n<10?2:1).replace(/\.0$/,'');
-  let idx = Math.floor(Math.log10(n)/3);
-  if(idx>=SUF.length) return n.toExponential(2).replace('+','');
-  let v = n/Math.pow(1000,idx);
-  if(v.toFixed(2).startsWith('1000') && idx+1<SUF.length){ idx++; v=n/Math.pow(1000,idx); }
-  return v.toFixed(2)+SUF[idx];
-}
-const $$$ = n=>'$'+fmt(n);
 function fmtTime(s){
   if(s<1) return s.toFixed(1)+'s';
   s=Math.ceil(s); if(s<60) return s+'s';
@@ -730,7 +737,7 @@ function doSell(){
    ===================================================================== */
 const ACH=[];
 BIZ.forEach((b,i)=>ACH.push({id:'own'+i,ic:b.emoji,name:'Grand Opening',desc:'Open a '+b.name,t:()=>S.own[i]>0}));
-[1e3,1e6,1e9,1e12,1e15,1e18,1e21,1e30].forEach(v=>ACH.push({id:'life'+v,ic:'💰',name:'Earned $'+fmt(v),desc:'Lifetime earnings of $'+fmt(v),t:()=>S.life>=v}));
+[1e3,1e6,1e9,1e12,1e15,1e18,1e21,1e30].forEach(v=>ACH.push({id:'life'+v,ic:'💰',name:'Earned '+$$$(v),desc:'Lifetime earnings of '+$$$(v),t:()=>S.life>=v}));
 [[5,'Team Builder'],[10,'Fully Staffed']].forEach(([n,nm])=>ACH.push({id:'mgr'+n,ic:'🧑‍⚕️',name:nm,desc:'Hire '+n+' managers',t:()=>S.mgr.filter(x=>x).length>=n}));
 [1,10,50].forEach(v=>ACH.push({id:'gold'+v,ic:'🌟',name:'Tooth Fairy ×'+v,desc:'Catch '+v+' Golden Tooth'+(v>1?'s':''),t:()=>S.stats.golden>=v}));
 [1,10].forEach(v=>ACH.push({id:'spin'+v,ic:'🎡',name:'Lucky ×'+v,desc:'Spin the wheel '+v+' time'+(v>1?'s':''),t:()=>S.stats.spins>=v}));
@@ -757,13 +764,20 @@ function checkAch(){
    boot — no code for the player to type, no account, nothing to copy.
    Each tier is strictly harder than the last; reaching one also implies
    every easier one, so the list always ends up fully granted in order.
+
+   Thresholds ramp exponentially on purpose — Tier 1 is a first-session
+   grab, Tier 2 needs the whole roster developed, and Tiers 3-4 track the
+   game's own lifetime-earnings achievement scale (each existing ACH step
+   above is 1000x the last: 1e6, 1e9, 1e12...), so completing the full set
+   of 4 realistically takes checking in and reinvesting across most of the
+   event window (THEME.start/end above), not one sitting.
    ===================================================================== */
 const SE_PENDING_KEY = 'smile-empire-halloween-rewards-v1';
 const HW_TIERS = [
-  { id:'hw-stapler',       name:'The Haunted Stapler', need:S=>S.own[0]>=25,      hint:'Grow your first practice to 25' },
-  { id:'hw-audit-ghost',   name:'The Audit Ghost',     need:S=>minOwn()>=25,      hint:'Get every practice to 25' },
-  { id:'hw-chair7',        name:'Haunted Chair 7',     need:S=>S.life>=1e6,       hint:'Earn $1,000,000 lifetime' },
-  { id:'hw-rollup-reaper', name:'The Rollup Reaper',   need:S=>S.life>=1e9,       hint:'Earn $1,000,000,000 lifetime' },
+  { id:'hw-stapler',       name:'The Haunted Stapler', need:S=>S.own[0]>=100,     hint:'Grow your first practice to 100' },
+  { id:'hw-audit-ghost',   name:'The Audit Ghost',     need:S=>minOwn()>=100,     hint:'Get every practice to 100' },
+  { id:'hw-chair7',        name:'Haunted Chair 7',     need:S=>S.life>=1e9,       hint:'Earn '+$$$(1e9)+' lifetime' },
+  { id:'hw-rollup-reaper', name:'The Rollup Reaper',   need:S=>S.life>=1e12,      hint:'Earn '+$$$(1e12)+' lifetime' },
 ];
 function checkHalloween(){
   if(THEME.id!=='halloween') return;
@@ -859,7 +873,7 @@ function renderLegacy(){
     <div class="stat"><span>Legacy Points</span><b style="color:var(--pink)">${S.lp}</b></div>
     <div class="stat"><span>Current bonus</span><b>+${Math.round((lpBonus()-1)*100)}%</b></div>
     <div class="stat"><span>Earned this run</span><b>${$$$(S.run)}</b></div>
-    <button class="bigbtn ${gain<1?'dis':''}" id="sellBtn">${gain>=1?'SELL PRACTICE → +'+gain+' LP':'Earn $100M this run to sell (1 LP)'}</button>
+    <button class="bigbtn ${gain<1?'dis':''}" id="sellBtn">${gain>=1?'SELL PRACTICE → +'+gain+' LP':'Earn '+$$$(1e8)+' this run to sell (1 LP)'}</button>
     <h3>Legacy Perks</h3><p class="note">Spending LP removes its 2% bonus, so choose wisely.</p>`;
   PERKS.forEach(pk=>{
     const r=document.createElement('div'); r.className='row';
