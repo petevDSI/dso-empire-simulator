@@ -230,7 +230,7 @@
   @media (prefers-reduced-motion: reduce){ .cf, .gift-card-item-name, .cf-front .gift-card-item-art{animation:none !important;} .cf-back{display:none;} }
   /* v51: Card Exchange moved into its own full-width card (Open Item #9) — lay its offers out
      as a responsive grid instead of one long stacked list so the extra width gets used. */
-  #desk-exchange{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:10px;}
+  #desk-exchange{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(320px,100%),1fr)); gap:10px;}
   .xchg-sub{grid-column:1 / -1; font-size:0.78rem; color:var(--ink-soft); font-weight:600; margin:0 0 4px;}
   .xchg-title{font-family:'Fredoka',sans-serif; font-size:1rem; margin:16px 0 2px; grid-column:1 / -1;}
   .xchg-row{display:flex; align-items:center; gap:10px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:0; background:var(--surface);}
@@ -267,6 +267,48 @@
   .xchg-forge-arrow.r-rare{background:color-mix(in srgb, var(--r-rare) 30%, var(--surface-2)); color:var(--r-rare);}
   .xchg-forge-arrow.r-epic{background:color-mix(in srgb, var(--r-epic) 30%, var(--surface-2)); color:var(--r-epic);}
   .xchg-divider{grid-column:1 / -1; border:none; border-top:2px dashed var(--ink); opacity:0.3; margin:6px 0 0;}
+
+  /* v76: Card Exchange art blocks — illustrated 3-slice strips (assets/exchange/*.png) drawn with border-image:
+     the left/right caps keep their proportions, the plain middle stretches to any width. Live text + buttons
+     sit on the plate; the small explanatory line sits underneath so the strip stays a fixed height. */
+  .xchg-block{position:relative; margin-top:6px; min-width:0;}
+  .xchg-strip{
+    display:flex; align-items:center; gap:6px; box-sizing:border-box; height:64px; padding:0;
+    border:solid transparent; border-width:0 55px 0 102px;
+    border-image:var(--strip) 0 var(--sr) 0 var(--sl) fill / 0 55px 0 102px stretch;
+    filter:drop-shadow(2px 2px 0 var(--hard-shadow));
+  }
+  .xchg-block.b-uncommon .xchg-strip{--strip:url(assets/exchange/uncommon.png); --sl:163; --sr:141;}
+  .xchg-block.b-rare .xchg-strip{--strip:url(assets/exchange/rare.png); --sl:163; --sr:141;}
+  .xchg-block.b-epic .xchg-strip{--strip:url(assets/exchange/epic.png); --sl:163; --sr:141;}
+  .xchg-block.b-trade .xchg-strip{--strip:url(assets/exchange/trade.png); --sl:143; --sr:143; height:72px; border-width:0 46px 0 46px; border-image-width:0 46px 0 46px; padding:0 2px;}
+  .xchg-block.b-empty .xchg-strip{--strip:url(assets/exchange/empty.png); --sl:129; --sr:102; border-width:0 62px 0 79px; border-image-width:0 62px 0 79px;}
+  .xchg-strip .xchg-info{flex:1; min-width:0; color:#fff; font-size:0.74rem; font-weight:800; line-height:1.15;
+    text-shadow:1px 1px 0 #14162f, -1px 1px 0 #14162f, 1px -1px 0 #14162f, -1px -1px 0 #14162f, 0 2px 0 #14162f;}
+  .xchg-block.b-empty .xchg-info{color:#3a3556; text-shadow:none; font-weight:700; text-align:center; font-size:0.7rem;}
+  .xchg-block.b-trade .xchg-info{font-size:0.68rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .xchg-block.b-trade .row-buy{padding:4px 7px;}
+  .xchg-strip .xchg-info{white-space:nowrap; padding-left:8px;}
+  .xchg-block.b-uncommon .xchg-info, .xchg-block.b-rare .xchg-info, .xchg-block.b-epic .xchg-info{font-size:0.78rem; font-weight:900; letter-spacing:0;}
+  .xchg-block.b-uncommon .row-buy, .xchg-block.b-rare .row-buy, .xchg-block.b-epic .row-buy{padding:4px 7px;}
+  .xchg-block.b-empty .xchg-info{padding-left:0;}
+  .xchg-block.b-trade .xchg-info{white-space:normal;}
+  .xchg-strip .row-buy{flex:none; min-width:0; width:auto; padding:4px 9px; min-height:0;}
+  .xchg-strip .row-buy::before, .xchg-strip .row-buy::after{display:none;}
+  .xchg-strip .xchg-thumb{width:28px; flex:none; border-radius:4px; border:1.5px solid #14162f; background:var(--surface-2);}
+  .xchg-note{font-size:0.68rem; line-height:1.3; color:var(--ink-soft); font-weight:600; padding:4px 6px 0;}
+  .xchg-block:not(.ready):not(.b-empty) .xchg-strip{filter:grayscale(0.7) brightness(0.92) drop-shadow(2px 2px 0 var(--hard-shadow)); opacity:0.78;}
+  .xchg-block.ready .xchg-strip{animation:xchgReady 2.4s ease-in-out infinite;}
+  @keyframes xchgReady{0%,100%{filter:drop-shadow(2px 2px 0 var(--hard-shadow));} 50%{filter:brightness(1.12) drop-shadow(0 0 7px rgba(255,255,255,0.55)) drop-shadow(2px 2px 0 var(--hard-shadow));}}
+  @media (prefers-reduced-motion: reduce){ .xchg-block.ready .xchg-strip{animation:none;} }
+  .xchg-ribbon{
+    position:absolute; top:-9px; left:46px; z-index:2; width:108px; height:23px; box-sizing:border-box;
+    background:url(assets/exchange/ribbon.png) center/100% 100% no-repeat; display:flex; align-items:center; justify-content:center;
+    padding:0 14px 2px; color:#fff; font:900 0.5rem/1 'Nunito', sans-serif; letter-spacing:0.05em; white-space:nowrap;
+    text-shadow:0 1px 0 #6b2a00, 1px 0 0 #6b2a00, -1px 0 0 #6b2a00; pointer-events:none;
+  }
+  .xchg-block .xchg-skip{width:28px; height:28px; border:none; border-radius:0; background:url(assets/exchange/dismiss.png) center/contain no-repeat; font-size:0; color:transparent; flex:none;}
+  .xchg-block .xchg-skip:hover{background:url(assets/exchange/dismiss.png) center/contain no-repeat; filter:brightness(1.15);}
   .auto-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; border:2.5px solid var(--ink); border-radius:12px; padding:8px 10px; margin-bottom:8px; background:var(--surface);}
   .auto-row.off{opacity:.55;}
   .auto-row select{font:700 0.78rem 'Nunito',sans-serif; padding:5px 6px; border:2px solid var(--ink); border-radius:8px; background:var(--surface-2); color:var(--ink); max-width:100%;}
@@ -886,11 +928,11 @@
      neighbour slivers and were forced to object-fit:contain, so the frame covered the art's edges.)
      Frame window geometry per rarity comes from the cleaned assets/frames/*.png. */
   .desk-card{background:var(--fill, var(--surface-2));}
-  .desk-card.r-common{--fill:#8b97c2; --fa:0.96; --wl:14.6%; --wt:21%; --ww:70.8%; --wh:69%;}
-  .desk-card.r-uncommon{--fill:#1ebe83; --fa:0.894; --wl:15.1%; --wt:24%; --ww:69.8%; --wh:65.4%;}
-  .desk-card.r-rare{--fill:#3d8df7; --fa:0.852; --wl:14.1%; --wt:27.8%; --ww:70.7%; --wh:61.1%;}
-  .desk-card.r-epic{--fill:#b15cf0; --fa:0.853; --wl:15.1%; --wt:28.4%; --ww:69.8%; --wh:60.6%;}
-  .desk-card.r-legendary{--fill:#feb100; --fa:0.982; --wl:14%; --wt:26.6%; --ww:72%; --wh:63.3%;}
+  .desk-card.r-common{--fill:#8b97c2; --fa:0.814; --wl:10.5%; --wt:10%; --ww:79%; --wh:79.6%;}
+  .desk-card.r-uncommon{--fill:#1ebe83; --fa:0.831; --wl:11.4%; --wt:11%; --ww:76.8%; --wh:77.2%;}
+  .desk-card.r-rare{--fill:#3d8df7; --fa:0.810; --wl:12.1%; --wt:10.4%; --ww:75.5%; --wh:78%;}
+  .desk-card.r-epic{--fill:#b15cf0; --fa:0.820; --wl:12.9%; --wt:11.5%; --ww:73.7%; --wh:75.8%;}
+  .desk-card.r-legendary{--fill:#feb100; --fa:0.824; --wl:13.9%; --wt:14.4%; --ww:73%; --wh:72.1%;}
   .desk-card-face{position:absolute; left:0; right:0; top:44%; transform:translateY(-50%); aspect-ratio:var(--fa); pointer-events:none;}
   .desk-card-window{
     position:absolute; left:var(--wl); top:var(--wt); width:var(--ww); height:var(--wh);
@@ -5072,11 +5114,10 @@
   function forgeRowHtml(rarity){
     var p = forgePlan(rarity);
     if (!p) return "";
-    return '<div class="xchg-row xchg-forge-row' + (p.ok ? ' ready' : '') + '">' +
-      '<div class="xchg-forge-arrow r-' + rarity + '" aria-hidden="true">↑</div>' +
-      '<div class="xchg-info">Combine into a ' + rarity.charAt(0).toUpperCase() + rarity.slice(1) +
-        '<small>Give ' + p.n + ' spare ' + p.from + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ') for a guaranteed ' + rarity + ' card</small></div>' +
-      '<button class="row-buy" type="button" data-forge="' + rarity + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Combine</span></button>' +
+    return '<div class="xchg-block b-' + rarity + (p.ok ? ' ready' : '') + '">' +
+      '<div class="xchg-strip"><div class="xchg-info">' + rarity.charAt(0).toUpperCase() + rarity.slice(1) + '</div>' +
+      '<button class="row-buy" type="button" data-forge="' + rarity + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Combine</span></button></div>' +
+      '<div class="xchg-note">Give ' + p.n + ' spare ' + p.from + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ') for a guaranteed ' + rarity + ' card</div>' +
     '</div>';
   }
   var XCHG_SLOTS = 3;
@@ -5339,8 +5380,8 @@
             var rarity = XCHG_SLOT_RARITIES[i];
             var soldOut = eligibleTradeCards([], [rarity]).length === 0;
             html += soldOut
-              ? '<div class="xchg-row xchg-pending"><div class="xchg-info">All ' + rarity.charAt(0).toUpperCase() + rarity.slice(1) + ' cards owned — nothing left to offer here.</div></div>'
-              : '<div class="xchg-row xchg-pending"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div>';
+              ? '<div class="xchg-block b-empty"><div class="xchg-strip"><div class="xchg-info">All ' + rarity.charAt(0).toUpperCase() + rarity.slice(1) + ' cards owned \u2014 nothing left to offer here.</div></div></div>'
+              : '<div class="xchg-block b-empty"><div class="xchg-strip"><div class="xchg-info">New offer in ' + formatDuration(Math.max(0, (s.readyAt || 0) - now) / 1000) + '&hellip;</div></div></div>';
             return;
           }
           var t = allDeskCards().filter(function(c){ return c.id === s.id; })[0];
@@ -5348,13 +5389,15 @@
           var p = tradePlan(t), set = deskSetOf(t);
           var have = set.cards.filter(function(x){ return owned.indexOf(x.id) !== -1; }).length;
           var completes = have + 1 === set.cards.length;
-          html += '<div class="xchg-row' + (p.ok ? ' ready' : '') + '">' +
-            '<img class="xchg-thumb" src="' + t.img + '" alt="">' +
-            '<div class="xchg-info">' + t.name + ' <span style="text-transform:capitalize;color:var(--ink-soft)">(' + t.rarity + ')</span>' +
-              (completes ? '<span class="xchg-tag">COMPLETES SET</span>' : '') +
-              '<small>' + set.name + ' ' + have + '/' + set.cards.length + ' &middot; give ' + p.n + ' spare ' + p.rarity + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ')</small></div>' +
-            '<button class="row-buy" type="button" data-trade="' + t.id + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Trade</span></button>' +
-            '<button class="xchg-skip" type="button" data-trade-skip="' + t.id + '" title="Not interested \u2014 roll a new offer later">&times;</button>' +
+          html += '<div class="xchg-block b-trade' + (p.ok ? ' ready' : '') + '">' +
+            (completes ? '<span class="xchg-ribbon">COMPLETES SET</span>' : '') +
+            '<div class="xchg-strip">' +
+              '<img class="xchg-thumb" src="' + t.img + '" alt="">' +
+              '<div class="xchg-info">' + t.name + '</div>' +
+              '<button class="row-buy" type="button" data-trade="' + t.id + '"' + (p.ok ? '' : ' disabled') + '><span class="buy-label">Trade</span></button>' +
+              '<button class="xchg-skip" type="button" data-trade-skip="' + t.id + '" title="Not interested \u2014 roll a new offer later">&times;</button>' +
+            '</div>' +
+            '<div class="xchg-note"><b style="text-transform:capitalize">' + t.rarity + '</b> &middot; ' + set.name + ' ' + have + '/' + set.cards.length + ' &middot; give ' + p.n + ' spare ' + p.rarity + (p.n > 1 ? 's' : '') + ' (you have ' + p.have + ')</div>' +
           '</div>';
         });
         html += xchgBuyRowHtml();
