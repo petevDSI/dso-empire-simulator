@@ -138,6 +138,15 @@
   }
 
   *{box-sizing:border-box;}
+  /* v74.2: every custom-styled <button> in this game had never disabled native button
+     appearance. On macOS Safari specifically, a <button> that keeps its native
+     -webkit-appearance while also having custom flex/absolute children and CSS box-shadow
+     can end up with an effective click hit-region that follows the native control bezel
+     rather than the CSS box - the reported symptom (a "donut": edges clickable, center
+     dead) matches this exactly. Chrome and WebKitGTK don't reproduce it because they don't
+     apply that native bezel layering the same way real Apple WebKit does. Disabling native
+     appearance on every button removes that separate native hit-test surface entirely. */
+  button{-webkit-appearance:none; appearance:none;}
   body{
     margin:0;
     background-color:var(--bg);
