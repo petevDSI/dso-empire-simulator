@@ -489,7 +489,7 @@ function newState(){
   return { v:1, cash:0, run:0, life:0, own:BIZ.map((_,i)=>i===0?1:0), mgr:BIZ.map(()=>false), prog:BIZ.map(()=>0), running:BIZ.map(()=>false),
     upg:{}, lp:0, lpTotal:0, perks:{}, buffs:[], ach:{}, story:{}, gmsSeen:0,
     stats:{taps:0,golden:0,spins:0,sales:0,ms:0}, daily:{last:'',streak:0}, wheelAt:0, savedAt:Date.now(), startedAt:Date.now(),
-    settings:{sfx:0.8,music:0.4,musicOn:false,sfxOn:true}, buyMode:'1', nextGolden:0, hwGranted:{}, hwEligibleAt:{}, hwSeen:{} };
+    settings:{sfx:0.8,music:0.4,musicOn:THEME.id==='halloween',sfxOn:true}, buyMode:'1', nextGolden:0, hwGranted:{}, hwEligibleAt:{}, hwSeen:{} };
 }
 let S = newState();
 function load(){
@@ -980,22 +980,31 @@ function checkAch(){
    Each tier is strictly harder than the last; reaching one also implies
    every easier one, so the list always ends up fully granted in order.
 
-   Thresholds are tuned (via a greedy-play simulation of this game's own
-   cost/revenue curves, not guesswork) so an engaged player who checks in
-   every few hours and reinvests reaches Tier 1 in around an hour, Tier 2
-   in around 6 hours, Tier 3 in around a day, and the full set of 4 in
-   around two days — active play moves you forward, you don't just wait
-   out a clock. HW_SPACING_MS is a tiny debounce (not a real gate) so an
-   offline catch-up that crosses two thresholds in the same tick doesn't
-   fire two banners at once.
+   Thresholds are all lifetime-earnings-based (smooth, continuous, and easy
+   to display as a % progress bar — no plateauing "own N of a business"
+   milestone that a focused player can blow through by spamming one buy
+   button). Each tier is a "level" of roughly one more hour of actively-
+   engaged play than the last — not one more hour on a wall clock, one
+   more hour of the compounding income an engaged player is generating at
+   that point in the game — so tier 2's threshold is set at (life an
+   actively-engaged player has earned by hour 1) + (one more hour of play
+   from there), tier 3 is +1 more hour from tier 2, tier 4 is +1 more hour
+   from tier 3. Levels 1-4 come out to roughly 1h / 2h / 3h / 4h of total
+   play. Numbers came from a greedy-play simulation of this game's own
+   cost/revenue curves, calibrated against real playtesting (the very
+   first version used an own[0]>=100 milestone for Tier 1 that a focused
+   player cleared in ~5 minutes flat — these are recalibrated off that
+   real data point). HW_SPACING_MS is a tiny debounce (not a real gate) so
+   an offline catch-up that crosses two thresholds in the same tick
+   doesn't fire two banners at once.
    ===================================================================== */
 const SE_PENDING_KEY = 'smile-empire-halloween-rewards-v1';
 const HW_SPACING_MS = 5*60e3; // debounce only — thresholds themselves set the pace
 const HW_TIERS = [
-  { id:'hw-stapler',       name:'The Haunted Stapler', art:'hwCard0', need:S=>S.own[0]>=100,   hint:'Grow your first practice to 100', pct:S=>S.own[0]/100 },
-  { id:'hw-audit-ghost',   name:'The Audit Ghost',     art:'hwCard1', need:S=>S.life>=1.5e10,  hint:'Earn '+$$$(1.5e10)+' lifetime',    pct:S=>S.life/1.5e10 },
-  { id:'hw-chair7',        name:'Haunted Chair 7',     art:'hwCard2', need:S=>S.life>=2.5e13,  hint:'Earn '+$$$(2.5e13)+' lifetime',    pct:S=>S.life/2.5e13 },
-  { id:'hw-rollup-reaper', name:'The Rollup Reaper',   art:'hwCard3', need:S=>S.life>=7e14,    hint:'Earn '+$$$(7e14)+' lifetime',      pct:S=>S.life/7e14 },
+  { id:'hw-stapler',       name:'The Haunted Stapler', art:'hwCard0', need:S=>S.life>=1e11,   hint:'Earn '+$$$(1e11)+' lifetime',   pct:S=>S.life/1e11 },
+  { id:'hw-audit-ghost',   name:'The Audit Ghost',     art:'hwCard1', need:S=>S.life>=5e11,   hint:'Earn '+$$$(5e11)+' lifetime',   pct:S=>S.life/5e11 },
+  { id:'hw-chair7',        name:'Haunted Chair 7',     art:'hwCard2', need:S=>S.life>=2.7e12, hint:'Earn '+$$$(2.7e12)+' lifetime', pct:S=>S.life/2.7e12 },
+  { id:'hw-rollup-reaper', name:'The Rollup Reaper',   art:'hwCard3', need:S=>S.life>=1e13,   hint:'Earn '+$$$(1e13)+' lifetime',   pct:S=>S.life/1e13 },
 ];
 // Per-tier display state for the progress tracker / prize panel:
 // 'got' (already granted), 'ready' (threshold met, granting this tick),
