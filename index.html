@@ -628,20 +628,23 @@
     padding:9px 11px 8px; border-radius:3px 9px 9px 9px; border:2px solid var(--postit-buy-ink); color:var(--postit-buy-ink);
     font-family:'Nunito', sans-serif; cursor:pointer; background:var(--postit-buy-bg);
     box-shadow:0 3px 0 var(--postit-buy-edge), 2px 5px 6px rgba(0,0,0,0.18);
-    transform:rotate(-1.6deg);
-    transition:transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+    /* v74.1: no transform anywhere in this rule (not even a static idle tilt) - Safari/WebKit can
+       silently drop the click event if an element's geometry moves at all between mousedown and
+       mouseup, and :active/:hover briefly apply mid-gesture. All "press" feedback below is
+       box-shadow-only so the button never physically shifts under the pointer. */
+    transition:box-shadow 0.1s ease, opacity 0.1s ease;
   }
   .row-buy::before{content:""; width:20px; height:20px; flex:0 0 auto; background-image:var(--icon-buy); background-size:contain; background-repeat:no-repeat; background-position:center;}
   .row-buy::after{content:""; position:absolute; top:-1px; right:-1px; width:13px; height:13px; background:linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%); border-radius:0 8px 0 8px; pointer-events:none;}
-  .row-buy.hire-btn{background:var(--postit-hire-bg); border-color:var(--postit-hire-ink); color:var(--postit-hire-ink); box-shadow:0 3px 0 var(--postit-hire-edge), 2px 5px 6px rgba(0,0,0,0.18); transform:rotate(1.3deg); border-radius:9px 3px 9px 9px;}
+  .row-buy.hire-btn{background:var(--postit-hire-bg); border-color:var(--postit-hire-ink); color:var(--postit-hire-ink); box-shadow:0 3px 0 var(--postit-hire-edge), 2px 5px 6px rgba(0,0,0,0.18); border-radius:9px 3px 9px 9px;}
   .row-buy.hire-btn::before{background-image:var(--icon-hire);}
-  .row-buy:hover:not(:disabled){transform:rotate(0deg) translateY(-1px); box-shadow:0 4px 0 var(--postit-buy-edge), 2px 6px 7px rgba(0,0,0,0.2);}
+  .row-buy:hover:not(:disabled){box-shadow:0 4px 0 var(--postit-buy-edge), 2px 6px 7px rgba(0,0,0,0.2);}
   .row-buy.hire-btn:hover:not(:disabled){box-shadow:0 4px 0 var(--postit-hire-edge), 2px 6px 7px rgba(0,0,0,0.2);}
-  .row-buy:active:not(:disabled){transform:rotate(0deg) translateY(2px); box-shadow:0 1px 0 var(--postit-buy-edge), 1px 2px 3px rgba(0,0,0,0.16);}
+  .row-buy:active:not(:disabled){box-shadow:0 1px 0 var(--postit-buy-edge), 1px 2px 3px rgba(0,0,0,0.16);}
   .row-buy.hire-btn:active:not(:disabled){box-shadow:0 1px 0 var(--postit-hire-edge), 1px 2px 3px rgba(0,0,0,0.16);}
   .row-buy .buy-label{font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:800;}
   .row-buy .buy-cost{font-family:'Nunito', sans-serif; font-size:0.84rem; font-weight:900;}
-  .row-buy:disabled{cursor:not-allowed; background:var(--postit-disabled-bg); border-color:var(--postit-disabled-ink); color:var(--postit-disabled-ink); box-shadow:0 2px 0 var(--postit-disabled-edge); transform:rotate(-0.6deg);}
+  .row-buy:disabled{cursor:not-allowed; background:var(--postit-disabled-bg); border-color:var(--postit-disabled-ink); color:var(--postit-disabled-ink); box-shadow:0 2px 0 var(--postit-disabled-edge);}
   .row-buy:disabled::before{background-image:var(--icon-disabled);}
   .row-buy.hire-btn:disabled::before{background-image:var(--icon-hire-disabled);}
   .row-buy.owned-btn{cursor:default;}
@@ -686,16 +689,21 @@
     margin-top:7px; display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:10px;
     border:2.5px solid var(--ink); background:var(--gold); color:#2c1f06; font-family:'Fredoka', sans-serif;
     font-weight:700; font-size:0.76rem; cursor:pointer; box-shadow:3px 3px 0 var(--hard-shadow);
-    transition:transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+    /* v74.1: transform-only feedback removed (hover translate, the active-state press, and the
+       "ready" pulse all used to move/scale the element). Safari/WebKit can silently drop a click
+       whose target moved between mousedown and mouseup, which is exactly what a continuous scale
+       animation does right when a player is trying to tap this button. Everything below is
+       box-shadow/filter-only so the button's geometry never changes under the pointer. */
+    transition:box-shadow 0.08s ease, filter 0.08s ease, opacity 0.1s ease;
     position:relative; overflow:hidden;
   }
-  .row-collect:hover:not(:disabled){transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--hard-shadow);}
-  .row-collect:active:not(:disabled){transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hard-shadow);}
+  .row-collect:hover:not(:disabled){box-shadow:4px 4px 0 var(--hard-shadow);}
+  .row-collect:active:not(:disabled){box-shadow:1px 1px 0 var(--hard-shadow);}
   .row-collect:disabled{opacity:0.7; cursor:not-allowed; box-shadow:none;}
   .row-collect.ready{animation:collectPulse 1.1s ease-in-out infinite;}
-  @keyframes collectPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+  @keyframes collectPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.15);}}
   .row-collect.collected{animation:collectFlash 0.26s ease-out;}
-  @keyframes collectFlash{0%{transform:scale(1.18); background:#fff2c2;}100%{transform:scale(1); background:var(--gold);}}
+  @keyframes collectFlash{0%{filter:brightness(1.4); background:#fff2c2;}100%{filter:brightness(1); background:var(--gold);}}
   .row-collect .collect-label{text-transform:uppercase; letter-spacing:0.03em;}
   .row-collect .collect-amt{font-family:'Nunito', sans-serif; font-weight:900;}
   .row-collect:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
@@ -922,12 +930,12 @@
     padding:9px 12px; border-radius:4px 10px 10px 10px; border:2px solid var(--postit-buy-ink); color:var(--postit-buy-ink);
     font-family:'Nunito', sans-serif; cursor:pointer; background:var(--postit-buy-bg);
     box-shadow:0 3px 0 var(--postit-buy-edge), 2px 5px 6px rgba(0,0,0,0.18);
-    transition:transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+    transition:box-shadow 0.08s ease, opacity 0.1s ease;
   }
   .board-card-buy::before{content:""; width:20px; height:20px; flex:0 0 auto; background-image:var(--icon-buy); background-size:contain; background-repeat:no-repeat; background-position:center;}
   .board-card-buy::after{content:""; position:absolute; top:-1px; right:-1px; width:13px; height:13px; background:linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%); border-radius:0 9px 0 9px; pointer-events:none;}
-  .board-card-buy:hover:not(:disabled){transform:translateY(-1px); box-shadow:0 4px 0 var(--postit-buy-edge), 2px 6px 7px rgba(0,0,0,0.2);}
-  .board-card-buy:active:not(:disabled){transform:translateY(2px); box-shadow:0 1px 0 var(--postit-buy-edge), 1px 2px 3px rgba(0,0,0,0.16);}
+  .board-card-buy:hover:not(:disabled){box-shadow:0 4px 0 var(--postit-buy-edge), 2px 6px 7px rgba(0,0,0,0.2);}
+  .board-card-buy:active:not(:disabled){box-shadow:0 1px 0 var(--postit-buy-edge), 1px 2px 3px rgba(0,0,0,0.16);}
   .board-card-buy .buy-label{font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:800;}
   .board-card-buy .buy-cost{font-family:'Nunito', sans-serif; font-size:0.86rem; font-weight:900;}
   .board-card-buy:disabled{cursor:not-allowed; background:var(--postit-disabled-bg); border-color:var(--postit-disabled-ink); color:var(--postit-disabled-ink); box-shadow:0 2px 0 var(--postit-disabled-edge);}
@@ -967,12 +975,12 @@
     padding:8px 12px; border-radius:4px 10px 10px 10px; border:2px solid var(--postit-buy-ink); color:var(--postit-buy-ink);
     font-family:'Nunito', sans-serif; cursor:pointer; background:var(--postit-buy-bg);
     box-shadow:0 3px 0 var(--postit-buy-edge), 2px 5px 6px rgba(0,0,0,0.18);
-    transition:transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+    transition:box-shadow 0.08s ease, opacity 0.1s ease;
   }
   .office-buy-btn::before{content:""; width:20px; height:20px; flex:0 0 auto; background-image:var(--icon-buy); background-size:contain; background-repeat:no-repeat; background-position:center;}
   .office-buy-btn::after{content:""; position:absolute; top:-1px; right:-1px; width:13px; height:13px; background:linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.15) 50%); border-radius:0 9px 0 9px; pointer-events:none;}
-  .office-buy-btn:hover:not(:disabled){transform:translateY(-1px); box-shadow:0 4px 0 var(--postit-buy-edge), 2px 6px 7px rgba(0,0,0,0.2);}
-  .office-buy-btn:active:not(:disabled){transform:translateY(2px); box-shadow:0 1px 0 var(--postit-buy-edge), 1px 2px 3px rgba(0,0,0,0.16);}
+  .office-buy-btn:hover:not(:disabled){box-shadow:0 4px 0 var(--postit-buy-edge), 2px 6px 7px rgba(0,0,0,0.2);}
+  .office-buy-btn:active:not(:disabled){box-shadow:0 1px 0 var(--postit-buy-edge), 1px 2px 3px rgba(0,0,0,0.16);}
   .office-buy-btn .buy-label{font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:800;}
   .office-buy-btn .buy-cost{font-family:'Nunito', sans-serif; font-size:0.82rem; font-weight:900;}
   .office-buy-btn:disabled{cursor:not-allowed; background:var(--postit-disabled-bg); border-color:var(--postit-disabled-ink); color:var(--postit-disabled-ink); box-shadow:0 2px 0 var(--postit-disabled-edge);}
