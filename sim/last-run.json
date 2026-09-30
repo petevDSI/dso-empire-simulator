@@ -1,0 +1,28 @@
+{
+  "active": [
+    {
+      "season": 1,
+      "kind": "exit",
+      "minutes": 9.6,
+      "realSec": 13
+    },
+    {
+      "season": 2,
+      "kind": "exit",
+      "minutes": 8,
+      "realSec": 24
+    },
+    {
+      "season": 3,
+      "kind": "exit",
+      "minutes": 6.7,
+      "realSec": 34
+    },
+    {
+      "season": 4,
+      "kind": "exit",
+      "minutes": 7.8,
+      "realSec": 46
+    }
+  ]
+}
