@@ -391,6 +391,13 @@
   .memo-day{font-weight:800; flex:0 0 auto;}
   .memo-text{flex:1 1 240px; font-weight:600;}
 
+
+  /* ---------- progressive reveal: features stay hidden until the player earns them ---------- */
+  .ui-locked{display:none !important;}
+  .ui-new{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px; animation:tutorialPulse 1.4s ease-in-out infinite;}
+  @media (prefers-reduced-motion: reduce){ .ui-new{animation:none;} }
+  .roster-more-hint{margin:10px 4px 2px; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.74rem; color:var(--ink-soft); font-style:italic; text-align:center;}
+
   /* ---------- v56: getting-started tutorial banner ---------- */
   .tutorial-banner{
     position:relative; display:flex; align-items:center; gap:12px; padding:10px 14px;
@@ -1649,10 +1656,10 @@
     </div>
     <div class="ticker" aria-label="Company stats">
       <div class="ticker-item"><span class="ticker-label">Cash</span><span class="ticker-value num" id="stat-revenue">$0.00</span></div>
-      <div class="ticker-item"><span class="ticker-label">EBITDA / sec</span><span class="ticker-value num" id="stat-ebitda">$0.00</span></div>
-      <div class="ticker-item"><span class="ticker-label">Multiple</span><span class="ticker-value num" id="stat-multiple">6.0×</span></div>
-      <div class="ticker-item"><span class="ticker-label">Streak</span><span class="ticker-value num" id="stat-streak">1d</span></div>
-      <div class="ticker-item"><span class="ticker-label">Net Worth</span><span class="ticker-value num" id="stat-networth">$0.00</span></div>
+      <div class="ticker-item" id="tile-ebitda"><span class="ticker-label">EBITDA / sec</span><span class="ticker-value num" id="stat-ebitda">$0.00</span></div>
+      <div class="ticker-item" id="tile-multiple"><span class="ticker-label">Multiple</span><span class="ticker-value num" id="stat-multiple">6.0×</span></div>
+      <div class="ticker-item" id="tile-streak" title="Play on consecutive days: +5% production per day, up to +35% at 7 days."><span class="ticker-label">Streak</span><span class="ticker-value num" id="stat-streak">1d</span></div>
+      <div class="ticker-item" id="tile-networth"><span class="ticker-label">Net Worth</span><span class="ticker-value num" id="stat-networth">$0.00</span></div>
       <div class="ticker-item highlight ticker-item-info" id="ev-info-btn" role="button" tabindex="0" title="How is Enterprise Value calculated?"><span class="ticker-label">Enterprise Value <span aria-hidden="true">&#9432;</span></span><span class="ticker-value num" id="stat-ev">$0.00</span></div>
     </div>
     <button id="sfx-toggle" class="mini-toggle" type="button" title="Toggle sound effects">&#128266; Sound on</button>
@@ -1707,13 +1714,13 @@
   <div class="tutorial-banner" id="tutorial-banner" hidden>
     <img class="tutorial-banner-mascot" src="data:image/png;base64,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" alt="" aria-hidden="true">
     <div class="tutorial-banner-body">
-      <span class="tutorial-banner-eyebrow">GETTING STARTED</span>
+      <span class="tutorial-banner-eyebrow" id="tutorial-banner-eyebrow">DR. FLOSSBERG &middot; STEP 1 OF 8</span>
       <p class="tutorial-banner-text" id="tutorial-banner-text"></p>
     </div>
     <button class="tutorial-skip" id="tutorial-skip" type="button">Skip tutorial</button>
   </div>
 
-  <div class="memo">
+  <div class="memo" id="memo-strip">
     <span class="memo-eyebrow">OFFICE MEMO</span>
     <span class="memo-day" id="memo-day">—</span>
     <span class="memo-text" id="memo-text">—</span>
@@ -3729,24 +3736,123 @@
       "• After you go public, the Analyst Coverage IPO perk adds +0.5× per rank purchased.";
   }
 
-  /* ---------- v56: guided first-actions tutorial ----------
-     Pete's playtest note: collecting felt like a tap before the player had much to decide, and
-     asked for an explicit tutorial moment for the game's opening actions, using a mascot as the
-     "talking head." This walks a genuinely new player (never clicked, never hired) through Bill a
-     Patient -> hiring Dana -> collecting her cash, then ends on a real branching choice between
-     automating her collection for free or banking $750 cash instead — a small, concrete version of
-     the "automate vs. grow" tension the whole game is built around. Returning players (anyone with
-     existing clicks, hires, or a save) never see it: startTutorial() checks for a genuinely fresh
-     game before doing anything. */
+  /* ---------- progressive reveal + guided tutorial (Dr. Flossberg, the Molar Mogul) ----------
+     Pete's playtest note: a first-time player was shown the whole game at once. New players now start
+     with only Cash and the Bill a Patient button; each feature appears when the player can act on it,
+     with a short banner from Dr. Flossberg explaining it. Reveal flags live in their OWN localStorage
+     key (not in `state`) because an Exit/Fund/IPO rebuilds `state` from defaultState() and would
+     otherwise re-hide everything. Anyone with an existing save is grandfathered to "show everything".
+
+     Steps 1-3 (Bill -> hire Dana -> Collect) are the original v56 flow; after the Automate-or-Grow
+     choice the rest is driven by checkReveals(), which runs once per tick. */
+  var UI_KEY = "dso-empire-simulator-ui-unlocks-v1";
+  // Leaderboard reveal timing (Pete is still deciding): "exit" = after the first Exit, "tabs" = with the tab bar.
+  var LEADERBOARD_REVEAL = "exit";
+  var ui = { all:false, u:{}, ts:{} };
+  function uiLoad(){
+    try { var raw = localStorage.getItem(UI_KEY); if (raw){ var o = JSON.parse(raw); ui = { all:!!o.all, u:o.u || {}, ts:o.ts || {} }; return true; } } catch(e){}
+    return false;
+  }
+  function uiSave(){ try { localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch(e){} }
+  function uiHas(f){ return ui.all || !!ui.u[f]; }
+
+  // which elements each feature reveals
+  var UI_LOCKS = {
+    roster:     ["#panel-staff"],
+    upgrades:   ["#panel-upgrades"],
+    ebitda:     ["#tile-ebitda"],
+    ev:         ["#ev-info-btn", "#tile-multiple", "#exit-topbar", "#memo-strip", "#news", "#holiday-banner", "#fn-link"],
+    milestones: ["#ms-progress-badge"],
+    hiremax:    ["#hire-max-toggle"],
+    streak:     ["#tile-streak"],
+    networth:   ["#tile-networth"],
+    tabs:       ["#tab-bar", '.tab-btn[data-tab="ops"]', '.tab-btn[data-tab="exit"]', "#mini-toggle", "#panel-redeem"],
+    board:      ["#panel-board"],
+    sponsor:    ["#panel-sponsor", "#panel-supply"],
+    collection: ['.tab-btn[data-tab="collection"]'],
+    story:      ['.tab-btn[data-tab="story"]'],
+    leaderboard:['.tab-btn[data-tab="leaderboard"]'],
+    bonuses:    ['.tab-btn[data-tab="bonuses"]'],
+    office:     ['.tab-btn[data-tab="office"]']
+  };
+  // only pulse the things worth looking at (not every element a reveal un-hides)
+  var UI_NEW_MARK = { ev:["#ev-info-btn", "#tile-multiple", "#exit-topbar"], tabs:["#tab-bar"] };
+  function applyUiLocks(){
+    Object.keys(UI_LOCKS).forEach(function(f){
+      var open = uiHas(f);
+      UI_LOCKS[f].forEach(function(sel){
+        document.querySelectorAll(sel).forEach(function(n){ n.classList.toggle("ui-locked", !open); });
+      });
+    });
+  }
+  function markUiNew(sels){
+    (sels || []).forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(n){
+        n.classList.add("ui-new");
+        var clear = function(){ n.classList.remove("ui-new"); n.removeEventListener("click", clear); };
+        n.addEventListener("click", clear);
+        setTimeout(clear, 25000);
+      });
+    });
+  }
+  function uiUnlock(f, opts){
+    if (uiHas(f) && ui.u[f]) return false;
+    if (ui.all) return false;
+    ui.u[f] = true;
+    ui.ts[f] = Date.now();
+    uiSave();
+    applyUiLocks();
+    if (!opts || !opts.quiet) markUiNew(UI_NEW_MARK[f] || UI_LOCKS[f]);
+    return true;
+  }
+  function uiUnlockAll(){
+    ui.all = true;
+    uiSave();
+    applyUiLocks();
+    renderStaff();
+    renderUpgrades();
+  }
+  function uiTutorialDone(){ return ui.all || !!ui.u.tutdone; }
+
+  /* ----- coach banner (Dr. Flossberg) ----- */
+  var coachQueue = [], coachCurrent = null;
+  function coachSay(c){
+    coachQueue.push(c);
+    if (!coachCurrent) coachNext();
+  }
+  function coachNext(){
+    clearTutorialHighlights();
+    coachCurrent = coachQueue.shift() || null;
+    if (!coachCurrent){ if (!tutorialActive()) el["tutorial-banner"].hidden = true; return; }
+    el["tutorial-banner"].hidden = false;
+    el["tutorial-banner-eyebrow"].textContent = "DR. FLOSSBERG · " + coachCurrent.eyebrow;
+    el["tutorial-banner-text"].textContent = coachCurrent.text;
+    el["tutorial-skip"].textContent = "Got it";
+    if (coachCurrent.sel) highlightTutorialTarget(coachCurrent.sel);
+  }
+  function coachDismiss(){
+    var done = coachCurrent && coachCurrent.onDone;
+    coachCurrent = null;
+    clearTutorialHighlights();
+    if (done) done();           // may queue (and immediately show) a follow-up coach
+    if (!coachCurrent) coachNext();
+  }
+  function onTutorialButton(){ if (tutorialActive()) skipTutorial(); else coachDismiss(); }
+
   var TUTORIAL_TEXT = {
-    1: "Welcome to DSO Empire Simulator. Tap Bill a Patient below to bring in your first bit of cash.",
-    2: "Nice — that's billing revenue landing straight in cash. Real growth comes from staff. Hire Dana Whitfield, RDH below in The Roster.",
-    3: "Dana's fees pile up until you collect them. Give her Collect button a click when it lights up."
+    1: "Welcome to DSO Empire Simulator. I'm Dr. Flossberg, the Molar Mogul. Tap Bill a Patient to bring in your first dollars.",
+    2: "Taps pay, but staff pay you while you work. Meet The Roster. Keep tapping until you have $15, then hire Dana Whitfield, RDH.",
+    3: "Dana's fees pile up until you Collect them. Tap her Collect button when it lights up."
   };
   function tutorialActive(){ return (state.tutorialStep || 0) > 0 && state.tutorialStep < 4; }
   function startTutorial(){
     if (!state || state.tutorialStep) return;
-    if ((state.totalClicks || 0) > 0 || (state.staff.chair || 0) > 0){ state.tutorialStep = 5; return; }
+    if (ui.all || (state.totalClicks || 0) > 0 || (state.staff.chair || 0) > 0){
+      state.tutorialStep = 5;
+      if (!ui.all){ ui.u.tutdone = true; uiSave(); }
+      return;
+    }
+    ui.t = true; uiSave();
     state.tutorialStep = 1;
     saveGame();
     renderTutorialStep();
@@ -3764,8 +3870,13 @@
     var step = state.tutorialStep;
     if (step === 1 || step === 2 || step === 3){
       el["tutorial-banner"].hidden = false;
+      el["tutorial-banner-eyebrow"].textContent = "DR. FLOSSBERG · STEP " + step + " OF 8";
       el["tutorial-banner-text"].textContent = TUTORIAL_TEXT[step];
+      el["tutorial-skip"].textContent = "Skip tutorial";
       highlightTutorialTarget(step === 1 ? "#click-btn" : step === 2 ? '[data-gen="chair"]' : '[data-collect="chair"]');
+    } else if (coachCurrent){
+      el["tutorial-banner"].hidden = false;
+      if (coachCurrent.sel) highlightTutorialTarget(coachCurrent.sel);
     } else {
       el["tutorial-banner"].hidden = true;
     }
@@ -3773,6 +3884,10 @@
   function advanceTutorial(fromStep){
     if (state.tutorialStep !== fromStep) return;
     clearTutorialHighlights();
+    if (fromStep === 1){
+      uiUnlock("roster", {quiet:true});
+      renderStaff();
+    }
     if (fromStep === 3){
       el["tutorial-banner"].hidden = true;
       state.tutorialStep = 4;
@@ -3786,10 +3901,12 @@
   }
   function skipTutorial(){
     clearTutorialHighlights();
+    coachQueue = []; coachCurrent = null;
     if (el["tutorial-banner"]) el["tutorial-banner"].hidden = true;
     if (el["tutorial-choice-overlay"]) el["tutorial-choice-overlay"].hidden = true;
     state.tutorialStep = 5;
     saveGame();
+    uiUnlockAll();
   }
   function resolveTutorialChoice(choice){
     if (el["tutorial-choice-overlay"]) el["tutorial-choice-overlay"].hidden = true;
@@ -3802,16 +3919,157 @@
         state.pending.chair = 0;
         showToast("AUTOMATED", "Dana Whitfield's revenue now collects itself, free of charge — the tutorial's on us.");
       }
-      renderUpgrades();
     } else {
       state.revenue += 750;
       state.lifetimeRevenue += 750;
       showToast("CASH INJECTION", "+$750.00 banked. Dana still needs a manual Collect for now.");
     }
+    // tutorial steps done: reveal Initiatives + the EBITDA tile and hand over to the reveal engine
+    ui.u.tutdone = true;
+    uiUnlock("ebitda");
+    uiUnlock("upgrades");
+    coachSay({
+      eyebrow: "STEP 4 OF 8",
+      text: (choice === "automate"
+        ? "Initiatives are one-time upgrades, and you just got the Practice Manager free. Next up: Digital Recall Reminders, $60, makes Dana collect twice as fast."
+        : "Initiatives are one-time upgrades. The Practice Manager, $500, would make Dana collect on her own.") +
+        " EBITDA per second, up top, is how fast your whole team earns.",
+      sel: "#panel-upgrades"
+    });
     renderStaff();
+    renderUpgrades();
     updateStats();
     updateAffordability();
     saveGame();
+  }
+
+  /* ----- what's visible in the Roster / Initiatives lists ----- */
+  function staffVisible(g){
+    if (uiHas("all-staff")) return true;
+    if (ui.all) return true;
+    if (!uiHas("roster")) return false;
+    if (g.id === "chair") return true;
+    return !!ui.u["hire-" + g.id];
+  }
+  function upgradeVisible(u){
+    if (ui.all) return true;
+    if (!uiHas("upgrades")) return false;
+    var need = u.target || u.speedTarget;
+    if (need) return staffVisible(STAFF.filter(function(g){ return g.id === need; })[0]);
+    if (u.id === "audit") return !!ui.u["hire-platform"];
+    return !!ui.u["hire-location"];   // global Initiatives (Unified Suite, GPO) arrive with the Wilmington Satellite
+  }
+
+  var HIRE_COACH = {
+    associate: {
+      eyebrow: "STEP 5 OF 8",
+      text: "Dr. Raj Malhotra joins the Roster. He earns 10× what Dana does and costs 10×. Each extra copy of the same hire costs 15% more than the last, so mix your hires.",
+      sel: '[data-gen="associate"]'
+    }
+  };
+  var REVEAL_TOASTS = {
+    hiremax:     ["HIRE ×MAX", "Tired of tapping? Hire ×Max buys as many as you can afford in one click."],
+    collection:  ["COLLECTION UNLOCKED", "Cards you earn live here. Complete sets give permanent bonuses."],
+    bonuses:     ["BONUSES TAB", "Every permanent bonus you've earned, all in one place."],
+    story:       ["STORY TAB", "New episode. The DSO plot thickens."],
+    networth:    ["NET WORTH", "This follows you across companies. It's your lifetime score."],
+    leaderboard: ["LEADERBOARD UNLOCKED", "You're on the board. Enter a name to claim your spot."],
+    office:      ["THE OFFICE", "Equipment will matter later. Come back around Season 8."]
+  };
+  var inReveal = false;
+  function checkReveals(){
+    if (ui.all || inReveal || !state) return;
+    // failsafe: fresh player whose intro never kicked the tutorial off (e.g. splash already seen)
+    if (!ui.t && !state.tutorialStep && !uiTutorialDone()){
+      var intro = el["logo-intro"];
+      if (!intro || intro.hidden || getComputedStyle(intro).display === "none") startTutorial();
+    }
+    if (!uiTutorialDone()) return;
+    inReveal = true;
+    var changedLists = false;
+    try {
+      var cash = state.revenue, life = state.lifetimeRevenue;
+      // hires: one tier ahead, once the previous tier is owned and the price is within reach
+      STAFF.forEach(function(g, i){
+        if (i === 0 || ui.u["hire-" + g.id]) return;
+        var prev = STAFF[i - 1], prevOwned = state.staff[prev.id] || 0;
+        var near = (state.staff[g.id] || 0) > 0 || (prevOwned >= 1 && (cash >= 0.5 * g.baseCost || prevOwned >= 3));
+        if (!near) return;
+        ui.u["hire-" + g.id] = true; ui.ts["hire-" + g.id] = Date.now(); uiSave();
+        changedLists = true;
+        if (HIRE_COACH[g.id]) coachSay(HIRE_COACH[g.id]);
+        else showToast("NEW HIRE AVAILABLE", g.name + " is on the Roster. Bigger earnings, bigger price.");
+      });
+      if (changedLists){ renderStaff(); renderUpgrades(); }
+      if (totalOwned(state) >= 10 && uiUnlock("hiremax")) showToast(REVEAL_TOASTS.hiremax[0], REVEAL_TOASTS.hiremax[1]);
+      if (life >= 500 && !ui.u.ev){
+        uiUnlock("ev");
+        coachSay({
+          eyebrow: "STEP 6 OF 8",
+          text: "This is Enterprise Value: everything you've earned × your Multiple. The bar up top is your goal. Hit the target and you can Exit to Private Equity.",
+          sel: "#ev-info-btn",
+          onDone: function(){
+            if (uiUnlock("tabs")){
+              coachSay({
+                eyebrow: "STEP 7 OF 8",
+                text: "You've got more than one screen now. Operations is where you run the business. Exit Strategy is where you sell it.",
+                sel: "#tab-bar"
+              });
+            }
+          }
+        });
+      }
+      if ((state.milestonesUnlocked || []).length > 0) uiUnlock("milestones", {quiet:true});
+      if (ui.u.tabs){
+        if (!ui.u.board && cash >= boardThresholds()[0]){
+          uiUnlock("board");
+          coachSay({
+            eyebrow: "STEP 8 OF 8",
+            text: "You've got real money now, which means the Board wants a word. Board Room decisions cost cash and pay off in different ways. There's no right answer, only the kind of DSO you want to build.",
+            sel: "#panel-board"
+          });
+        }
+        // sponsor + supply: 3 minutes after the tabs open, or as soon as the Board Room does
+        if (!ui.u.sponsor && (ui.u.board || Date.now() - (ui.ts.tabs || Date.now()) > 180000)){
+          uiUnlock("sponsor");
+          coachSay({
+            eyebrow: "NEW",
+            text: "Sponsor Bonus: watch a short message for a mystery reward and a boost. Supply Order: gamble cash on a bulk order. It usually pays off. Sometimes it doesn't.",
+            sel: "#panel-sponsor"
+          });
+        }
+        var later = [
+          ["collection", (state.desksUnlocked || []).length > 0],
+          ["bonuses",    (state.milestonesUnlocked || []).length > 0 || (state.achievementsUnlocked || []).length > 0],
+          ["story",      (state.episodesUnlocked || []).length > 0],
+          ["office",     (state.seasonsCompleted || 0) >= 1]
+        ];
+        later.forEach(function(p){
+          if (p[1] && uiUnlock(p[0])) showToast(REVEAL_TOASTS[p[0]][0], REVEAL_TOASTS[p[0]][1]);
+        });
+        if (LEADERBOARD_REVEAL === "tabs" || (state.prestigeCount || 0) >= 1){
+          if (uiUnlock("leaderboard")) showToast(REVEAL_TOASTS.leaderboard[0], REVEAL_TOASTS.leaderboard[1]);
+        }
+      }
+      if ((state.streakCount || 0) >= 2) uiUnlock("streak");
+      if (((state.prestigeCount || 0) >= 1 || (state.netWorth || 0) > 0) && uiUnlock("networth")) showToast(REVEAL_TOASTS.networth[0], REVEAL_TOASTS.networth[1]);
+    } finally { inReveal = false; }
+  }
+  // Decide, once per page load, whether this player gets the staged reveal or the full screen.
+  function initUiReveal(hadSave){
+    var had = uiLoad();
+    if (!had){
+      // no flags stored: anyone with an existing save is a returning player -> full screen
+      ui = { all: !!hadSave, u:{}, ts:{} };
+      uiSave();
+    }
+    applyUiLocks();
+  }
+  function resetUiReveal(){
+    ui = { all:false, u:{}, ts:{} };
+    coachQueue = []; coachCurrent = null;
+    uiSave();
+    applyUiLocks();
   }
   function clickValue(s){ return BASE_CLICK * globalMult(s); }
   function effectiveCostGrowth(s){
@@ -4006,7 +4264,7 @@
    "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit",
    "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn",
    "bonus-global-rows","bonus-roster-rows","ms-progress-badge","ev-info-btn","ev-explain-link",
-   "tutorial-banner","tutorial-banner-text","tutorial-skip","tutorial-choice-overlay","tutorial-choice-automate","tutorial-choice-grow",
+   "tutorial-banner","tutorial-banner-text","tutorial-banner-eyebrow","tutorial-skip","tutorial-choice-overlay","tutorial-choice-automate","tutorial-choice-grow",
    "dso-health-readout",
    "panel-office","office-body","office-alert-dot","panel-office-ceo","office-ceo-body","tab-dot-office"
   ].forEach(function(id){ el[id] = document.getElementById(id); });
@@ -4086,7 +4344,9 @@
   function renderStaff(){
     updateMilestoneBadge();
     el["staff-rows"].innerHTML = "";
+    var hiddenHires = 0;
     STAFF.forEach(function(g){
+      if (!staffVisible(g)){ hiddenHires++; return; }
       var owned = state.staff[g.id] || 0;
       var cap = genCap(g, state);
       var bs = buyButtonState(g);
@@ -4123,6 +4383,12 @@
         buyHtml;
       el["staff-rows"].appendChild(row);
     });
+    if (hiddenHires > 0 && !ui.all && uiHas("roster") && uiTutorialDone()){
+      var more = document.createElement("p");
+      more.className = "roster-more-hint";
+      more.textContent = "\uD83D\uDD12 More of the team unlocks as you grow.";
+      el["staff-rows"].appendChild(more);
+    }
     updateLockProgress();
     if (tutorialActive()) renderTutorialStep();
   }
@@ -4130,6 +4396,7 @@
   function renderUpgrades(){
     el["upgrade-rows"].innerHTML = "";
     UPGRADES.forEach(function(u){
+      if (!upgradeVisible(u)) return;
       var bought = state.upgrades[u.id];
       var deskLocked = !bought && u.deskRequirement && !meetsDeskRequirement(state, u.deskRequirement);
       var cost = upgradeCost(u, state);
@@ -5782,6 +6049,9 @@
     if (!state || !state.staff || state.flagshipAsked || !el["flagship-overlay"]) return;
     var total = 0; Object.keys(state.staff).forEach(function(k){ total += state.staff[k] || 0; });
     if (total < 1 || anyOverlayOpen()) return;
+    // hold the naming pop-up until the opening tutorial is over so it can't cover the Collect button
+    if (state.tutorialStep >= 1 && state.tutorialStep <= 4) return;
+    if (el["tutorial-choice-overlay"] && !el["tutorial-choice-overlay"].hidden) return;
     openFlagshipDialog(false);
   }
   el["flagship-icons"].addEventListener("click", function(e){
@@ -5838,7 +6108,7 @@
     el["ev-info-btn"].addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openEvBreakdown(); } });
   }
   if (el["ev-explain-link"]) el["ev-explain-link"].addEventListener("click", openEvBreakdown);
-  if (el["tutorial-skip"]) el["tutorial-skip"].addEventListener("click", skipTutorial);
+  if (el["tutorial-skip"]) el["tutorial-skip"].addEventListener("click", onTutorialButton);
   if (el["tutorial-choice-automate"]) el["tutorial-choice-automate"].addEventListener("click", function(){ resolveTutorialChoice("automate"); });
   if (el["tutorial-choice-grow"]) el["tutorial-choice-grow"].addEventListener("click", function(){ resolveTutorialChoice("grow"); });
 
@@ -6547,9 +6817,11 @@
   function doReset(){
     try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
     state = defaultState();
+    resetUiReveal();
     renderStaff(); renderUpgrades(); renderEpisodes(); renderAchievements(); renderDesk(); renderSeasonCheckpoints();
     el["redeem-status"].textContent = "";
     saveGame();
+    startTutorial();
   }
 
   /* ---------- coffee run (random bonus event) ---------- */
@@ -7429,7 +7701,8 @@
       setTimeout(function(){
         intro.hidden = true;
         intro.classList.remove("is-leaving");
-        if (!loadSplashSeen()){ saveSplashSeen(); startTutorial(); }
+        if (!loadSplashSeen()) saveSplashSeen();
+        startTutorial();
       }, 500);
     }
     intro.addEventListener("click", function(){ if (!ready) skipToEnd(); else enter(); });
@@ -8179,6 +8452,7 @@
     });
     autoTick(dt);
     updateStats();
+    checkReveals();
     updateAffordability();
     updatePending();
     checkEpisodes();
@@ -8217,6 +8491,7 @@
       state = base;
     }
     checkPackRedemption();
+    initUiReveal(hadSave);
     renderMemo();
     renderStaff();
     renderUpgrades();
