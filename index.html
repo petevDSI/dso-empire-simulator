@@ -8078,8 +8078,44 @@
 
   /* ---------- game loop ---------- */
   var TICK_MS = 100;
+  // Real-elapsed-time tick: browsers throttle/suspend timers in background tabs and on phones, so a
+  // fixed 0.1s per tick under-credits any time the game wasn't actively running. Each tick now
+  // measures the real gap since the previous tick. Short gaps are credited exactly; a gap of
+  // MIN_OFFLINE_SECONDS or more goes through the same capped offline routine used at page load
+  // (piled-up cash on manual hires included), and the summary is shown once the tab is visible.
+  var lastTickAt = Date.now();
+  var awayAccum = null;
+  function flushAwaySummary(){
+    if (!awayAccum || document.hidden) return;
+    var r = awayAccum; awayAccum = null;
+    showWelcomeBackModal(r);
+  }
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible") flushAwaySummary();
+  });
   setInterval(function(){
+    var nowT = Date.now();
+    var gapSec = (nowT - lastTickAt) / 1000;
+    var prevTickAt = lastTickAt;
+    lastTickAt = nowT;
     var dt = TICK_MS / 1000;
+    if (gapSec >= MIN_OFFLINE_SECONDS){
+      var away = applyOfflineEarnings(prevTickAt);
+      if (away){
+        if (awayAccum){
+          awayAccum.elapsedSec += away.elapsedSec;
+          awayAccum.earnings += away.earnings;
+          awayAccum.piled += away.piled;
+          awayAccum.capped = awayAccum.capped || away.capped;
+        } else {
+          awayAccum = away;
+        }
+        flushAwaySummary();
+      }
+      dt = 0; // that gap was already credited above
+    } else if (gapSec > dt && gapSec > 0){
+      dt = gapSec; // throttled tab / slow frame: credit the real elapsed time
+    }
     var autoGain = computeAutoEbitda(state) * dt;
     state.revenue += autoGain;
     state.lifetimeRevenue += autoGain;
@@ -8165,6 +8201,7 @@
       }
     }
     state.lastSeen = Date.now();
+    lastTickAt = Date.now();
     saveGame();
     scheduleCoffeeRun();
     scheduleDeskDrop();
