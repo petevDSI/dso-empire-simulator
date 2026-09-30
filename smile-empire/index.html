@@ -56,8 +56,14 @@ header{display:flex;align-items:center;gap:10px;padding:10px 12px 6px;background
 .hwt-link.done{background:#facc15}
 .hwt-lifebar{position:relative;margin-top:8px;height:16px;border-radius:8px;background:#150a2c;border:1px solid #4a2a80;overflow:hidden}
 .hwt-lifebar-fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#7c3aed,#a855f7,#facc15);transition:width .4s ease}
+.hwt-lifebar-fill::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(-45deg,#fff8 0 10px,transparent 10px 20px);background-size:28px 28px;animation:hwtCandy 1.1s linear infinite}
+@keyframes hwtCandy{from{background-position:0 0}to{background-position:28px 0}}
 .hwt-lifebar span{position:relative;z-index:1;display:block;text-align:center;font-size:10px;line-height:16px;font-weight:700;color:#fff;text-shadow:0 1px 2px #000c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
 .hwt-next{font-size:11px;color:#c4b5fd;margin-top:5px}
+.hwt-nudge{display:none;margin-top:6px;padding:7px 10px;border-radius:10px;background:linear-gradient(90deg,#3b0764,#581c87);border:1px solid #c084fc;font-size:11.5px;font-weight:700;color:#f3e8ff;text-align:center;cursor:pointer;animation:hwtNudgePulse 1.6s ease-in-out infinite}
+.hwt-nudge.on{display:block}
+@keyframes hwtNudgePulse{0%,100%{box-shadow:0 0 0px #c084fc00}50%{box-shadow:0 0 14px #c084fcaa}}
+nav button.nudge{animation:hwtNudgePulse 1.6s ease-in-out infinite}
 #modes{display:flex;gap:6px;padding:8px 12px 4px}
 #modes button{flex:1;padding:6px 0;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:13px;color:var(--dim)}
 #modes button.on{background:linear-gradient(#34d399,#059669);color:#04231a;border-color:#6ee7b7;box-shadow:0 0 12px #34d39955}
@@ -204,6 +210,7 @@ nav .dot.on{display:flex}
     <div class="hwt-head"><span>🎃 Fright Night Prizes</span><span id="hwt-count">0/5</span></div>
     <div class="hwt-nodes" id="hwt-nodes"></div>
     <div class="hwt-lifebar"><div class="hwt-lifebar-fill" id="hwt-lifebar-fill"></div><span id="hwt-lifebar-label"></span></div>
+    <div class="hwt-nudge" id="hwt-nudge"></div>
     <div class="hwt-next" id="hwt-next"></div>
   </div>
   <div id="buffs"></div>
@@ -591,6 +598,25 @@ function effectiveBuyCount(i){
   return n;
 }
 function pendingLP(){ return Math.floor(10*Math.sqrt(S.run/1e10)); }
+// True once every practice the player currently has is capped, they can't
+// afford any manager that would lift a cap, and they can't afford to open
+// the next practice either — i.e. there's no lever left to pull except
+// selling (Legacy) to reinvest LP and start climbing again. Used to nudge
+// toward the Legacy tab instead of leaving the player to bang against a
+// wall of "🔒 CAPPED" buttons with no clue what to do next.
+function growthStuck(){
+  if(THEME.id!=='halloween') return false;
+  const hi=mostUnlocked();
+  for(let i=0;i<=hi;i++){
+    if(S.own[i]<=0) continue;
+    const cap=levelCap(i);
+    const capped=levelCapped(i) && cap!=null && S.own[i]>=cap;
+    if(!capped) return false;
+    if(S.cash>=BIZ[i].mgr) return false;
+  }
+  if(hi+1<N){ if(S.cash>=costFor(hi+1,1)) return false; }
+  return true;
+}
 function minutesIncome(m){ return Math.max(G.inc*60*m, m*30 + S.run*0.002*m); }
 
 /* =====================================================================
@@ -911,7 +937,7 @@ function addBuff(id,name,mult,secs){ S.buffs.push({id,name,mult,until:Date.now()
 let goldenEl=$('#golden'), goldenTO=null;
 if(THEME.id==='halloween' && ART.phantomFang) goldenEl.querySelector('span').innerHTML='<img src="'+ART.phantomFang+'" alt="" style="width:64px;height:64px;object-fit:contain;display:block">';
 else goldenEl.querySelector('span').textContent=GOLD.emoji;
-function scheduleGolden(){ const base=rnd(55,120)*(S.perks.magnet?.5:1); S.nextGolden=Date.now()+base*1000; }
+function scheduleGolden(){ const base=rnd(130,240)*(S.perks.magnet?.5:1); S.nextGolden=Date.now()+base*1000; }
 function spawnGolden(force){
   if(goldenEl.classList.contains('on')) return;
   goldenEl.style.setProperty('--gy', rnd(18,55)+'vh'); goldenEl.classList.remove('on'); void goldenEl.offsetWidth; goldenEl.classList.add('on');
@@ -1137,8 +1163,17 @@ function renderHwTrack(){
     }
   }
   setT('hwt-next', hwNextLine());
+  // Nudge toward Legacy once growth has genuinely stalled — capped out,
+  // can't afford a manager or the next practice — so selling to reinvest
+  // LP is the actual next move, not just "grind more taps."
+  const nudge=$('#hwt-nudge');
+  if(nudge){
+    const stuck = nextIdx!==-1 && growthStuck() && pendingLP()>=1;
+    nudge.classList.toggle('on', stuck);
+    if(stuck) nudge.textContent='💰 Every practice is capped — sell & reinvest to keep climbing toward '+HW_TIERS[nextIdx].name+'!';
+  }
 }
-$('#hwTrack').onclick=()=>{ SFX.resume(); SFX.click(3); showTab('more'); };
+$('#hwTrack').onclick=(e)=>{ SFX.resume(); SFX.click(3); if(e.target.closest('#hwt-nudge')) showTab('leg'); else showTab('more'); };
 
 /* =====================================================================
    Rendering
@@ -1337,6 +1372,8 @@ function updateAll(force){
   const mAff=BIZ.filter((b,i)=>!S.mgr[i]&&S.cash>=b.mgr&&S.own[i]>0).length; const uAff=UPGS.filter(u=>!S.upg[u.id]).slice(0,14).filter(u=>S.cash>=u.cost).length;
   const hwNew=THEME.id==='halloween' && HW_TIERS.some(t=>S.hwGranted[t.id] && !S.hwSeen[t.id]) ? '🎃' : 0;
   [['mgr',mAff],['upg',uAff],['leg',pendingLP()>=1?'!':0],['more',hwNew]].forEach(([k,v])=>{ const e=$('#dot-'+k); if(e){ e.textContent=v; e.classList.toggle('on',!!v); } });
+  const legBtn=$('#nav button[data-k="leg"]');
+  if(legBtn) legBtn.classList.toggle('nudge', growthStuck() && pendingLP()>=1);
 }
 $('#goal').onclick=()=>{ if(goalTarget===null) return; const i=goalTarget, n=nextMs(i)-S.own[i], cost=costFor(i,n);
   if(S.cash>=cost){ const m=S.buyMode; S.buyMode='next'; buy(i); S.buyMode=m; } else { SFX.err(); toast('Need '+$$$(cost)+' to hit the next milestone'); } };
