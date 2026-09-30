@@ -2113,6 +2113,7 @@
   };
   var STREAK_CAP_DAYS = 7;
   var STREAK_PCT_PER_DAY = 0.05;
+  var STREAK_GRACE_COOLDOWN_DAYS = 14; // one forgiven missed day per this many days
 
   var SUPPLY_COST_PCT = 0.18;
   var SUPPLY_MIN_CASH = 50;
@@ -2130,7 +2131,10 @@
   var LP_RAISE_DIVISOR = 5;
 
   var EXIT_TARGET_BASE = 10000000;
-  var SEASON_DIFFICULTY_GROWTH = 1.6;
+  // Pacing: each season takes about (this / 1.17) times longer than the last for an active player
+  // (1.17 = measured per-season income growth, see sim/README.md). 1.23 => ~5% longer per season,
+  // so Season 100 is about a week of play instead of tens of millions of years at the old 1.6.
+  var SEASON_DIFFICULTY_GROWTH = 1.23;
   var SEASON_CHECKPOINTS = [0.2, 0.4, 0.6, 0.8];
   var SEASON_CHECKPOINT_BOOST_MS = 60000;
   var SEASON_COST_GROWTH_STEP = 0.005;
@@ -2953,6 +2957,7 @@
       streakCount:0,
       streakLastDate:"",
       streakBonusPct:0,
+      streakGraceDate:"",
       frenzyUntil:0,
       sponsorReadyAt:0,
       sponsorBoostUntil:0,
@@ -3952,6 +3957,11 @@
     d.setDate(d.getDate() - 1);
     return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
   }
+  function daysAgoStr(n){
+    var d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
   function formatDuration(sec){
     sec = Math.max(0, Math.floor(sec));
     var h = Math.floor(sec / 3600);
@@ -3969,6 +3979,63 @@
   }
   function saveGame(){
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+
+  /* ---------- analytics (privacy-first, OFF until configured) ----------
+     Answers the soft-launch questions: do people come back on day 1 / day 7, when do they
+     first prestige, and where do they stop. Sends only an anonymous random ID plus game-progress
+     numbers, never names, emails, or anything typed in. Does nothing unless ANALYTICS_CONFIG is
+     enabled with an endpoint, and always stays off if the browser sends Do Not Track / Global
+     Privacy Control. Point `endpoint` at any service that accepts a JSON POST (Supabase edge
+     function, Plausible/PostHog proxy, etc.). Events are also kept in a small local ring buffer
+     (window.__dsoEvents via ?debug=analytics) so this can be tested without a server. */
+  var ANALYTICS_CONFIG = { enabled: false, endpoint: "" };
+  var ANALYTICS_KEY = "dso-empire-analytics-v1";
+  var analyticsId = null, analyticsFirstOpen = null, sessionStartedAt = Date.now();
+  var analyticsBuffer = [];
+  function analyticsAllowed(){
+    if (!ANALYTICS_CONFIG.enabled || !ANALYTICS_CONFIG.endpoint) return false;
+    if (navigator.doNotTrack === "1" || window.doNotTrack === "1" || navigator.globalPrivacyControl) return false;
+    return true;
+  }
+  function sessionPlayedMs(){ return Date.now() - sessionStartedAt; }
+  function analyticsInit(){
+    try {
+      var raw = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "null");
+      if (raw && raw.id && raw.first){ analyticsId = raw.id; analyticsFirstOpen = raw.first; return; }
+    } catch(e){}
+    analyticsId = "p" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    analyticsFirstOpen = todayStr();
+    try { localStorage.setItem(ANALYTICS_KEY, JSON.stringify({id:analyticsId, first:analyticsFirstOpen})); } catch(e){}
+  }
+  function daysSinceFirstOpen(){
+    var a = analyticsFirstOpen ? new Date(analyticsFirstOpen + "T00:00:00") : new Date();
+    return Math.max(0, Math.round((new Date(todayStr() + "T00:00:00") - a) / 86400000));
+  }
+  function track(name, props){
+    var evt = {
+      e: name, t: Date.now(), id: analyticsId, day_n: daysSinceFirstOpen(),
+      season: (state && state.seasonsCompleted) || 0, p: props || {}
+    };
+    analyticsBuffer.push(evt);
+    if (analyticsBuffer.length > 50) analyticsBuffer.shift();
+    try { if (/[?&]debug=analytics/.test(location.search)) window.__dsoEvents = analyticsBuffer; } catch(e){}
+    if (!analyticsAllowed()) return;
+    try {
+      var body = JSON.stringify(evt);
+      if (navigator.sendBeacon) navigator.sendBeacon(ANALYTICS_CONFIG.endpoint, new Blob([body], {type:"text/plain"}));
+      else fetch(ANALYTICS_CONFIG.endpoint, {method:"POST", body:body, keepalive:true});
+    } catch(e){}
+  }
+  function trackSessionEnd(){
+    var tabBtn = document.querySelector('[data-tab].active, .tab-btn.active, [role=tab][aria-selected=true]');
+    track("session_end", {
+      minutes: Math.round(sessionPlayedMs() / 60000),
+      total_clicks: state.totalClicks || 0,
+      exits: state.prestigeCount || 0,
+      last_tab: tabBtn ? (tabBtn.getAttribute("data-tab") || "") : ""
+    });
   }
 
   /* ---------- DOM refs ---------- */
@@ -5828,7 +5895,7 @@
     pendingConfirm = onConfirm;
     el["modal-overlay"].hidden = false;
   }
-  function closeModal(){ el["modal-overlay"].hidden = true; pendingConfirm = null; el["modal-cancel"].style.display = ""; }
+  function closeModal(){ el["modal-overlay"].hidden = true; pendingConfirm = null; el["modal-cancel"].style.display = ""; el["modal-cancel"].textContent = "Cancel"; }
   el["modal-cancel"].addEventListener("click", closeModal);
   el["modal-overlay"].addEventListener("click", function(e){ if (e.target === el["modal-overlay"]) closeModal(); });
   el["modal-confirm"].addEventListener("click", function(){ var fn = pendingConfirm; closeModal(); if (fn) fn(); });
@@ -5901,15 +5968,24 @@
       updateStreakUI();
       return;
     }
+    var graceUsed = false;
     if (state.streakLastDate === yesterdayStr()){
       state.streakCount = (state.streakCount || 0) + 1;
+    } else if (state.streakLastDate === daysAgoStr(2) && (state.streakCount || 0) >= 2 &&
+               (!state.streakGraceDate || state.streakGraceDate < daysAgoStr(STREAK_GRACE_COOLDOWN_DAYS))){
+      // One missed day is forgiven: the streak survives (it doesn't grow today), and the grace
+      // can only be used once every STREAK_GRACE_COOLDOWN_DAYS days so it can't be farmed.
+      state.streakGraceDate = today;
+      graceUsed = true;
     } else {
       state.streakCount = 1;
     }
     state.streakLastDate = today;
     state.streakBonusPct = Math.min(state.streakCount, STREAK_CAP_DAYS) * STREAK_PCT_PER_DAY;
     updateStreakUI();
-    if (state.streakCount >= 2){
+    if (graceUsed){
+      showToast("STREAK SAVED", "You missed a day, but your " + state.streakCount + "-day streak survived. Grace resets in " + STREAK_GRACE_COOLDOWN_DAYS + " days.");
+    } else if (state.streakCount >= 2){
       showToast("STREAK", "Day " + state.streakCount + " streak — +" + Math.round(state.streakBonusPct * 100) + "% production bonus.");
     }
     saveGame();
@@ -5942,6 +6018,44 @@
     if (earnings <= 0 && piled <= 0) return null;
     return {elapsedSec: elapsedSec, capped: capped, earnings: earnings, piled: piled};
   }
+  /* Offline x2: after a long absence the welcome-back popup offers a sponsor message that
+     doubles what the player just earned. Uses the same ad switch as the Sponsor button: a real
+     Google Ad Manager rewarded ad when AD_CONFIG is live and one is ready, otherwise the
+     simulated few-second message. Grants at most once per return. */
+  var OFFLINE_DOUBLE_MIN_SECONDS = 15 * 60;
+  var offlineDoublePending = null; // the offline result waiting on an ad to finish
+  function grantOfflineDouble(result){
+    if (!result || result.doubled) return;
+    result.doubled = true;
+    if (result.earnings > 0){
+      state.revenue += result.earnings;
+      state.lifetimeRevenue += result.earnings;
+    }
+    if (result.piled > 0){
+      STAFF.forEach(function(g){
+        if ((state.staff[g.id] || 0) > 0 && !isAutomated(state, g.id)){
+          state.pending[g.id] = (state.pending[g.id] || 0) + genRate(state, g.id) * Math.min(result.elapsedSec, MAX_OFFLINE_SECONDS);
+        }
+      });
+    }
+    sfxChimeRare();
+    showToast("DOUBLED", "Your sponsor doubled your time away: +" + fmt(result.earnings + result.piled) + ".");
+    pushNews("SPONSOR", "A sponsor matched everything you earned while you were away.");
+    renderStaff(); updateStats(); updateAffordability(); updatePending();
+    track("offline_double_granted", {mode: gamEnabled() ? "ad" : "simulated"});
+    saveGame();
+  }
+  function startOfflineDouble(result){
+    track("offline_double_started", {mode: gamEnabled() ? "ad" : "simulated"});
+    if (gamEnabled() && gamAdState === "ready" && gamRewardEvent){
+      offlineDoublePending = result;
+      gamRewardEvent.makeRewardedVisible();
+      return;
+    }
+    if (gamEnabled() && (gamAdState === "idle" || gamAdState === "unavailable")) requestRewardedAd();
+    showToast("SPONSOR MESSAGE", "Hang on a few seconds while our sponsor says hello...");
+    setTimeout(function(){ grantOfflineDouble(result); }, SPONSOR_PLAY_MS);
+  }
   function showWelcomeBackModal(result){
     var body = (state.flagshipAsked ? "Welcome back to " + flagshipName() + ". " : "") + "While you were away (" + formatDuration(result.elapsedSec) + "), ";
     if (result.earnings > 0 && result.piled > 0){
@@ -5954,7 +6068,14 @@
     }
     if (result.capped) body += " Offline earnings cap out at 8 hours, so that's the max for one trip away.";
     pushNews("WELCOME BACK", body);
-    openModal("Welcome back", body, "Nice", null, true);
+    track("welcome_back_shown", {away_min: Math.round(result.elapsedSec / 60)});
+    if (result.elapsedSec >= OFFLINE_DOUBLE_MIN_SECONDS && (result.earnings > 0 || result.piled > 0)){
+      body += " Want a sponsor to match it?";
+      el["modal-cancel"].textContent = "No thanks";
+      openModal("Welcome back", body, "Watch sponsor: double it", function(){ startOfflineDouble(result); }, false);
+    } else {
+      openModal("Welcome back", body, "Nice", null, true);
+    }
   }
 
   /* ---------- actions ---------- */
@@ -6261,12 +6382,14 @@
     fresh.prestigeCount = state.prestigeCount + 1;
     fresh.prestigePoints = (state.prestigePoints || 0) + gain;
     fresh.seasonsCompleted = endingSeasonIdx + 1;
+    track("prestige", {kind:"exit", season:endingSeasonIdx + 1, first:endingSeasonIdx === 0, minutes_played:Math.round(sessionPlayedMs() / 60000)});
     fresh.episodesUnlocked = state.episodesUnlocked.slice();
     fresh.codesRedeemed = state.codesRedeemed.slice();
     fresh.codeBoostPct = state.codeBoostPct;
     fresh.streakCount = state.streakCount;
     fresh.streakLastDate = state.streakLastDate;
     fresh.streakBonusPct = state.streakBonusPct;
+    fresh.streakGraceDate = state.streakGraceDate || "";
     fresh.lastSeen = state.lastSeen;
     fresh.sponsorReadyAt = state.sponsorReadyAt;
     fresh.sponsorBoostUntil = state.sponsorBoostUntil;
@@ -6318,12 +6441,14 @@
     fresh.netWorth = state.netWorth || 0;
     fresh.lpPoints = (state.lpPoints || 0) + gain;
     fresh.seasonsCompleted = endingSeasonIdx + 1;
+    track("prestige", {kind:"fund_raise", season:endingSeasonIdx + 1, first:endingSeasonIdx === 0, minutes_played:Math.round(sessionPlayedMs() / 60000)});
     fresh.episodesUnlocked = state.episodesUnlocked.slice();
     fresh.codesRedeemed = state.codesRedeemed.slice();
     fresh.codeBoostPct = state.codeBoostPct;
     fresh.streakCount = state.streakCount;
     fresh.streakLastDate = state.streakLastDate;
     fresh.streakBonusPct = state.streakBonusPct;
+    fresh.streakGraceDate = state.streakGraceDate || "";
     fresh.lastSeen = state.lastSeen;
     fresh.sponsorReadyAt = state.sponsorReadyAt;
     fresh.sponsorBoostUntil = state.sponsorBoostUntil;
@@ -6403,12 +6528,14 @@
     fresh.netWorth = (state.netWorth || 0) + computeEV(state) * NET_WORTH_SHARE_PCT;
     fresh.lpPoints = 0;
     fresh.seasonsCompleted = endingSeasonIdx + 1;
+    track("prestige", {kind:"ipo", season:endingSeasonIdx + 1, first:endingSeasonIdx === 0, minutes_played:Math.round(sessionPlayedMs() / 60000)});
     fresh.episodesUnlocked = state.episodesUnlocked.slice();
     fresh.codesRedeemed = state.codesRedeemed.slice();
     fresh.codeBoostPct = state.codeBoostPct;
     fresh.streakCount = state.streakCount;
     fresh.streakLastDate = state.streakLastDate;
     fresh.streakBonusPct = state.streakBonusPct;
+    fresh.streakGraceDate = state.streakGraceDate || "";
     fresh.lastSeen = state.lastSeen;
     fresh.sponsorReadyAt = state.sponsorReadyAt;
     fresh.sponsorBoostUntil = state.sponsorBoostUntil;
@@ -6712,6 +6839,7 @@
         if (!(state.sponsorReadyAt && Date.now() < state.sponsorReadyAt)) requestRewardedAd();
       });
       googletag.pubads().addEventListener("rewardedSlotGranted", function(){
+        if (offlineDoublePending){ var r = offlineDoublePending; offlineDoublePending = null; grantOfflineDouble(r); return; }
         grantSponsorReward();
       });
       googletag.pubads().addEventListener("slotRenderEnded", function(event){
@@ -8193,7 +8321,7 @@
   }, TICK_MS);
 
   setInterval(function(){ state.lastSeen = Date.now(); saveGame(); checkSmileEmpireRewards(); }, 5000);
-  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") { state.lastSeen = Date.now(); saveGame(); } });
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") { state.lastSeen = Date.now(); saveGame(); trackSessionEnd(); } });
 
   /* ---------- boot ---------- */
   function init(initialState){
@@ -8256,6 +8384,8 @@
     state.lastSeen = Date.now();
     lastTickAt = Date.now();
     saveGame();
+    analyticsInit();
+    track("session_start", {returning: hadSave, day_n_bucket: (function(d){ return d === 0 ? "d0" : d === 1 ? "d1" : d >= 7 && d < 14 ? "d7" : d >= 14 ? "d14+" : "d2-6"; })(daysSinceFirstOpen())});
     scheduleCoffeeRun();
     scheduleDeskDrop();
     checkSmileEmpireRewards();
