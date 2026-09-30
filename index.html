@@ -2897,9 +2897,9 @@
     ];
     var reqs = [
       null,
-      {kind:"rev", need:loiTarget, text:"Reach " + fmt(loiTarget) + " lifetime revenue"},
+      {kind:"rev", need:loiTarget, text:"Reach " + fmtFull(loiTarget) + " lifetime revenue"},
       {kind:"own", need:rebrandTarget, text:"Own " + rebrandTarget + " hires & locations"},
-      {kind:"ev", need:termsheetTarget, text:"Reach " + fmt(termsheetTarget) + " enterprise value"},
+      {kind:"ev", need:termsheetTarget, text:"Reach " + fmtFull(termsheetTarget) + " enterprise value"},
       {kind:"mult", need:9, text:"Reach a 9.0\u00d7 EBITDA multiple"},
       {kind:"final", text:"Finish the season"}
     ];
@@ -3235,7 +3235,7 @@
       showToast("BOARD DECISION \u2014 " + BOARD_OPTS[key].name, "Cash stays in the bank. Next decision is now \u00d7" + boardMult().toFixed(1) + ".");
     } else {
       sfxAcquire();
-      showToast("BOARD DECISION \u2014 " + BOARD_OPTS[key].name, "+" + fmt(gain) + "/s for the rest of this season" + (patch.tierName ? " (" + patch.tierName + ")" : "") + ".");
+      showToast("BOARD DECISION \u2014 " + BOARD_OPTS[key].name, "+" + fmtFull(gain) + "/s for the rest of this season" + (patch.tierName ? " (" + patch.tierName + ")" : "") + ".");
     }
     boardSig = "";
     updateStats(); updateAffordability(); updateBoard();
@@ -3709,13 +3709,13 @@
     var ev = computeEV(state);
     var ebitda = computeEbitda(state);
     return "Enterprise Value = Lifetime Revenue × Multiple.\n\n" +
-      "Lifetime Revenue billed & collected so far: " + fmt(lifetime) + "\n" +
+      "Lifetime Revenue billed & collected so far: " + fmtFull(lifetime) + "\n" +
       "Multiple: " + mult.toFixed(1) + "×\n" +
-      "= " + fmt(ev) + " Enterprise Value\n\n" +
+      "= " + fmtFull(ev) + " Enterprise Value\n\n" +
       "Lifetime Revenue only grows when cash is actually billed or collected — hiring, buying " +
       "Initiatives, and every other purchase spends cash but never lowers Lifetime Revenue, so your " +
       "cash on hand and your Enterprise Value move independently.\n\n" +
-      "HOW TO GROW EBITDA/SEC (right now: " + fmt(ebitda) + "/s)\n" +
+      "HOW TO GROW EBITDA/SEC (right now: " + fmtFull(ebitda) + "/s)\n" +
       "• Hire more staff — every role adds straight to it, and higher tiers add a lot more per hire.\n" +
       "• Buy Initiatives — several also automate a role's collection so nothing sits idle.\n" +
       "• Unlock Milestones by owning more of a role, complete Desk Sets, earn Trophy Case achievements, " +
@@ -3868,25 +3868,78 @@
     return { label:"Hire", cost: cost, disabled: state.revenue < cost, capped:false };
   }
 
-  function fmt(n){
-    if (n === undefined || n === null || isNaN(n)) n = 0;
-    var sign = n < 0 ? "-" : "";
-    n = Math.abs(n);
-    if (n < 1000) return sign + "$" + n.toFixed(2);
-    var units = ["", "K", "M", "B", "T", "Qa", "Qi"];
-    var tier = Math.min(Math.floor(Math.log10(n) / 3), units.length - 1);
-    var scaled = n / Math.pow(1000, tier);
-    return sign + "$" + scaled.toFixed(2) + units[tier];
+  /* ---------- big-number names (short scale, US) ----------
+     Tier 1 = thousand, tier 2 = million ... tier 101 = centillion (10^303), which is right at the top
+     of what plain JavaScript numbers can hold (~1.8e308). Full names are used inside sentences
+     (toasts, modals, memos); the short forms are used in tight spots (stat tiles, buy buttons).
+     Names 11-19 follow the common dictionary forms; 21-99 are generated with the Conway-Wechsler
+     rules (tre->tres, se->ses/sex, septe/nove->m/n depending on the tens prefix). Past centillion
+     (numbers >= 1e306) the display falls back to scientific notation like 1.23e306. */
+  var BIGNUM_CACHE = null;
+  function bigNames(){ if (BIGNUM_CACHE) return BIGNUM_CACHE; BIGNUM_CACHE = buildBigNames(); return BIGNUM_CACHE; }
+  function buildBigNames(){
+    var full = ["", "thousand", "million", "billion", "trillion", "quadrillion", "quintillion",
+                "sextillion", "septillion", "octillion", "nonillion", "decillion",
+                "undecillion", "duodecillion", "tredecillion", "quattuordecillion", "quindecillion",
+                "sexdecillion", "septendecillion", "octodecillion", "novemdecillion"];
+    var abbr = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc",
+                "UDc", "DDc", "TDc", "QaDc", "QiDc", "SxDc", "SpDc", "OcDc", "NoDc"];
+    var uPre  = ["", "un", "duo", "tre", "quattuor", "quin", "se", "septe", "octo", "nove"];
+    var uAbbr = ["", "U", "D", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No"];
+    var tens = [null, null,
+      {stem:"vigint",      flags:"MS", abbr:"Vg"},
+      {stem:"trigint",     flags:"NS", abbr:"Tg"},
+      {stem:"quadragint",  flags:"NS", abbr:"Qg"},
+      {stem:"quinquagint", flags:"NS", abbr:"Qqg"},
+      {stem:"sexagint",    flags:"N",  abbr:"Sg"},
+      {stem:"septuagint",  flags:"N",  abbr:"Spg"},
+      {stem:"octogint",    flags:"MX", abbr:"Ocg"},
+      {stem:"nonagint",    flags:"",   abbr:"Nog"}
+    ];
+    for (var x = 20; x <= 99; x++){
+      var t = tens[Math.floor(x / 10)], u = x % 10, f = t.flags, pre = uPre[u];
+      if (u === 3 && (f.indexOf("S") !== -1 || f.indexOf("X") !== -1)) pre = "tres";
+      else if (u === 6) pre = f.indexOf("S") !== -1 ? "ses" : (f.indexOf("X") !== -1 ? "sex" : "se");
+      else if (u === 7 || u === 9) pre = pre + (f.indexOf("M") !== -1 ? "m" : (f.indexOf("N") !== -1 ? "n" : ""));
+      full[x + 1] = pre + t.stem + "illion";
+      abbr[x + 1] = uAbbr[u] + t.abbr;
+    }
+    full[101] = "centillion";
+    abbr[101] = "Ce";
+    return {full: full, abbr: abbr, maxTier: 101};
   }
-  function fmtCount(n){
+  // n must be a finite number >= 1000. digitsFor(scaled) returns decimals to show.
+  function scaleBig(n, digitsFor, full){
+    var tier = Math.max(1, Math.floor(Math.log10(n) / 3));
+    var scaled = n / Math.pow(1000, tier);
+    var text = scaled.toFixed(digitsFor(scaled));
+    if (parseFloat(text) >= 1000){ tier++; scaled = scaled / 1000; text = scaled.toFixed(digitsFor(scaled)); } // 999.999K -> 1.00M
+    var names = bigNames();
+    if (tier > names.maxTier) return null;
+    return text + (full ? " " + names.full[tier] : names.abbr[tier]);
+  }
+  function sciBig(n){ return n.toExponential(2).replace("e+", "e"); }
+  function fmt(n, full){
     if (n === undefined || n === null || isNaN(n)) n = 0;
     var sign = n < 0 ? "-" : "";
     n = Math.abs(n);
-    if (n < 1000) return sign + Math.round(n);
-    var units = ["", "K", "M", "B", "T", "Qa", "Qi"];
-    var tier = Math.min(Math.floor(Math.log10(n) / 3), units.length - 1);
-    var scaled = n / Math.pow(1000, tier);
-    return sign + scaled.toFixed(scaled < 10 ? 2 : (scaled < 100 ? 1 : 0)) + units[tier];
+    if (!isFinite(n)) return sign + "$∞";
+    if (n < 1000){
+      var small = n.toFixed(2);
+      if (parseFloat(small) < 1000) return sign + "$" + small;
+    }
+    var out = scaleBig(Math.max(n, 1000), function(){ return 2; }, full);
+    return sign + "$" + (out === null ? sciBig(n) : out);
+  }
+  function fmtFull(n){ return fmt(n, true); }
+  function fmtCount(n, full){
+    if (n === undefined || n === null || isNaN(n)) n = 0;
+    var sign = n < 0 ? "-" : "";
+    n = Math.abs(n);
+    if (!isFinite(n)) return sign + "∞";
+    if (n < 1000 && Math.round(n) < 1000) return sign + Math.round(n);
+    var out = scaleBig(Math.max(n, 1000), function(sc){ return sc < 10 ? 2 : (sc < 100 ? 1 : 0); }, full);
+    return sign + (out === null ? sciBig(n) : out);
   }
 
   function pad2(n){ return (n < 10 ? "0" : "") + n; }
@@ -4353,7 +4406,7 @@
       var cash1 = Math.max(computeEbitda(state) * 30, clickValue(state) * 15);
       state.revenue += cash1;
       state.lifetimeRevenue += cash1;
-      return { icon:ICONS.cash_bonus, title:"20% to Exit", desc:"+" + fmt(cash1) + " bonus cash." + cardNote, cards: cards };
+      return { icon:ICONS.cash_bonus, title:"20% to Exit", desc:"+" + fmtFull(cash1) + " bonus cash." + cardNote, cards: cards };
     } else if (i === 1){
       var now = Date.now();
       state.sponsorBoostUntil = Math.max(state.sponsorBoostUntil || 0, now) + SEASON_CHECKPOINT_BOOST_MS;
@@ -4366,7 +4419,7 @@
       var cash2 = Math.max(computeEbitda(state) * 90, clickValue(state) * 45);
       state.revenue += cash2;
       state.lifetimeRevenue += cash2;
-      return { icon:ICONS.cash_bonus, title:"80% to Exit", desc:"+" + fmt(cash2) + " bonus cash. Almost there." + cardNote, cards: cards };
+      return { icon:ICONS.cash_bonus, title:"80% to Exit", desc:"+" + fmtFull(cash2) + " bonus cash. Almost there." + cardNote, cards: cards };
     }
     return { icon:ICONS.gift_milestone, title:"Milestone", desc:"", cards: cards };
   }
@@ -5518,7 +5571,7 @@
     renderDesk(); renderStaff(); renderUpgrades();
     checkDeskSetComplete(pick);
     updateStats(); updateAffordability(); saveGame();
-    showGiftReveal({ icon:ICONS.card_exchange, title:"CARD PURCHASED", desc:"Spent " + fmt(price) + " on a guaranteed pull — got " + pick.name + ".", cards:[{ card: pick, isNew: !already, count: 1 }] });
+    showGiftReveal({ icon:ICONS.card_exchange, title:"CARD PURCHASED", desc:"Spent " + fmtFull(price) + " on a guaranteed pull — got " + pick.name + ".", cards:[{ card: pick, isNew: !already, count: 1 }] });
   }
   document.addEventListener("click", function(e){
     var b = e.target.closest && e.target.closest("[data-trade]");
@@ -5892,12 +5945,12 @@
   function showWelcomeBackModal(result){
     var body = (state.flagshipAsked ? "Welcome back to " + flagshipName() + ". " : "") + "While you were away (" + formatDuration(result.elapsedSec) + "), ";
     if (result.earnings > 0 && result.piled > 0){
-      body += "your automated staff earned " + fmt(result.earnings) + ", and " + fmt(result.piled) +
+      body += "your automated staff earned " + fmtFull(result.earnings) + ", and " + fmtFull(result.piled) +
         " piled up uncollected across your manual hires — tap Collect on their rows to bank it.";
     } else if (result.earnings > 0){
-      body += "your automated staff earned " + fmt(result.earnings) + ".";
+      body += "your automated staff earned " + fmtFull(result.earnings) + ".";
     } else {
-      body += fmt(result.piled) + " piled up uncollected across your manual hires — tap Collect on their rows to bank it.";
+      body += fmtFull(result.piled) + " piled up uncollected across your manual hires — tap Collect on their rows to bank it.";
     }
     if (result.capped) body += " Offline earnings cap out at 8 hours, so that's the max for one trip away.";
     pushNews("WELCOME BACK", body);
@@ -6014,7 +6067,7 @@
       var bonusCash = Math.max(computeEbitda(state) * 15, clickValue(state) * 8);
       state.revenue += bonusCash;
       state.lifetimeRevenue += bonusCash;
-      special = { type:"gem", text: "⭐ HIDDEN GEM — hygiene utilization way up. +" + fmt(bonusCash) + " found in the numbers." };
+      special = { type:"gem", text: "⭐ HIDDEN GEM — hygiene utilization way up. +" + fmtFull(bonusCash) + " found in the numbers." };
     }
     return {
       name: pickRandom(ACQUISITION_TARGET_NAMES),
@@ -6109,7 +6162,7 @@
       state.pending[u.target] = 0;
       if (g){
         var msg = swept >= 0.005
-          ? g.name + "'s revenue now collects itself. +" + fmt(swept) + " swept in from the drawer."
+          ? g.name + "'s revenue now collects itself. +" + fmtFull(swept) + " swept in from the drawer."
           : g.name + "'s revenue now collects itself — no more manual collecting.";
         showToast("AUTOMATED", msg);
       }
@@ -6252,7 +6305,7 @@
     updateStreakUI();
     saveGame();
     scrollToNewSeason();
-    showToast("EXIT COMPLETE", "+" + gain + " Serial Entrepreneur point" + (gain === 1 ? "" : "s") + ". You pocketed " + fmt(personalCut) + " personally — lifetime net worth now " + fmt(fresh.netWorth) + ".");
+    showToast("EXIT COMPLETE", "+" + gain + " Serial Entrepreneur point" + (gain === 1 ? "" : "s") + ". You pocketed " + fmtFull(personalCut) + " personally — lifetime net worth now " + fmtFull(fresh.netWorth) + ".");
   }
 
   function doFundRaise(){
@@ -6464,7 +6517,7 @@
     var ev = computeEV(state);
     var ready = ev >= need && gain >= 1;
     var needEl = document.getElementById("ipo-need-text");
-    if (needEl) needEl.textContent = ev >= need ? "\u2705 Valuation is IPO-ready." : "Reach " + fmt(need) + " enterprise value (2\u00d7 this season's Exit target) to go public.";
+    if (needEl) needEl.textContent = ev >= need ? "\u2705 Valuation is IPO-ready." : "Reach " + fmtFull(need) + " enterprise value (2\u00d7 this season's Exit target) to go public.";
     var gainEl = document.getElementById("ipo-gain-text");
     if (gainEl) gainEl.textContent = "Going public now: +" + gain + " IPO share" + (gain === 1 ? "" : "s") + " for " + (state.lpPoints || 0) + " LP + " + (state.prestigePoints || 0) + " Serial Entrepreneur pts.";
     var btn = document.getElementById("ipo-btn");
@@ -6482,7 +6535,7 @@
     var after = ipoMult({ipoShares:(state.ipoShares || 0) + gain});
     openModal(
       "Ring the bell?",
-      "You'll take the company public at " + fmt(computeEV(state)) + " enterprise value. You'll sacrifice ALL " + (state.lpPoints || 0) + " LP Track Record point(s) and " + (state.prestigePoints || 0) +
+      "You'll take the company public at " + fmtFull(computeEV(state)) + " enterprise value. You'll sacrifice ALL " + (state.lpPoints || 0) + " LP Track Record point(s) and " + (state.prestigePoints || 0) +
       " Serial Entrepreneur point(s) for +" + gain + " IPO share" + (gain === 1 ? "" : "s") + ". Your combined permanent multiplier goes from \u00d7" + before.toFixed(2) + " to \u00d7" + after.toFixed(2) +
       (after < before ? " \u2014 that's LOWER right now, so you may want to build up more first. Shares never reset, so they keep compounding." : ", and shares never reset.") +
       " Cash, staff and exit count reset; shares, perks, trophies, desk cards and episodes stay. Next up: " + companyName((state.seasonsCompleted || 0) + 1) + "." + flagshipTail(companyName((state.seasonsCompleted || 0) + 1)),
@@ -6536,7 +6589,7 @@
       var windfall = computeEbitda(state) * WINDFALL_SECONDS;
       state.revenue += windfall;
       state.lifetimeRevenue += windfall;
-      showToast(title, (skin ? hev.windfallText + "a windfall of " : "Windfall! ") + "+" + fmt(windfall) + " straight to the till.");
+      showToast(title, (skin ? hev.windfallText + "a windfall of " : "Windfall! ") + "+" + fmtFull(windfall) + " straight to the till.");
     }
     updateStats();
     updateBoostBanner();
@@ -6586,7 +6639,7 @@
       var cash = Math.max(computeEbitda(state) * SPONSOR_CASH_SECONDS, clickValue(state) * (SPONSOR_CASH_SECONDS / 2));
       state.revenue += cash;
       state.lifetimeRevenue += cash;
-      return { title:"CASH BONUS", desc:"+" + fmt(cash) + " straight to the till." };
+      return { title:"CASH BONUS", desc:"+" + fmtFull(cash) + " straight to the till." };
     }},
     {id:"card", weight:20, run:function(){
       var dropResult = awardDeskCard("SPONSOR BONUS", true);
@@ -6742,7 +6795,7 @@
       var amt = computeEbitda(state) * SUPPLY_WINDFALL_SECONDS;
       state.revenue += amt;
       state.lifetimeRevenue += amt;
-      return "The bulk discount on " + item + " came through. +" + fmt(amt) + " straight to the till.";
+      return "The bulk discount on " + item + " came through. +" + fmtFull(amt) + " straight to the till.";
     }},
     {id:"rush", weight:20, run:function(item){
       state.supplyBoostUntil = Date.now() + SUPPLY_BOOST_MS;
@@ -6768,7 +6821,7 @@
         lost += cut;
       });
       return lost >= 0.005
-        ? "Half the " + item + " arrive damaged — " + fmt(lost) + " in uncollected revenue got tossed with the box."
+        ? "Half the " + item + " arrive damaged — " + fmtFull(lost) + " in uncollected revenue got tossed with the box."
         : "Half the " + item + " arrive damaged. Lucky for you, nothing was sitting uncollected.";
     }},
     {id:"walkout", weight:8, run:function(item){
@@ -6807,7 +6860,7 @@
       if (el["supply-cooldown-note"]) el["supply-cooldown-note"].textContent = "Next order in " + formatDuration((state.supplyReadyAt - now) / 1000) + ".";
     } else if (state.revenue < SUPPLY_MIN_CASH){
       btn.disabled = true;
-      if (el["supply-cooldown-note"]) el["supply-cooldown-note"].textContent = "Need at least " + fmt(SUPPLY_MIN_CASH) + " cash on hand to place an order.";
+      if (el["supply-cooldown-note"]) el["supply-cooldown-note"].textContent = "Need at least " + fmtFull(SUPPLY_MIN_CASH) + " cash on hand to place an order.";
     } else {
       btn.disabled = false;
       if (el["supply-cooldown-note"]) el["supply-cooldown-note"].textContent = "";
@@ -7987,9 +8040,9 @@
     var personalCut = computeEV(state) * NET_WORTH_SHARE_PCT;
     openModal(
       "Exit to Private Equity?",
-      "You'll cash out at " + fmt(computeEV(state)) + " enterprise value for +" + gain +
+      "You'll cash out at " + fmtFull(computeEV(state)) + " enterprise value for +" + gain +
       " Serial Entrepreneur point" + (gain === 1 ? "" : "s") + " (bonus goes from +" + bonusNow +
-      "% to +" + bonusAfter + "%). You'll also personally pocket " + fmt(personalCut) + " toward your lifetime net worth. Cash, staff, and locations reset to zero. The bonus, your episodes, your redeemed codes, and your net worth do not. Next up: " + nextName + "." + flagshipTail(nextName),
+      "% to +" + bonusAfter + "%). You'll also personally pocket " + fmtFull(personalCut) + " toward your lifetime net worth. Cash, staff, and locations reset to zero. The bonus, your episodes, your redeemed codes, and your net worth do not. Next up: " + nextName + "." + flagshipTail(nextName),
       "Exit",
       doPrestige
     );
@@ -8026,7 +8079,7 @@
     var cost = supplyCost();
     openModal(
       "Place a supply order?",
-      "You'll spend " + fmt(cost) + " on a bulk order of " + currentSupplyItem + ". Most of the time it pays off — sometimes it doesn't.",
+      "You'll spend " + fmtFull(cost) + " on a bulk order of " + currentSupplyItem + ". Most of the time it pays off — sometimes it doesn't.",
       "Place Order",
       doSupplyOrder
     );
