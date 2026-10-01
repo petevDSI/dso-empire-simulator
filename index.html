@@ -846,6 +846,25 @@
   .fn-link.live{background:linear-gradient(#ff9d2e,#e07410); color:#2a0f00; border-color:#2a0f00; animation:fnGlow 2s ease-in-out infinite;}
   @keyframes fnGlow{0%,100%{box-shadow:2.5px 2.5px 0 var(--hard-shadow);} 50%{box-shadow:2.5px 2.5px 0 var(--hard-shadow), 0 0 10px 2px rgba(255,157,46,0.85);}}
   @media (prefers-reduced-motion: reduce){ .fn-link.live{animation:none;} }
+  /* Illustrated Fright Night banner (assets/fright-night/). The art already contains the pumpkin,
+     the FRIGHT NIGHT wordmark and its own shadow, so only the short state text is live: it sits
+     in the open middle of the banner. Soon = light text on the purple panel, Live = dark text on
+     the cream panel. No transforms anywhere (Safari click safety); the live glow is filter-only. */
+  .fn-link.art{
+    display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
+    --fn-w:300px; width:var(--fn-w); max-width:100%; aspect-ratio:1000 / 190;
+    padding:0 calc(var(--fn-w) * 0.19) 0 calc(var(--fn-w) * 0.44); /* % padding would measure the whole header, not this banner */
+    border:0; border-radius:0; box-shadow:none; background-color:transparent;
+    background-repeat:no-repeat; background-position:center; background-size:100% 100%;
+    font:900 0.78rem/1 'Nunito',sans-serif; letter-spacing:0.02em; white-space:nowrap; text-align:center;
+  }
+  .fn-link.art.soon{background-image:url(assets/fright-night/banner-soon.webp); color:#ffe9c2; text-shadow:0 1px 0 #1b0a33;}
+  .fn-link.art.live{background-image:url(assets/fright-night/banner-live.webp); color:#3a1500; animation:fnArtGlow 2.2s ease-in-out infinite;}
+  .fn-link.art:hover{filter:brightness(1.1); box-shadow:none;}
+  @media (max-width:340px){ .fn-link.art{--fn-w:260px;} }
+  @keyframes fnArtGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,157,46,0));} 50%{filter:drop-shadow(0 0 7px rgba(255,157,46,0.9));}}
+  @media (prefers-reduced-motion: reduce){ .fn-link.art.live{animation:none;} }
+  .holiday-banner .holiday-emoji img{display:block; height:2.6rem; width:auto;}
   .holiday-play{flex:0 0 auto; text-decoration:none; font:900 0.78rem 'Nunito',sans-serif; padding:7px 12px; border-radius:999px; background:#fff7ea; color:#3a1a00; border:2.5px solid #3a1a00; box-shadow:2.5px 2.5px 0 rgba(0,0,0,0.45);}
   .holiday-play:hover{filter:brightness(1.06);}
   body.mini-mode .fn-link{display:none;}
@@ -7316,6 +7335,7 @@
       id: "fright-night",
       name: "Compliance Fright Night",
       emoji: "\uD83C\uDF83",
+      emojiImg: "assets/fright-night/pumpkin-live.webp",
       start: "10-24",
       end: "11-01",
       bonusPct: 0.13,
@@ -7430,9 +7450,11 @@
     if (ph !== fnShown){
       fnShown = ph;
       a.classList.toggle("soon", ph === "soon"); a.classList.toggle("live", ph === "live");
+      a.classList.add("art");
       a.hidden = (ph === "hidden");
-      if (ph === "soon"){ a.textContent = "\uD83C\uDF83 Fright Night \u00B7 Coming Oct 24"; a.setAttribute("href", "#"); }
-      if (ph === "live"){ a.textContent = "\uD83C\uDF83 Play Fright Night"; a.setAttribute("href", fnUrl()); }
+      // The banner art already says FRIGHT NIGHT, so the live text only carries the state.
+      if (ph === "soon"){ a.textContent = "Coming Oct 24"; a.setAttribute("href", "#"); a.setAttribute("aria-label", "Fright Night, coming October 24"); }
+      if (ph === "live"){ a.textContent = "Play now \u25B8"; a.setAttribute("href", fnUrl()); a.setAttribute("aria-label", "Play Fright Night"); }
     }
     if (el["holiday-play"]){ el["holiday-play"].hidden = (ph !== "live"); el["holiday-play"].setAttribute("href", fnUrl()); }
   }
@@ -7453,7 +7475,14 @@
       return;
     }
     banner.classList.add("active");
-    if (el["holiday-emoji"]) el["holiday-emoji"].textContent = ev.emoji;
+    if (el["holiday-emoji"]){
+      var emojiKey = ev.emojiImg || ev.emoji;
+      if (el["holiday-emoji"].getAttribute("data-k") !== emojiKey){ // only rebuild when it changes (this runs every tick)
+        el["holiday-emoji"].setAttribute("data-k", emojiKey);
+        if (ev.emojiImg) el["holiday-emoji"].innerHTML = '<img src="' + ev.emojiImg + '" alt="" decoding="async">';
+        else el["holiday-emoji"].textContent = ev.emoji;
+      }
+    }
     if (el["holiday-name"]) el["holiday-name"].textContent = ev.name;
     if (el["holiday-blurb"]) el["holiday-blurb"].textContent = ev.blurb;
     if (el["holiday-bonus"]) el["holiday-bonus"].textContent = "+" + Math.round(ev.bonusPct * 100) + "% company-wide";
