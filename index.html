@@ -517,6 +517,33 @@
   .lb-status{opacity:0.75; font-size:0.9rem;}
   .lb-refresh-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;}
   .lb-note{font-size:0.78rem; opacity:0.65;}
+  /* ---------- account / cloud save ---------- */
+  .acct-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:10px 0 6px;}
+  .acct-row label{font-size:0.85rem; opacity:0.8; flex-basis:100%;}
+  .acct-row input[type=email], .acct-row input[type=text]{
+    font-family:'Fredoka', sans-serif; font-size:16px; padding:8px 10px; border:2px solid var(--ink); border-radius:8px;
+    background:var(--surface); color:var(--ink); flex:1 1 200px; min-width:0; max-width:320px;
+  }
+  .acct-btn{
+    font-family:'Fredoka', sans-serif; font-weight:600; cursor:pointer; padding:8px 14px;
+    border:2px solid var(--ink); border-radius:8px; background:var(--accent-2); color:#fff;
+  }
+  .acct-btn.secondary{background:var(--surface); color:var(--ink);}
+  .acct-btn:disabled{opacity:0.6; cursor:default;}
+  .acct-check{display:flex; gap:8px; align-items:flex-start; font-size:0.85rem; margin:10px 0 6px; line-height:1.35;}
+  .acct-check input{margin-top:2px; width:18px; height:18px; flex-shrink:0;}
+  .acct-who, .acct-sync{margin:4px 0; font-size:0.92rem;}
+  .acct-actions{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;}
+  .acct-conflict{border:2px dashed var(--ink); border-radius:10px; padding:10px 12px; margin:10px 0; background:rgba(255,209,102,0.25); font-size:0.9rem;}
+  .acct-conflict p{margin:0 0 8px;}
+  .acct-prefs{border:2px solid var(--ink); border-radius:10px; padding:8px 12px 12px; margin:12px 0;}
+  .acct-prefs legend{font-weight:600; padding:0 6px; font-size:0.9rem;}
+  .acct-prefs .acct-check{margin:6px 0;}
+  .acct-pref-status{font-size:0.82rem; opacity:0.75; margin-left:8px;}
+  #acct-msg{min-height:1.2em; margin:8px 0 0;}
+  .acct-danger{margin-top:10px; font-size:0.82rem;}
+  .acct-danger summary{cursor:pointer; opacity:0.75;}
+  .acct-danger button{margin-top:8px;}
   .panel, .side-card{
     background:var(--surface); border:3px solid var(--ink); border-radius:var(--radius);
     padding:16px; box-shadow:5px 5px 0 var(--hard-shadow);
@@ -1933,9 +1960,56 @@
   </div>
 
   <div class="tab-content" id="tab-content-leaderboard" data-tab-content="leaderboard" hidden>
+    <section class="panel" id="panel-account">
+      <h2>Save your progress</h2>
+      <p class="panel-sub" id="acct-sub">Free. Keep your empire and leaderboard spot safe, and pick up on any phone or computer. We email you a 6-digit code &mdash; no password to remember. Optional: the game works fine without it.</p>
+      <div id="acct-out">
+        <div class="acct-row" id="acct-step-email">
+          <label for="acct-email">Your email</label>
+          <input id="acct-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@yourpractice.com">
+          <button id="acct-send" type="button" class="acct-btn">Email me a code</button>
+        </div>
+        <div class="acct-row" id="acct-step-code" hidden>
+          <label for="acct-code">6-digit code from the email</label>
+          <input id="acct-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456">
+          <button id="acct-verify" type="button" class="acct-btn">Sign in</button>
+          <button id="acct-back" type="button" class="acct-btn secondary">Different email</button>
+        </div>
+        <label class="acct-check"><input type="checkbox" id="acct-mkt"><span>Also send me DSO Empire news and updates from Dental Strategy Institute. Optional; unchecked by default, and you can change it any time.</span></label>
+        <p class="lb-note">Sign-in emails are only for signing in. By continuing you agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+      </div>
+      <div id="acct-in" hidden>
+        <p class="acct-who">Signed in as <strong id="acct-who-email"></strong></p>
+        <p class="acct-sync" id="acct-sync-status"></p>
+        <div class="acct-conflict" id="acct-conflict" hidden>
+          <p id="acct-conflict-text"></p>
+          <div class="acct-actions">
+            <button id="acct-keep-local" type="button" class="acct-btn secondary">Keep this device</button>
+            <button id="acct-use-cloud" type="button" class="acct-btn">Use cloud save</button>
+          </div>
+        </div>
+        <div class="acct-actions">
+          <button id="acct-sync-now" type="button" class="acct-btn">Sync now</button>
+          <button id="acct-signout" type="button" class="acct-btn secondary">Sign out</button>
+        </div>
+        <fieldset class="acct-prefs">
+          <legend>Email preferences</legend>
+          <label class="acct-check"><input type="checkbox" id="acct-pref-mkt"><span>News and offers from Dental Strategy Institute (marketing)</span></label>
+          <label class="acct-check"><input type="checkbox" id="acct-pref-events"><span>Tell me when a new holiday event starts</span></label>
+          <label class="acct-check"><input type="checkbox" id="acct-pref-outranked"><span>Tell me when someone passes my leaderboard rank</span></label>
+          <p class="lb-note">Event and rank emails are rolling out soon; ticking them now just saves your choice. We only email what you tick.</p>
+          <button id="acct-pref-save" type="button" class="acct-btn">Save preferences</button><span class="acct-pref-status" id="acct-pref-status" role="status"></span>
+        </fieldset>
+        <details class="acct-danger"><summary>Delete my account</summary>
+          <p>Email us and we&rsquo;ll remove your login, cloud save and email preferences, and take you off the leaderboard.</p>
+          <button id="acct-delete" type="button" class="acct-btn secondary">Email a deletion request</button>
+        </details>
+      </div>
+      <p class="lb-status" id="acct-msg" role="status" aria-live="polite"></p>
+    </section>
     <section class="panel" id="panel-leaderboard">
       <h2>Leaderboard</h2>
-      <p class="panel-sub">Bragging rights across every player, ranked three ways. Your stats submit automatically at each Exit and IPO &mdash; no account, just a name.</p>
+      <p class="panel-sub">Bragging rights across every player, ranked three ways. Your stats submit automatically at each Exit and IPO. Just pick a name; sign in above if you want your spot to follow you to other devices.</p>
       <div class="lb-name-row">
         <label for="lb-name-input">Show up on the board as:</label>
         <input id="lb-name-input" type="text" maxlength="24" autocomplete="off" placeholder="Anonymous DSO">
@@ -1970,6 +2044,7 @@
     <p>a dumb little game about dental DSOs. no real practices were rolled up in the making of this.</p>
     <div class="footer-links">
       <button id="office-view-btn" class="reset-link" type="button"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-7h6v7"/></svg>view the office</button>
+      <button id="acct-footer-link" class="reset-link" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4.5 5-6 8-6s6.5 1.5 8 6"/></svg>account</button>
       <button id="reset-link" class="reset-link" type="button"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg>reset save</button>
       <a href="faq.html" class="reset-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.8 1c0 1.7-2.3 2-2.3 3.6"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>faq</a>
       <a href="mailto:petev@dentalstrategyinstitute.com?subject=DSO%20Empire%20Simulator%20feedback" class="reset-link"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>send feedback</a>
@@ -4256,7 +4331,9 @@
     return null;
   }
   function saveGame(){
+    if (savesBlocked) return; // set while a cloud save is being swapped in, so it isn't overwritten
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e) {}
+    if (acct) acct.dirty = true;
   }
 
 
@@ -4350,6 +4427,7 @@
    "news","news-bar","news-track","news-more","news-log","news-list",
    "flagship-overlay","flagship-title","flagship-input","flagship-icons","flagship-save","flagship-skip","flagship-line","flagship-icon","flagship-name","flagship-edit",
    "lb-name-input","lb-name-save","lb-name-status","lb-cat-bar","lb-your-rank","lb-list","lb-status","lb-refresh-btn",
+   "acct-out","acct-in","acct-step-email","acct-step-code","acct-email","acct-send","acct-code","acct-verify","acct-back","acct-mkt","acct-who-email","acct-sync-status","acct-conflict","acct-conflict-text","acct-keep-local","acct-use-cloud","acct-sync-now","acct-signout","acct-pref-mkt","acct-pref-events","acct-pref-outranked","acct-pref-save","acct-pref-status","acct-delete","acct-msg","acct-footer-link",
    "bonus-global-rows","bonus-roster-rows","ms-progress-badge","ev-info-btn","ev-explain-link",
    "tutorial-banner","tutorial-banner-text","tutorial-banner-eyebrow","tutorial-skip","tutorial-choice-overlay","tutorial-choice-automate","tutorial-choice-grow",
    "dso-health-readout",
@@ -5749,6 +5827,7 @@
     renderDesk(); renderStaff(); renderUpgrades();
     cards.forEach(function(c){ checkDeskSetComplete(c.card); });
     updateStats(); updateAffordability(); saveGame();
+    acctPushSoon(); acctMaybeNudge();
     showGiftReveal({ icon:ICONS.card_exchange, title:"LEGENDARY PACK OPENED", desc:"Your " + PACK_CARD_COUNT + " cards are in.", cards:cards });
     logPackPurchase(sessionId, cards.map(function(c){ return c.card.id; }), amountTotal, currency);
   }
@@ -6717,6 +6796,7 @@
     updateSupplyUI();
     updateStreakUI();
     saveGame();
+    acctPushSoon(); acctMaybeNudge();
     scrollToNewSeason();
     showToast("EXIT COMPLETE", "+" + gain + " Serial Entrepreneur point" + (gain === 1 ? "" : "s") + ". You pocketed " + fmtFull(personalCut) + " personally — lifetime net worth now " + fmtFull(fresh.netWorth) + ".");
   }
@@ -6865,6 +6945,7 @@
     updateSupplyUI();
     updateStreakUI();
     saveGame();
+    acctPushSoon(); acctMaybeNudge();
     scrollToNewSeason();
     showToast("THE BELL RINGS \u2014 YOU'RE PUBLIC", "+" + gain + " IPO share" + (gain === 1 ? "" : "s") + ". Every earning is now \u00d7" + ipoMult(state).toFixed(1) + " from your shares alone.");
   }
@@ -7677,14 +7758,18 @@
     } catch(e){ return "networth"; }
   }
   function lbCall(fn, body){
-    return fetch(LB_URL + fn, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": LB_ANON_KEY,
-        "Authorization": "Bearer " + LB_ANON_KEY
-      },
-      body: JSON.stringify(body)
+    // Signed-in players send their own login token so account-bound functions know who they are;
+    // everyone else sends the public key exactly as before.
+    return acctToken().then(function(tok){
+      return fetch(LB_URL + fn, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": LB_ANON_KEY,
+          "Authorization": "Bearer " + (tok || LB_ANON_KEY)
+        },
+        body: JSON.stringify(body)
+      });
     }).then(function(r){
       if (!r.ok) throw new Error("leaderboard http " + r.status);
       return r.json();
@@ -7777,6 +7862,377 @@
       setTimeout(function(){ if (el["lb-name-status"]) el["lb-name-status"].textContent = ""; }, 3000);
     });
     if (el["lb-refresh-btn"]) el["lb-refresh-btn"].addEventListener("click", function(){ refreshLeaderboard(); });
+  }
+
+  /* ---------- optional accounts, cloud save, email preferences ----------
+     Everything here is opt-in: the game works exactly as before with no account. Signing in is a
+     6-digit emailed code (Supabase Auth, no passwords). Once signed in, the browser's anonymous
+     player ID is attached to the account (so the leaderboard entry follows you), and the save is
+     copied to the cloud so any device can pick it up. The server never trusts the cloud save for
+     scoring: leaderboard stats still go through the same server-checked dso_submit_event path.
+     Conflict rule: if the cloud copy is unchanged since this device last saw it, we just upload;
+     if this device is brand new we load the cloud copy; if both sides have progress that diverged,
+     the player chooses (we never silently overwrite either). */
+  var AUTH_URL = "https://difrryshoyxcdydbtjjt.supabase.co/auth/v1";
+  var ACCT_KEY = "dso-empire-simulator-auth-v1";
+  var ACCT_BASE_KEY = "dso-empire-simulator-cloud-base-v1";
+  var ACCT_NUDGE_KEY = "dso-empire-simulator-acct-nudge-v1";
+  var EMAIL_CONSENT_VERSION = "dso-email-2026-10";
+  var CONFLICT_TITLE = "Two different saves found";
+  var savesBlocked = false;
+  var acct = {session:null, base:null, dirty:false, busy:false, conflict:null, lastSync:0, err:"",
+              email:"", pendingMarketing:false, refreshing:null, prefsLoaded:false};
+
+  function acctReadSession(){
+    try {
+      var s = JSON.parse(localStorage.getItem(ACCT_KEY) || "null");
+      return (s && s.access_token && s.refresh_token) ? s : null;
+    } catch(e){ return null; }
+  }
+  function acctWriteSession(s){
+    try { if (s) localStorage.setItem(ACCT_KEY, JSON.stringify(s)); else localStorage.removeItem(ACCT_KEY); } catch(e){}
+  }
+  function acctSessionFromResponse(j){
+    var exp = j.expires_at ? j.expires_at * 1000 : Date.now() + (j.expires_in || 3600) * 1000;
+    return {
+      access_token: j.access_token, refresh_token: j.refresh_token, expires_at: exp,
+      user_id: (j.user && j.user.id) || (acct.session && acct.session.user_id) || "",
+      email: (j.user && j.user.email) || (acct.session && acct.session.email) || ""
+    };
+  }
+  function acctGetBase(){
+    try {
+      var o = JSON.parse(localStorage.getItem(ACCT_BASE_KEY) || "null");
+      return (o && acct.session && o.u === acct.session.user_id) ? o.v : null;
+    } catch(e){ return null; }
+  }
+  function acctSetBase(v){
+    acct.base = v;
+    try { localStorage.setItem(ACCT_BASE_KEY, JSON.stringify({u: acct.session ? acct.session.user_id : "", v: v})); } catch(e){}
+  }
+  function acctAuthFetch(path, body, token, method){
+    var h = {"Content-Type": "application/json", "apikey": LB_ANON_KEY};
+    if (token) h["Authorization"] = "Bearer " + token;
+    var opts = {method: method || "POST", headers: h};
+    if ((method || "POST") === "POST") opts.body = JSON.stringify(body || {});
+    return fetch(AUTH_URL + path, opts).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if (!r.ok){
+          var e = new Error(j.msg || j.message || j.error_description || ("auth http " + r.status));
+          e.status = r.status; e.code = j.error_code || j.code || "";
+          throw e;
+        }
+        return j;
+      });
+    });
+  }
+  // Returns a usable access token (refreshing it if it is about to expire), or null when signed out.
+  function acctToken(){
+    var s = acct && acct.session;
+    if (!s) return Promise.resolve(null);
+    if (s.expires_at - Date.now() > 60000) return Promise.resolve(s.access_token);
+    if (acct.refreshing) return acct.refreshing;
+    acct.refreshing = acctAuthFetch("/token?grant_type=refresh_token", {refresh_token: s.refresh_token}).then(function(j){
+      acct.session = acctSessionFromResponse(j);
+      acctWriteSession(acct.session);
+      acct.refreshing = null;
+      return acct.session.access_token;
+    }).catch(function(e){
+      acct.refreshing = null;
+      if (e && (e.status === 400 || e.status === 401 || e.status === 403)) acctDropSession("Your sign-in expired. Sign in again to keep syncing.");
+      return null;
+    });
+    return acct.refreshing;
+  }
+  function acctDropSession(message){
+    acct.session = null; acct.base = null; acct.conflict = null; acct.prefsLoaded = false;
+    if (el["acct-mkt"]) el["acct-mkt"].checked = false; // consent never carries over to the next sign-in
+    acctWriteSession(null);
+    acctRender();
+    if (message) acctMsg(message);
+  }
+
+  function acctMsg(t){ if (el["acct-msg"]) el["acct-msg"].textContent = t || ""; }
+  function acctProgress(s){ return (s.netWorth || 0) + (s.lifetimeRevenue || 0); }
+  function acctSummary(){
+    return {nw: state.netWorth || 0, rev: state.lifetimeRevenue || 0, exits: state.seasonsCompleted || 0, name: lbGetName(), at: Date.now()};
+  }
+  function acctIsFresh(s){ return (s.lifetimeRevenue || 0) < 500 && !(s.netWorth || 0) && !(s.seasonsCompleted || 0); }
+  function acctDescribe(sum, progress){
+    if (!sum) return "progress " + fmt(progress || 0);
+    return "net worth " + fmt(sum.nw || 0) + ", lifetime revenue " + fmt(sum.rev || 0) + ", " + (sum.exits || 0) + " exit" + ((sum.exits || 0) === 1 ? "" : "s");
+  }
+  function acctAgo(ms){
+    var s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (s < 45) return "just now";
+    if (s < 3600) return Math.round(s / 60) + " min ago";
+    if (s < 86400) return Math.round(s / 3600) + " hr ago";
+    return Math.round(s / 86400) + " days ago";
+  }
+
+  function acctRender(){
+    var signedIn = !!acct.session;
+    if (el["acct-out"]) el["acct-out"].hidden = signedIn;
+    if (el["acct-in"]) el["acct-in"].hidden = !signedIn;
+    if (!signedIn) return;
+    if (el["acct-who-email"]) el["acct-who-email"].textContent = acct.session.email || "your account";
+    var st = "";
+    if (acct.conflict) st = "Cloud save paused: choose which save to keep.";
+    else if (acct.busy) st = "Syncing…";
+    else if (acct.err) st = "Couldn’t reach the cloud just now. We’ll retry automatically.";
+    else if (acct.lastSync) st = "Cloud save synced " + acctAgo(acct.lastSync) + ".";
+    else st = "Checking your cloud save…";
+    if (el["acct-sync-status"]) el["acct-sync-status"].textContent = st;
+    if (el["acct-conflict"]){
+      el["acct-conflict"].hidden = !acct.conflict;
+      if (acct.conflict && el["acct-conflict-text"]){
+        el["acct-conflict-text"].textContent = "This device: " + acctDescribe(acctSummary(), acctProgress(state)) +
+          ". Cloud: " + acctDescribe(acct.conflict.summary, acct.conflict.progress) +
+          (acct.conflict.summary && acct.conflict.summary.at ? " (saved " + acctAgo(acct.conflict.summary.at) + ")" : "") + ".";
+      }
+    }
+  }
+
+  /* ----- sign in ----- */
+  function acctSendCode(){
+    var email = (el["acct-email"].value || "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ acctMsg("Enter a valid email address."); return; }
+    acct.email = email;
+    acct.pendingMarketing = !!(el["acct-mkt"] && el["acct-mkt"].checked);
+    el["acct-send"].disabled = true;
+    acctMsg("Sending…");
+    acctAuthFetch("/otp", {email: email, create_user: true}).then(function(){
+      el["acct-step-email"].hidden = true;
+      el["acct-step-code"].hidden = false;
+      acctMsg("Code sent to " + email + ". Check your inbox (and spam folder).");
+      el["acct-code"].value = "";
+      try { el["acct-code"].focus(); } catch(e){}
+    }).catch(function(e){
+      acctMsg((e && (e.status === 429 || /rate|seconds|limit/i.test(e.message || "")))
+        ? "Too many emails right now. Wait a minute and try again."
+        : "Couldn’t send the code. Check the address and try again.");
+    }).then(function(){ el["acct-send"].disabled = false; });
+  }
+  function acctVerify(){
+    var code = (el["acct-code"].value || "").replace(/\s+/g, "");
+    if (!/^\d{6,10}$/.test(code)){ acctMsg("Enter the code from the email (digits only)."); return; }
+    el["acct-verify"].disabled = true;
+    acctMsg("Checking…");
+    acctAuthFetch("/verify", {type: "email", email: acct.email, token: code}).then(function(j){
+      acct.session = acctSessionFromResponse(j);
+      acctWriteSession(acct.session);
+      acct.base = acctGetBase();
+      el["acct-step-email"].hidden = false;
+      el["acct-step-code"].hidden = true;
+      acctMsg("");
+      acctRender();
+      return acctSync();
+    }).catch(function(e){
+      if (acct.session) return;
+      acctMsg("That code didn’t work. Check it, or go back and request a new one.");
+    }).then(function(){ el["acct-verify"].disabled = false; });
+  }
+  function acctSignOut(){
+    var tok = acct.session && acct.session.access_token;
+    if (tok) acctAuthFetch("/logout?scope=local", {}, tok).catch(function(){});
+    acctDropSession("Signed out. This device keeps its local save.");
+  }
+
+  /* ----- cloud save sync ----- */
+  function acctSync(){
+    if (!acct.session) return Promise.resolve();
+    acct.busy = true; acctRender();
+    return lbCall("dso_claim_player", {p_player_id: lbGetPlayerId()}).then(function(c){
+      if (c && c.reason === "owned_by_other"){
+        // this browser's anonymous ID already belongs to a different account: start a fresh one
+        try { localStorage.setItem(LB_PLAYER_ID_KEY, (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : lbFallbackUuid()); } catch(e){}
+        return lbCall("dso_claim_player", {p_player_id: lbGetPlayerId()});
+      }
+      return c;
+    }).then(function(c){
+      if (c && c.ok && c.player_id){ try { localStorage.setItem(LB_PLAYER_ID_KEY, c.player_id); } catch(e){} }
+      return lbCall("dso_cloud_save_get", {});
+    }).then(function(cloud){
+      acct.busy = false;
+      if (!cloud || !cloud.ok) throw new Error("cloud get failed");
+      acct.err = "";
+      if (!cloud.found){ return acctPush(false); }
+      if (acct.base && acct.base === cloud.updated_at){ return acctPush(false); }
+      if (acctProgress(state) === (cloud.progress || 0)){ acctSetBase(cloud.updated_at); return acctPush(false); }
+      if (acctIsFresh(state)){ return acctApplyCloud(cloud); }
+      acct.conflict = cloud; acctRender(); acctAskConflict();
+    }).then(function(){
+      return acctLoadPrefs();
+    }).catch(function(){
+      acct.busy = false; acct.err = "offline"; acctRender();
+    });
+  }
+  function acctPush(force){
+    if (!acct.session || acct.busy) return Promise.resolve();
+    if (acct.conflict && !force) return Promise.resolve();
+    acct.busy = true; acct.dirty = false; acctRender();
+    return lbCall("dso_cloud_save_put", {
+      p_save: state, p_progress: acctProgress(state), p_summary: acctSummary(),
+      p_base: acct.base, p_force: !!force
+    }).then(function(r){
+      acct.busy = false;
+      if (r && r.ok){
+        acctSetBase(r.updated_at); acct.lastSync = Date.now(); acct.err = ""; acct.conflict = null;
+      } else if (r && r.conflict){
+        acct.dirty = true; acctRender(); return acctSync();
+      } else if (r && r.reason === "rate_limited"){
+        acct.dirty = true;
+      } else {
+        acct.dirty = true; acct.err = (r && r.reason) || "error";
+      }
+      acctRender();
+    }).catch(function(){
+      acct.busy = false; acct.dirty = true; acct.err = "offline"; acctRender();
+    });
+  }
+  var acctPushTimer = null;
+  function acctPushSoon(){
+    if (!acct.session) return;
+    if (acctPushTimer) clearTimeout(acctPushTimer);
+    acctPushTimer = setTimeout(function(){ acctPushTimer = null; acct.dirty = true; acctPush(false); }, 4000);
+  }
+  function acctApplyCloud(cloud){
+    // Write the cloud copy into local storage and reload so the game boots from it through the
+    // normal load path. savesBlocked stops the running game from overwriting it on the way out.
+    savesBlocked = true;
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(cloud.save));
+      acctSetBase(cloud.updated_at);
+      if (cloud.summary && cloud.summary.name && !lbGetName()) lbSetName(cloud.summary.name);
+    } catch(e){
+      savesBlocked = false;
+      acctMsg("Couldn’t load the cloud save on this device (storage is full or blocked).");
+      return;
+    }
+    acctMsg("Loading your cloud save…");
+    setTimeout(function(){ location.reload(); }, 500);
+  }
+  function acctAskConflict(){
+    if (!acct.conflict) return;
+    var c = acct.conflict;
+    var body = "This device: " + acctDescribe(acctSummary(), acctProgress(state)) + ".\n\nCloud: " +
+      acctDescribe(c.summary, c.progress) + ".\n\nKeep one. The other is replaced, so pick the one that is further along.";
+    openModal(CONFLICT_TITLE, body, "Use cloud save", function(){ acctUseCloud(); });
+    el["modal-cancel"].textContent = "Keep this device";
+  }
+  function acctUseCloud(){ if (acct.conflict) acctApplyCloud(acct.conflict); }
+  function acctKeepLocal(){
+    acct.conflict = null;
+    acctRender();
+    return acctPush(true);
+  }
+
+  /* ----- email preferences (account email vs marketing are separate, both opt-in) ----- */
+  function acctLoadPrefs(){
+    if (!acct.session) return Promise.resolve();
+    return lbCall("dso_prefs_get", {}).then(function(p){
+      if (!p || !p.ok) return;
+      var mk = !!p.marketing_opt_in;
+      if (acct.pendingMarketing && !mk){
+        acct.pendingMarketing = false;
+        mk = true;
+        return lbCall("dso_prefs_set", {p_marketing: true, p_events: !!p.notify_events, p_outranked: !!p.notify_outranked, p_consent_version: EMAIL_CONSENT_VERSION}).then(function(){
+          acctFillPrefs(true, !!p.notify_events, !!p.notify_outranked);
+        });
+      }
+      acct.pendingMarketing = false;
+      acctFillPrefs(mk, !!p.notify_events, !!p.notify_outranked);
+    }).catch(function(){});
+  }
+  function acctFillPrefs(mk, ev, out){
+    if (el["acct-pref-mkt"]) el["acct-pref-mkt"].checked = mk;
+    if (el["acct-pref-events"]) el["acct-pref-events"].checked = ev;
+    if (el["acct-pref-outranked"]) el["acct-pref-outranked"].checked = out;
+    acct.prefsLoaded = true;
+  }
+  function acctSavePrefs(){
+    el["acct-pref-status"].textContent = "Saving…";
+    lbCall("dso_prefs_set", {
+      p_marketing: !!el["acct-pref-mkt"].checked, p_events: !!el["acct-pref-events"].checked,
+      p_outranked: !!el["acct-pref-outranked"].checked, p_consent_version: EMAIL_CONSENT_VERSION
+    }).then(function(r){
+      el["acct-pref-status"].textContent = (r && r.ok) ? "Saved." : "Couldn’t save. Try again.";
+    }).catch(function(){ el["acct-pref-status"].textContent = "Couldn’t save. Try again."; });
+    setTimeout(function(){ if (el["acct-pref-status"]) el["acct-pref-status"].textContent = ""; }, 3500);
+  }
+
+  /* ----- delete account: for now a prefilled email request (self-serve delete needs a DB function that is not installed yet) ----- */
+  function acctDelete(){
+    var who = (acct.session && acct.session.email) || "";
+    window.location.href = "mailto:privacy@dentalstrategyinstitute.com?subject=" + encodeURIComponent("Delete my DSO Empire account") +
+      "&body=" + encodeURIComponent("Please delete my DSO Empire account, cloud save and email preferences, and remove my leaderboard entry.\n\nAccount email: " + who);
+  }
+
+  // One gentle, one-time nudge after the first moment a player has something worth keeping.
+  function acctMaybeNudge(){
+    if (acct.session) return;
+    try { if (localStorage.getItem(ACCT_NUDGE_KEY)) return; localStorage.setItem(ACCT_NUDGE_KEY, "1"); } catch(e){ return; }
+    setTimeout(function(){
+      if (acct.session) return;
+      showToast("SAVE YOUR EMPIRE", "Playing on a phone and a laptop? Tap “account” at the bottom of the page to sign in and sync. It’s free.");
+    }, 6500);
+  }
+  function acctOpenPanel(){
+    switchTab("leaderboard");
+    var p = document.getElementById("panel-account");
+    if (p && p.scrollIntoView) p.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block: "start"});
+  }
+
+  function initAccount(){
+    acct.session = acctReadSession();
+    acct.base = acctGetBase();
+    var handled = Promise.resolve();
+    try {
+      // Fallback for the default "magic link" email template: the link lands back here with tokens in the hash.
+      var h = window.location.hash || "";
+      if (h.indexOf("access_token=") !== -1 && h.indexOf("refresh_token=") !== -1){
+        var p = new URLSearchParams(h.replace(/^#/, ""));
+        acct.session = {access_token: p.get("access_token"), refresh_token: p.get("refresh_token"),
+          expires_at: Date.now() + ((+p.get("expires_in")) || 3600) * 1000, user_id: "", email: ""};
+        acctWriteSession(acct.session);
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+        handled = acctAuthFetch("/user", null, acct.session.access_token, "GET").then(function(u){
+          acct.session.user_id = u.id || ""; acct.session.email = u.email || "";
+          acctWriteSession(acct.session); acct.base = acctGetBase();
+        }).catch(function(){});
+      }
+    } catch(e){}
+    if (el["acct-send"]) el["acct-send"].addEventListener("click", acctSendCode);
+    if (el["acct-email"]) el["acct-email"].addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); acctSendCode(); } });
+    if (el["acct-verify"]) el["acct-verify"].addEventListener("click", acctVerify);
+    if (el["acct-code"]) el["acct-code"].addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); acctVerify(); } });
+    if (el["acct-back"]) el["acct-back"].addEventListener("click", function(){
+      el["acct-step-code"].hidden = true; el["acct-step-email"].hidden = false; acctMsg("");
+    });
+    if (el["acct-signout"]) el["acct-signout"].addEventListener("click", acctSignOut);
+    if (el["acct-sync-now"]) el["acct-sync-now"].addEventListener("click", function(){
+      acct.dirty = true;
+      if (acct.conflict){ acctAskConflict(); return; }
+      acctSync();
+    });
+    if (el["acct-keep-local"]) el["acct-keep-local"].addEventListener("click", acctKeepLocal);
+    if (el["acct-use-cloud"]) el["acct-use-cloud"].addEventListener("click", acctUseCloud);
+    if (el["acct-pref-save"]) el["acct-pref-save"].addEventListener("click", acctSavePrefs);
+    if (el["acct-delete"]) el["acct-delete"].addEventListener("click", acctDelete);
+    if (el["acct-footer-link"]) el["acct-footer-link"].addEventListener("click", acctOpenPanel);
+    // the conflict dialog's second button means "keep this device"
+    el["modal-cancel"].addEventListener("click", function(){
+      if (el["modal-title"].textContent === CONFLICT_TITLE && acct.conflict) acctKeepLocal();
+    });
+    acctRender();
+    handled.then(function(){ acctRender(); if (acct.session) acctSync(); });
+    setInterval(function(){
+      if (acct.session && acct.dirty && !acct.busy && !acct.conflict && document.visibilityState !== "hidden") acctPush(false);
+    }, 90000);
+    setInterval(function(){ if (acct.session && !acct.busy) acctRender(); }, 30000);
+    document.addEventListener("visibilitychange", function(){
+      if (document.visibilityState === "hidden" && acct.session && acct.dirty && !acct.conflict) acctPush(false);
+    });
   }
 
   /* ---------- first-run flag (was the splash card; now the title sequence is the front door) ---------- */
@@ -8528,6 +8984,7 @@
   });
   initTabs();
   initLeaderboard();
+  initAccount();
   if (el["office-view-btn"]) el["office-view-btn"].addEventListener("click", openOfficeViewer);
   if (el["office-viewer-close"]) el["office-viewer-close"].addEventListener("click", closeOfficeViewer);
   document.addEventListener("keydown", function(e){

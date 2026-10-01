@@ -1,0 +1,5 @@
+-- PART 2b (NOT YET APPLIED): once a player is linked to an account, only that signed-in account may
+-- submit events for it. Replaces dso_submit_event with the same logic plus one guard at the top.
+-- Apply after the account build is live, so anonymous players are unaffected (guard only fires when
+-- dso_players.user_id is set).
+-- The only change vs. the current function is the block marked "NEW".
