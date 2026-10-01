@@ -392,6 +392,35 @@
   .memo-text{flex:1 1 240px; font-weight:600;}
 
 
+
+  /* ---------- spotlight tutorial (dimmed screen, hole around the target, mascot + speech bubble) ---------- */
+  .spot{position:fixed; inset:0; z-index:70; pointer-events:none;}
+  .spot[hidden]{display:none;}
+  .spot-block{position:fixed; background:rgba(8,12,28,0.74); pointer-events:auto; touch-action:none;}
+  .spot.no-target .spot-block{pointer-events:none;}
+  .spot-ring{position:fixed; border:3px solid var(--gold); border-radius:14px; pointer-events:none; box-shadow:0 0 0 2px rgba(255,255,255,0.55), 0 0 18px rgba(255,210,63,0.75); animation:spotRing 1.3s ease-in-out infinite;}
+  @keyframes spotRing{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,0.55), 0 0 10px rgba(255,210,63,0.45);} 50%{box-shadow:0 0 0 2px rgba(255,255,255,0.9), 0 0 24px rgba(255,210,63,0.95);}}
+  .spot-arrow{position:fixed; width:48px; height:60px; pointer-events:none; animation:spotBounce 0.8s ease-in-out infinite; filter:drop-shadow(0 3px 0 rgba(0,0,0,0.45));}
+  .spot-arrow svg{display:block; width:100%; height:100%;}
+  .spot-arrow.down svg{transform:rotate(180deg);}
+  @keyframes spotBounce{0%,100%{margin-top:0;} 50%{margin-top:-12px;}}
+  .spot-arrow.down{animation-name:spotBounceDown;}
+  @keyframes spotBounceDown{0%,100%{margin-top:0;} 50%{margin-top:12px;}}
+  .spot-guide{position:fixed; left:12px; right:12px; display:flex; align-items:flex-end; gap:10px; pointer-events:auto; cursor:pointer; max-width:560px; margin:0 auto;}
+  .spot-guide.right{flex-direction:row-reverse;}
+  .spot-mascot-wrap{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .spot-mascot{width:104px; height:104px; object-fit:cover; background:#7cc243; border:3px solid var(--ink); border-radius:16px; box-shadow:4px 4px 0 var(--hard-shadow); transform:rotate(-2deg);}
+  .spot-name{font-family:'Fredoka',sans-serif; font-weight:700; font-size:0.62rem; letter-spacing:0.05em; text-transform:uppercase; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8);}
+  .spot-bubble{position:relative; flex:1 1 auto; min-width:0; background:#fff; color:#1b1b2a; border:3px solid var(--ink); border-radius:16px; padding:10px 14px 12px; box-shadow:4px 4px 0 var(--hard-shadow);}
+  .spot-bubble::after{content:""; position:absolute; bottom:22px; left:-13px; width:0; height:0; border:9px solid transparent; border-right-color:var(--ink); border-left:0;}
+  .spot-guide.right .spot-bubble::after{left:auto; right:-13px; border-right:0; border-left:9px solid var(--ink); border-left-color:var(--ink);}
+  .spot-eyebrow{display:block; font-family:'Fredoka',sans-serif; font-weight:700; font-size:0.62rem; letter-spacing:0.06em; text-transform:uppercase; color:#d2561f; margin-bottom:2px;}
+  .spot-text{margin:0; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.95rem; line-height:1.35;}
+  .spot-more{display:block; text-align:right; color:#4aa02a; font-size:0.9rem; line-height:1; margin-top:4px; animation:spotNudge 0.9s ease-in-out infinite;}
+  @keyframes spotNudge{0%,100%{transform:translateY(0);} 50%{transform:translateY(3px);}}
+  .spot-skip{position:fixed; right:14px; bottom:calc(env(safe-area-inset-bottom,0px) + 14px); pointer-events:auto; background:#3d8fd1; color:#fff; border:3px solid var(--ink); border-radius:10px; padding:8px 20px; font-family:'Fredoka',sans-serif; font-weight:700; font-size:1.05rem; box-shadow:3px 3px 0 var(--hard-shadow); cursor:pointer;}
+  @media (prefers-reduced-motion: reduce){ .spot-arrow, .spot-ring, .spot-more{animation:none;} }
+
   /* ---------- progressive reveal: features stay hidden until the player earns them ---------- */
   .ui-locked{display:none !important;}
   .ui-new{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px; animation:tutorialPulse 1.4s ease-in-out infinite;}
@@ -3814,35 +3843,155 @@
   }
   function uiTutorialDone(){ return ui.all || !!ui.u.tutdone; }
 
-  /* ----- coach banner (Dr. Flossberg) ----- */
+  /* ----- spotlight coach (Dr. Flossberg): dim the screen, cut a hole around the target, point at it ----- */
+  var spot = { root:null, spec:null, raf:0, key:"", targetKey:"", blocks:{}, ring:null, arrow:null, guide:null, text:null, eyebrow:null, more:null, skip:null };
+  function spotBuild(){
+    if (spot.root) return;
+    var mascotSrc = (document.querySelector(".tutorial-banner-mascot") || {}).src || "";
+    var root = document.createElement("div");
+    root.className = "spot"; root.id = "spot"; root.hidden = true;
+    root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Tutorial from Dr. Flossberg");
+    root.innerHTML =
+      '<div class="spot-block" data-b="t"></div><div class="spot-block" data-b="b"></div>' +
+      '<div class="spot-block" data-b="l"></div><div class="spot-block" data-b="r"></div>' +
+      '<div class="spot-ring"></div>' +
+      '<div class="spot-arrow"><svg viewBox="0 0 48 60" aria-hidden="true"><path d="M24 3 L45 28 H32 V57 H16 V28 H3 Z" fill="#6ccf3a" stroke="#1d3d12" stroke-width="3" stroke-linejoin="round"/></svg></div>' +
+      '<div class="spot-guide" aria-live="polite">' +
+        '<div class="spot-mascot-wrap"><img class="spot-mascot" alt="" src="' + mascotSrc + '"><span class="spot-name">Dr. Flossberg</span></div>' +
+        '<div class="spot-bubble"><span class="spot-eyebrow"></span><p class="spot-text"></p><span class="spot-more" aria-hidden="true">&#9660;</span></div>' +
+      '</div>' +
+      '<button class="spot-skip" type="button">Skip</button>';
+    document.body.appendChild(root);
+    spot.root = root;
+    ["t","b","l","r"].forEach(function(k){ spot.blocks[k] = root.querySelector('[data-b="' + k + '"]'); });
+    spot.ring = root.querySelector(".spot-ring"); spot.arrow = root.querySelector(".spot-arrow");
+    spot.guide = root.querySelector(".spot-guide"); spot.text = root.querySelector(".spot-text");
+    spot.eyebrow = root.querySelector(".spot-eyebrow"); spot.more = root.querySelector(".spot-more"); spot.skip = root.querySelector(".spot-skip");
+    var advance = function(){ if (spot.spec && spot.spec.mode === "next" && spot.spec.onNext) spot.spec.onNext(); };
+    spot.guide.addEventListener("click", advance);
+    ["t","b","l","r"].forEach(function(k){ spot.blocks[k].addEventListener("click", advance); });
+    spot.skip.addEventListener("click", function(e){ e.stopPropagation(); if (spot.spec && spot.spec.onSkip) spot.spec.onSkip(); });
+  }
+  function spotShow(spec){
+    if (spot.spec === spec) return;
+    spotBuild();
+    spot.spec = spec; spot.key = ""; spot.targetKey = "";
+    spot.root.hidden = false;
+    document.body.classList.add("spot-on");
+    if (!spot.raf) spot.raf = requestAnimationFrame(spotFrame);
+  }
+  function spotHide(){
+    spot.spec = null;
+    if (spot.root) spot.root.hidden = true;
+    document.body.classList.remove("spot-on");
+    if (spot.raf){ cancelAnimationFrame(spot.raf); spot.raf = 0; }
+  }
+  function spotTargetRect(sel){
+    if (!sel) return null;
+    var t = document.querySelector(sel);
+    if (!t || t.closest(".ui-locked") || !t.getClientRects().length) return null;
+    var r = t.getBoundingClientRect();
+    return (r.width > 0 && r.height > 0) ? { el:t, r:r } : null;
+  }
+  function spotFrame(){
+    spot.raf = 0;
+    var spec = spot.spec;
+    if (!spec) return;
+    spot.raf = requestAnimationFrame(spotFrame);
+    // step out of the way of any real dialog (flagship naming, choice modal, gift reveals, ...)
+    var overlayUp = anyOverlayOpen() || (el["tutorial-choice-overlay"] && !el["tutorial-choice-overlay"].hidden);
+    if (overlayUp){ spot.root.style.visibility = "hidden"; return; }
+    spot.root.style.visibility = "";
+    var sel = typeof spec.sel === "function" ? spec.sel() : spec.sel;
+    var text = typeof spec.text === "function" ? spec.text() : spec.text;
+    var tg = spotTargetRect(sel);
+    var vw = window.innerWidth, vh = window.innerHeight;
+    // bring a new target into view once
+    var tk = sel + "|" + (tg ? "1" : "0");
+    if (tk !== spot.targetKey){
+      spot.targetKey = tk;
+      if (tg && (tg.r.top < 90 || tg.r.bottom > vh - 200)){
+        var want = window.pageYOffset + tg.r.top - vh * 0.38;
+        window.scrollTo({ top: Math.max(0, want), behavior: reduceMotion ? "auto" : "smooth" });
+      }
+    }
+    var pad = 7, h = null;
+    if (tg){
+      h = { l:Math.max(0, tg.r.left - pad), t:Math.max(0, tg.r.top - pad), r:Math.min(vw, tg.r.right + pad), b:Math.min(vh, tg.r.bottom + pad) };
+    }
+    var guideTop = h ? ((h.t + h.b) / 2 > vh * 0.5) : false;       // target low on screen -> mascot goes on top
+    var side = h ? (((h.l + h.r) / 2 < vw * 0.5) ? "right" : "left") : "left";   // mascot on the side away from the target
+    var key = [text, spec.eyebrow, spec.mode, h ? [h.l, h.t, h.r, h.b].map(Math.round).join(",") : "none", guideTop, side, vw, vh].join("|");
+    if (key === spot.key) return;
+    spot.key = key;
+    spot.text.textContent = text;
+    spot.eyebrow.textContent = spec.eyebrow || "";
+    spot.eyebrow.style.display = spec.eyebrow ? "" : "none";
+    spot.more.style.display = spec.mode === "next" ? "" : "none";
+    spot.root.classList.toggle("no-target", !h);
+    var B = spot.blocks;
+    if (h){
+      B.t.style.cssText = "left:0;top:0;width:" + vw + "px;height:" + h.t + "px";
+      B.b.style.cssText = "left:0;top:" + h.b + "px;width:" + vw + "px;height:" + Math.max(0, vh - h.b) + "px";
+      B.l.style.cssText = "left:0;top:" + h.t + "px;width:" + h.l + "px;height:" + (h.b - h.t) + "px";
+      B.r.style.cssText = "left:" + h.r + "px;top:" + h.t + "px;width:" + Math.max(0, vw - h.r) + "px;height:" + (h.b - h.t) + "px";
+      spot.ring.style.cssText = "display:block;left:" + h.l + "px;top:" + h.t + "px;width:" + (h.r - h.l) + "px;height:" + (h.b - h.t) + "px";
+      // arrow: above the hole pointing down when there is room, else below pointing up
+      var cx = Math.min(vw - 30, Math.max(30, (h.l + h.r) / 2));
+      var room = guideTop ? (vh - h.b > 90) : (h.t > 90);
+      if (!guideTop && h.t > 90){
+        spot.arrow.className = "spot-arrow down"; spot.arrow.style.cssText = "display:block;left:" + (cx - 24) + "px;top:" + (h.t - 66) + "px";
+      } else if (vh - h.b > 90){
+        spot.arrow.className = "spot-arrow"; spot.arrow.style.cssText = "display:block;left:" + (cx - 24) + "px;top:" + (h.b + 6) + "px";
+      } else { spot.arrow.style.cssText = "display:none"; }
+    } else {
+      B.t.style.cssText = "left:0;top:0;width:" + vw + "px;height:" + vh + "px;background:rgba(8,12,28,0.45)";
+      B.b.style.cssText = B.l.style.cssText = B.r.style.cssText = "display:none";
+      spot.ring.style.display = "none"; spot.arrow.style.display = "none";
+    }
+    spot.guide.className = "spot-guide " + side;
+    spot.guide.style.top = guideTop ? "calc(env(safe-area-inset-top,0px) + 14px)" : "auto";
+    spot.guide.style.bottom = guideTop ? "auto" : "calc(env(safe-area-inset-bottom,0px) + 70px)";
+  }
+
+  /* ----- coach queue (Dr. Flossberg's tips after the opening steps) ----- */
   var coachQueue = [], coachCurrent = null;
   function coachSay(c){
     coachQueue.push(c);
     if (!coachCurrent) coachNext();
   }
   function coachNext(){
-    clearTutorialHighlights();
     coachCurrent = coachQueue.shift() || null;
-    if (!coachCurrent){ if (!tutorialActive()) el["tutorial-banner"].hidden = true; return; }
-    el["tutorial-banner"].hidden = false;
-    el["tutorial-banner-eyebrow"].textContent = "DR. FLOSSBERG · " + coachCurrent.eyebrow;
-    el["tutorial-banner-text"].textContent = coachCurrent.text;
-    el["tutorial-skip"].textContent = "Got it";
-    if (coachCurrent.sel) highlightTutorialTarget(coachCurrent.sel);
+    if (!coachCurrent){ if (!tutorialActive()) spotHide(); return; }
+    spotShow({ mode:"next", sel:coachCurrent.sel, text:coachCurrent.text, eyebrow:coachCurrent.eyebrow, onNext:coachDismiss, onSkip:skipCoaches });
   }
   function coachDismiss(){
     var done = coachCurrent && coachCurrent.onDone;
     coachCurrent = null;
-    clearTutorialHighlights();
+    spotHide();
     if (done) done();           // may queue (and immediately show) a follow-up coach
     if (!coachCurrent) coachNext();
   }
+  function skipCoaches(){
+    var guard = 0;
+    while ((coachCurrent || coachQueue.length) && guard++ < 20){
+      if (!coachCurrent) coachNext(); else coachDismiss();
+    }
+    spotHide();
+  }
   function onTutorialButton(){ if (tutorialActive()) skipTutorial(); else coachDismiss(); }
 
-  var TUTORIAL_TEXT = {
-    1: "Welcome to DSO Empire Simulator. I'm Dr. Flossberg, the Molar Mogul. Tap Bill a Patient to bring in your first dollars.",
-    2: "Taps pay, but staff pay you while you work. Meet The Roster. Keep tapping until you have $15, then hire Dana Whitfield, RDH.",
-    3: "Dana's fees pile up until you Collect them. Tap her Collect button when it lights up."
+  var TUTORIAL_SPECS = {
+    1: { mode:"tap", eyebrow:"STEP 1 OF 8", sel:"#click-btn", onSkip:function(){ skipTutorial(); },
+         text:"Welcome to DSO Empire Simulator! I'm Dr. Flossberg, the Molar Mogul. Tap Bill a Patient to bring in your first dollars." },
+    2: { mode:"tap", eyebrow:"STEP 2 OF 8", onSkip:function(){ skipTutorial(); },
+         // two beats: keep tapping until Dana is affordable, then point at her Hire button
+         sel:function(){ return state.revenue >= genCost(STAFF[0], 0, state) ? '[data-gen="chair"]' : "#click-btn"; },
+         text:function(){ return state.revenue >= genCost(STAFF[0], 0, state)
+           ? "That's enough! Hire Dana Whitfield, RDH from The Roster. She keeps earning while you do other things."
+           : "Taps pay, but staff pay you while you work. Keep tapping: Dana costs $15."; } },
+    3: { mode:"tap", eyebrow:"STEP 3 OF 8", sel:'[data-collect="chair"]', onSkip:function(){ skipTutorial(); },
+         text:"Dana's fees pile up until you Collect them. Tap her Collect button when it lights up." }
   };
   function tutorialActive(){ return (state.tutorialStep || 0) > 0 && state.tutorialStep < 4; }
   function startTutorial(){
@@ -3865,20 +4014,11 @@
     if (t) t.classList.add("tutorial-highlight");
   }
   function renderTutorialStep(){
-    if (!el["tutorial-banner"]) return;
-    clearTutorialHighlights();
     var step = state.tutorialStep;
     if (step === 1 || step === 2 || step === 3){
-      el["tutorial-banner"].hidden = false;
-      el["tutorial-banner-eyebrow"].textContent = "DR. FLOSSBERG · STEP " + step + " OF 8";
-      el["tutorial-banner-text"].textContent = TUTORIAL_TEXT[step];
-      el["tutorial-skip"].textContent = "Skip tutorial";
-      highlightTutorialTarget(step === 1 ? "#click-btn" : step === 2 ? '[data-gen="chair"]' : '[data-collect="chair"]');
-    } else if (coachCurrent){
-      el["tutorial-banner"].hidden = false;
-      if (coachCurrent.sel) highlightTutorialTarget(coachCurrent.sel);
-    } else {
-      el["tutorial-banner"].hidden = true;
+      spotShow(TUTORIAL_SPECS[step]);
+    } else if (!coachCurrent){
+      spotHide();
     }
   }
   function advanceTutorial(fromStep){
@@ -3889,6 +4029,7 @@
       renderStaff();
     }
     if (fromStep === 3){
+      spotHide();
       el["tutorial-banner"].hidden = true;
       state.tutorialStep = 4;
       saveGame();
@@ -3902,6 +4043,7 @@
   function skipTutorial(){
     clearTutorialHighlights();
     coachQueue = []; coachCurrent = null;
+    spotHide();
     if (el["tutorial-banner"]) el["tutorial-banner"].hidden = true;
     if (el["tutorial-choice-overlay"]) el["tutorial-choice-overlay"].hidden = true;
     state.tutorialStep = 5;
@@ -3934,7 +4076,7 @@
         ? "Initiatives are one-time upgrades, and you just got the Practice Manager free. Next up: Digital Recall Reminders, $60, makes Dana collect twice as fast."
         : "Initiatives are one-time upgrades. The Practice Manager, $500, would make Dana collect on her own.") +
         " EBITDA per second, up top, is how fast your whole team earns.",
-      sel: "#panel-upgrades"
+      sel: "#upgrade-rows .row"
     });
     renderStaff();
     renderUpgrades();
@@ -4026,7 +4168,7 @@
           coachSay({
             eyebrow: "STEP 8 OF 8",
             text: "You've got real money now, which means the Board wants a word. Board Room decisions cost cash and pay off in different ways. There's no right answer, only the kind of DSO you want to build.",
-            sel: "#panel-board"
+            sel: "#panel-board h2"
           });
         }
         // sponsor + supply: 3 minutes after the tabs open, or as soon as the Board Room does
@@ -4035,7 +4177,7 @@
           coachSay({
             eyebrow: "NEW",
             text: "Sponsor Bonus: watch a short message for a mystery reward and a boost. Supply Order: gamble cash on a bulk order. It usually pays off. Sometimes it doesn't.",
-            sel: "#panel-sponsor"
+            sel: "#panel-sponsor h2"
           });
         }
         var later = [
@@ -4068,6 +4210,7 @@
   function resetUiReveal(){
     ui = { all:false, u:{}, ts:{} };
     coachQueue = []; coachCurrent = null;
+    spotHide();
     uiSave();
     applyUiLocks();
   }
