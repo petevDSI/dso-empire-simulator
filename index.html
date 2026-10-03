@@ -4346,12 +4346,13 @@
      Privacy Control. Point `endpoint` at any service that accepts a JSON POST (Supabase edge
      function, Plausible/PostHog proxy, etc.). Events are also kept in a small local ring buffer
      (window.__dsoEvents via ?debug=analytics) so this can be tested without a server. */
-  var ANALYTICS_CONFIG = { enabled: false, endpoint: "" };
+  var ANALYTICS_CONFIG = { enabled: true, provider: "posthog", host: "https://us.i.posthog.com", key: "phc_wURadtrfJkgqo3s82ghmdfHdmv38yfkRSrU34QG8Vcmp", endpoint: "" };
   var ANALYTICS_KEY = "dso-empire-analytics-v1";
   var analyticsId = null, analyticsFirstOpen = null, sessionStartedAt = Date.now();
   var analyticsBuffer = [];
   function analyticsAllowed(){
-    if (!ANALYTICS_CONFIG.enabled || !ANALYTICS_CONFIG.endpoint) return false;
+    if (!ANALYTICS_CONFIG.enabled) return false;
+    if (!(ANALYTICS_CONFIG.provider === "posthog" ? ANALYTICS_CONFIG.key : ANALYTICS_CONFIG.endpoint)) return false;
     if (navigator.doNotTrack === "1" || window.doNotTrack === "1" || navigator.globalPrivacyControl) return false;
     return true;
   }
@@ -4379,9 +4380,17 @@
     try { if (/[?&]debug=analytics/.test(location.search)) window.__dsoEvents = analyticsBuffer; } catch(e){}
     if (!analyticsAllowed()) return;
     try {
-      var body = JSON.stringify(evt);
-      if (navigator.sendBeacon) navigator.sendBeacon(ANALYTICS_CONFIG.endpoint, new Blob([body], {type:"text/plain"}));
-      else fetch(ANALYTICS_CONFIG.endpoint, {method:"POST", body:body, keepalive:true});
+      var url = ANALYTICS_CONFIG.endpoint, body;
+      if (ANALYTICS_CONFIG.provider === "posthog"){
+        /* PostHog capture API: events only, no person profiles, no cookies, no session replay. */
+        url = ANALYTICS_CONFIG.host + "/capture/";
+        var props = {day_n: evt.day_n, season: evt.season, $process_person_profile: false};
+        for (var k in evt.p) props[k] = evt.p[k];
+        body = JSON.stringify({api_key: ANALYTICS_CONFIG.key, event: evt.e, distinct_id: evt.id,
+          timestamp: new Date(evt.t).toISOString(), properties: props});
+      } else body = JSON.stringify(evt);
+      if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], {type:"text/plain"}));
+      else fetch(url, {method:"POST", body:body, keepalive:true});
     } catch(e){}
   }
   function trackSessionEnd(){

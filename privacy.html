@@ -87,6 +87,7 @@
     <ul>
       <li><strong>Supabase</strong> — hosts the leaderboard database described above.</li>
       <li><strong>Vercel</strong> — hosts the game itself, including the small server-side functions used to process real-money pack purchases. Like any web host, it automatically logs standard technical information (such as IP address and browser type) for security and reliability. We don't use this for tracking or advertising.</li>
+      <li><strong>PostHog</strong> — receives anonymous gameplay events (for example: opening the game, finishing a season, and how long a session lasted) tied to a random ID stored in your browser, so we can see whether the game is fun and where players get stuck. No name, email, or anything you type is sent. It is not used for advertising, uses no tracking cookies and no session recordings, and is switched off if your browser sends Do Not Track or Global Privacy Control. As with any web service, PostHog receives your IP address when your browser contacts it.</li>
       <li><strong>Stripe</strong> — processes payment for the optional Legendary Card Pack, as described above.</li>
       <li><strong>Google Fonts</strong> — delivers the typefaces used on this page and in the game, which may involve a standard request to Google's servers.</li>
     </ul>
