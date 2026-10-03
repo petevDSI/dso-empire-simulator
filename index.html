@@ -5790,6 +5790,8 @@
      handled entirely by Stripe's hosted Checkout page — no card details ever pass
      through this game's own code. See api/create-checkout-session.js and
      api/verify-checkout-session.js. */
+  /* Beta: real-money pack is OFF. Flip to true to bring the Buy Pack row and checkout back. */
+  var PACK_ENABLED = false;
   var PACK_PRICE_DISPLAY = "$1.99";
   var PACK_CARD_COUNT = 3;
   var PACK_ODDS_PCT = Math.round(1000 / 5) / 10; // 20.0
@@ -5799,7 +5801,7 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
   function xchgPackRowHtml(){
-    if (!packLegendaryPool().length) return "";
+    if (!PACK_ENABLED || !packLegendaryPool().length) return "";
     return '<div class="xchg-row xchg-pack-row" id="xchg-pack-row">' +
       '<div class="xchg-buy-icon" aria-hidden="true"><img src="' + ICONS.legendary_pack + '" alt=""></div>' +
       '<div class="xchg-info">Legendary Card Pack <span class="xchg-real-money-tag">REAL MONEY</span>' +
@@ -5809,7 +5811,7 @@
   }
   var packCheckoutInFlight = false;
   function startPackCheckout(){
-    if (packCheckoutInFlight) return;
+    if (!PACK_ENABLED || packCheckoutInFlight) return;
     var btn = document.getElementById("xchg-pack-btn");
     packCheckoutInFlight = true;
     if (btn){ btn.disabled = true; btn.querySelector(".buy-label").textContent = "Redirecting…"; }

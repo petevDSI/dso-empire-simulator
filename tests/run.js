@@ -188,6 +188,21 @@ test("Exit: resets the run but keeps permanent fields (streak, grace, equipment,
   await ctx.close();
 });
 
+test("beta: real-money Legendary Pack is hidden and never calls checkout", async () => {
+  const { page, ctx } = await openGame(DEFAULT, s => s);
+  const calls = [];
+  page.on("request", r => { if (/create-checkout-session|stripe\.com/.test(r.url())) calls.push(r.url()); });
+  for (const tab of ["collection", "ops", "exit", "office", "bonuses"]) {
+    await page.evaluate(t => { const b = document.querySelector('[data-tab="' + t + '"]'); if (b) b.click(); }, tab);
+    await page.waitForTimeout(150);
+  }
+  const html = await page.content();
+  assert(!/id="xchg-pack-btn"|id="xchg-pack-row"/.test(html), "pack row is rendered");
+  assert(!/REAL MONEY/i.test(await page.evaluate(() => document.body.innerText)), "REAL MONEY label is visible");
+  assert(calls.length === 0, "checkout was contacted: " + calls.join(", "));
+  await ctx.close();
+});
+
 test("analytics stays silent on the network while disabled", async () => {
   const { page, ctx } = await openGame(DEFAULT, s => s);
   const sent = [];
