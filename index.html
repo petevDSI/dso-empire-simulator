@@ -4,7 +4,7 @@
 <link rel="canonical" href="https://empire.dentalstrategyinstitute.com/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&family=DotGothic16&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&family=DotGothic16&family=Lilita+One&display=swap" rel="stylesheet">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DSO Empire Simulator">
@@ -1480,7 +1480,52 @@
   .logo-intro.is-ready .intro-cta{opacity:1; transform:none; pointer-events:auto;}
   .intro-tag{max-width:520px; margin:0; text-align:center; color:#fff; font:700 0.82rem/1.45 'Nunito',sans-serif; text-shadow:0 1px 3px rgba(0,0,0,0.85); background:rgba(8,10,28,0.55); padding:8px 12px; border-radius:12px;}
   .intro-tag[hidden]{display:none;}
-  .intro-enter{font-size:1.05rem; padding:14px 26px; max-width:92vw; border-radius:16px; animation:introPulse 1.6s ease-in-out infinite;}
+  /* ---------- start button: "Acquire Your First Practice" (gold plaque + Dr. mascot) ---------- */
+  .intro-enter{
+    all:unset; box-sizing:border-box; display:block; position:relative; cursor:pointer;
+    width:min(100%, 440px, 48vh); aspect-ratio:1 / .703; container-type:inline-size; /* height capped so it never crowds the logo on short phones */
+    touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+  }
+  .intro-enter:focus-visible .sb-plate{outline:4px solid #fff; outline-offset:6px; border-radius:18px;}
+  .sb-pulse{position:absolute; inset:0; transform-origin:50% 72%; animation:sbPulse 1.8s ease-in-out infinite;}
+  @keyframes sbPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.06);}}
+  .sb-lift{position:absolute; inset:0; transition:transform .12s cubic-bezier(.3,1.6,.5,1);}
+  .intro-enter:hover .sb-lift{transform:translateY(-4px);}
+  .intro-enter:active .sb-lift{transform:translateY(5px); transition-duration:.06s;}
+  .sb-shadow{position:absolute; left:5%; right:5%; bottom:-1.2cqw; height:5cqw; border-radius:50%; background:rgba(0,0,0,.5); filter:blur(3px); transition:transform .12s, opacity .12s;}
+  .intro-enter:hover .sb-shadow{transform:scale(1.03,1.15);}
+  .intro-enter:active .sb-shadow{transform:scale(.88,.35); opacity:.5;}
+  .sb-mascot{position:absolute; left:50%; top:0; width:48cqw; height:auto; transform:translateX(-50%); display:block; pointer-events:none;}
+  .sb-plate{position:absolute; left:0; right:0; bottom:0; aspect-ratio:2.95;}
+  .sb-base{position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none;}
+  .sb-mask{position:absolute; inset:0; overflow:hidden; pointer-events:none; -webkit-mask:url(assets/button/start-plaque.webp) center/100% 100% no-repeat; mask:url(assets/button/start-plaque.webp) center/100% 100% no-repeat;}
+  .sb-shine i{position:absolute; top:-10%; bottom:-10%; left:-30%; width:22%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.85) 50%,transparent); transform:translateX(-120%) skewX(-18deg); animation:sbShine 3.5s ease-in-out infinite;}
+  @keyframes sbShine{0%,62%{transform:translateX(-120%) skewX(-18deg);} 100%{transform:translateX(620%) skewX(-18deg);}}
+  .intro-enter:hover .sb-shine i{animation-duration:1.1s;}
+  .sb-light{background:#fff; opacity:0; transition:opacity .15s;}
+  .intro-enter:hover .sb-light{opacity:.14;}
+  .sb-dark{background:#5a2a00; opacity:0; transition:opacity .08s;}
+  .intro-enter:active .sb-dark{opacity:.16;}
+  .sb-tooth{position:absolute; left:.5cqw; top:50%; width:22cqw; height:auto; transform:translateY(-52%); pointer-events:none;}
+  .sb-label{
+    position:absolute; left:24cqw; right:7cqw; top:0; bottom:0; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
+    font-family:'Lilita One','Fredoka','Nunito',sans-serif; font-weight:400; font-size:8cqw; line-height:.98; letter-spacing:.01em; text-transform:uppercase; white-space:nowrap; pointer-events:none;
+    -webkit-text-stroke:.9cqw #20264D; paint-order:stroke fill; text-shadow:0 .7cqw 0 rgba(0,0,0,.35);
+  }
+  .sb-l1{color:#fff;} .sb-l2{color:#FFD45C;}
+  .sb-back,.sb-front{position:absolute; inset:0; pointer-events:none;}
+  .sb-ribbon{position:absolute; left:-4%; right:-4%; bottom:-13cqw; height:32cqw; opacity:0; transform-origin:50% 60%; transform:scaleX(.15);}
+  .sb-ribbon svg{width:100%; height:100%; overflow:visible; display:block;}
+  .sb-rays{position:absolute; left:50%; top:38%; width:130cqw; height:130cqw; margin:-65cqw 0 0 -65cqw; opacity:0; pointer-events:none;}
+  .sb-rays svg{width:100%; height:100%; display:block;}
+  .sb-bit{position:absolute; left:50%; top:60%; opacity:0; will-change:transform,opacity;}
+  .sb-coin{width:11cqw; height:11cqw; margin:-5.5cqw 0 0 -5.5cqw;}
+  .sb-conf{width:2.6cqw; height:4cqw; margin:-2cqw 0 0 -1.3cqw; border-radius:.5cqw;}
+  .sb-spark{width:7cqw; height:7cqw; margin:-3.5cqw 0 0 -3.5cqw;}
+  .sb-bit svg{display:block; width:100%; height:100%;}
+  .intro-enter.is-done{pointer-events:none;}
+  .intro-enter.is-done .sb-pulse{animation:none;}
+  @media (max-height:700px){ .intro-enter{width:min(100%, 440px, 38vh);} .intro-tag{font-size:0.7rem; line-height:1.35; padding:5px 9px;} }
   .logo-intro-skip{position:absolute; bottom:22px; left:50%; transform:translateX(-50%); color:#fff; opacity:0.6; font-family:'Nunito',sans-serif; font-size:0.72rem; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; text-shadow:0 1px 3px rgba(0,0,0,0.8);}
   .logo-intro.is-ready .logo-intro-skip{display:none;}
 
@@ -1529,7 +1574,10 @@
     .logo-intro.is-playing .intro-world, .logo-intro.is-playing .intro-flash, .logo-intro.is-playing .intro-ring,
     .logo-intro.is-playing .intro-crack, .logo-intro.is-playing .intro-spark{animation:none;}
     .intro-flash, .intro-ring, .intro-crack, .intro-sparks{display:none;}
-    .intro-enter{animation:none;}
+    .sb-pulse, .sb-shine i{animation:none;}
+    .sb-shine i{opacity:0;}
+    .sb-lift, .sb-shadow, .sb-light, .sb-dark{transition:none;}
+    .intro-enter:hover .sb-lift{transform:none;}
   }
 
   /* ---------- v73: "view the office" full-screen viewer ---------- */
@@ -1668,7 +1716,20 @@
   <div class="intro-flash"></div>
   <div class="intro-cta">
     <p class="intro-tag" id="intro-tag" hidden>Somewhere between "Main St Dental" and a private jet, there's a rollup with your name on it. Hire staff, buy Initiatives, and chase the Exit &mdash; every season gets a little bigger, and a little more absurd.</p>
-    <button id="intro-enter" class="btn-primary intro-enter" type="button">Acquire Your First Practice</button>
+    <button id="intro-enter" class="intro-enter" type="button" aria-label="Acquire Your First Practice">
+      <span class="sb-pulse"><span class="sb-lift">
+        <span class="sb-shadow"></span>
+        <span class="sb-back"><span class="sb-ribbon" id="sb-ribbon"><svg viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true"><g stroke="#20264D" stroke-width="7" stroke-linejoin="round"><path d="M70 120 L190 120 L190 250 L70 250 L110 185Z" fill="#B3282D"/><path d="M930 120 L810 120 L810 250 L930 250 L890 185Z" fill="#B3282D"/><path d="M190 150 L255 150 L255 200 L190 250Z" fill="#7C1A1F"/><path d="M810 150 L745 150 L745 200 L810 250Z" fill="#7C1A1F"/><path d="M150 60 Q500 110 850 60 L850 190 Q500 240 150 190Z" fill="#E8423A"/></g><path d="M170 76 Q500 124 830 76" fill="none" stroke="#FF8A7A" stroke-width="9" stroke-linecap="round" opacity=".7"/></svg></span></span>
+        <img class="sb-mascot" src="assets/button/start-mascot.webp" width="720" height="598" alt="" draggable="false" decoding="async">
+        <span class="sb-plate">
+          <img class="sb-base" src="assets/button/start-plaque.webp" width="1000" height="287" alt="" draggable="false" decoding="async">
+          <span class="sb-mask sb-shine"><i></i></span><span class="sb-mask sb-light"></span><span class="sb-mask sb-dark"></span>
+          <img class="sb-tooth" src="assets/button/start-tooth.webp" width="420" height="395" alt="" draggable="false" decoding="async">
+          <span class="sb-label"><span class="sb-l1">Acquire your</span><span class="sb-l2">First practice</span></span>
+        </span>
+        <span class="sb-front" id="sb-front"></span>
+      </span></span>
+    </button>
   </div>
   <span class="logo-intro-skip">tap to skip</span>
 </div>
@@ -7836,6 +7897,49 @@
     if (el["office-viewer"]) el["office-viewer"].hidden = true;
   }
 
+  /* ---------- start button burst: stamp-slam, ribbon unfurl, rays, coins + confetti (~0.7s) ---------- */
+  var SB_COIN = '<svg viewBox="-20 -20 40 40" aria-hidden="true"><circle r="18" fill="#20264D"/><circle r="15.5" fill="#FFB100"/><circle r="12" fill="#FFD45C" stroke="#C97A00" stroke-width="1.2"/><path d="M-6.5 -7 C-9.5 -7 -10 -2 -8.5 2 C-7.5 6 -6 9 -4.5 9 C-3 9 -3 3 0 3 C3 3 3 9 4.5 9 C6 9 7.5 6 8.5 2 C10 -2 9.5 -7 6.5 -7 C4 -7 3 -5.5 0 -5.5 C-3 -5.5 -4 -7 -6.5 -7Z" fill="#fff" stroke="#C97A00" stroke-width="1"/></svg>';
+  var SB_SPARK = '<svg viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -10 Q1.5 -1.5 10 0 Q1.5 1.5 0 10 Q-1.5 1.5 -10 0 Q-1.5 -1.5 0 -10Z" fill="#fff" stroke="#FFD45C" stroke-width="1"/></svg>';
+  function playEnterBurst(btn, reduce){
+    if (!btn || !btn.animate) return 0;
+    btn.classList.add("is-done");
+    var front = document.getElementById("sb-front"), ribbon = document.getElementById("sb-ribbon"), plate = btn.querySelector(".sb-plate");
+    if (reduce){ // gentle brightness flash only, no flying pieces
+      if (plate) plate.animate([{filter:"brightness(1)"},{filter:"brightness(1.25)"},{filter:"brightness(1)"}], {duration:400});
+      if (ribbon) ribbon.animate([{opacity:0},{opacity:1}], {duration:300, fill:"forwards"});
+      return 350;
+    }
+    var r = btn.getBoundingClientRect(), W = r.width, H = r.height;
+    function R(a, b){ return a + Math.random() * (b - a); }
+    function bit(cls, html){ var e = document.createElement("span"); e.className = "sb-bit " + cls; e.innerHTML = html; front.appendChild(e); return e; }
+    btn.querySelector(".sb-pulse").animate([{transform:"scale(.94)"},{transform:"scale(1.09)", offset:.55},{transform:"scale(1)"}], {duration:320, easing:"ease-out"});
+    if (ribbon) ribbon.animate([{opacity:0, transform:"scaleX(.15)"},{opacity:1, transform:"scaleX(1.06)", offset:.7},{opacity:1, transform:"scaleX(1)"}], {duration:420, delay:100, easing:"cubic-bezier(.2,1.4,.4,1)", fill:"forwards"});
+    var wedges = "";
+    for (var i = 0; i < 14; i++){
+      var a = i * (360 / 14), b = a + 9, ra = a * Math.PI / 180, rb = b * Math.PI / 180;
+      wedges += '<path d="M0 0 L' + (Math.cos(ra) * 100).toFixed(1) + ' ' + (Math.sin(ra) * 100).toFixed(1) + ' L' + (Math.cos(rb) * 100).toFixed(1) + ' ' + (Math.sin(rb) * 100).toFixed(1) + 'Z"/>';
+    }
+    var rays = document.createElement("span"); rays.className = "sb-rays";
+    rays.innerHTML = '<svg viewBox="-100 -100 200 200" aria-hidden="true"><defs><radialGradient id="sb-rg"><stop offset="0" stop-color="#FFF6B0" stop-opacity=".95"/><stop offset="1" stop-color="#FFD45C" stop-opacity="0"/></radialGradient></defs><g fill="url(#sb-rg)">' + wedges + '</g></svg>';
+    btn.querySelector(".sb-back").appendChild(rays);
+    rays.animate([{opacity:0, transform:"scale(.3) rotate(0deg)"},{opacity:1, offset:.3},{opacity:0, transform:"scale(1) rotate(40deg)"}], {duration:800, delay:100, easing:"ease-out", fill:"forwards"});
+    var colors = ["#FF4D4D","#2DD4A0","#3AA0FF","#FFD45C","#FF8A3D","#B77CFF"];
+    for (var c = 0; c < 12; c++){
+      var rad = (-80 + c / 12 * -360 + R(-10, 10)) * Math.PI / 180, dx = Math.cos(rad) * W * R(.30, .46), dy = Math.sin(rad) * H * R(.45, .85) - H * .05;
+      bit("sb-coin", SB_COIN).animate([{opacity:0, transform:"translate(0,0) scale(.3) rotate(0)"},{opacity:1, offset:.25, transform:"translate(" + dx * .7 + "px," + dy * .7 + "px) scale(1) rotate(" + R(-90, 90) + "deg)"},{opacity:0, transform:"translate(" + dx + "px," + (dy + H * .25) + "px) scale(.9) rotate(" + R(-200, 200) + "deg)"}], {duration:R(600, 800), delay:200 + R(0, 100), easing:"cubic-bezier(.2,.8,.4,1)", fill:"forwards"});
+    }
+    for (var k = 0; k < 28; k++){
+      var cf = bit("sb-conf", '<i style="display:block;width:100%;height:100%;border-radius:inherit;background:' + colors[k % colors.length] + '"></i>');
+      var cx = R(-.46, .46) * W, cy = R(-.9, -.2) * H;
+      cf.animate([{opacity:0, transform:"translate(0,0) rotate(0)"},{opacity:1, offset:.2, transform:"translate(" + cx * .6 + "px," + cy + "px) rotate(" + R(0, 360) + "deg)"},{opacity:0, transform:"translate(" + cx + "px," + (cy + H * .9) + "px) rotate(" + R(360, 900) + "deg)"}], {duration:R(650, 850), delay:210 + R(0, 120), easing:"cubic-bezier(.3,.6,.4,1)", fill:"forwards"});
+    }
+    for (var s = 0; s < 6; s++){
+      var sp = bit("sb-spark", SB_SPARK); sp.style.top = R(48, 80) + "%"; sp.style.left = R(10, 90) + "%";
+      sp.animate([{opacity:0, transform:"scale(0) rotate(0)"},{opacity:1, transform:"scale(1.2) rotate(45deg)", offset:.4},{opacity:0, transform:"scale(0) rotate(90deg)"}], {duration:500, delay:250 + s * 70, fill:"forwards"});
+    }
+    return 650;
+  }
+
   /* ---------- title sequence: office pan -> logo crash -> beat -> "Click to Enter" (plays every load) ---------- */
   function initLogoIntro(){
     var intro = el["logo-intro"];
@@ -7886,15 +7990,20 @@
       if (entered) return;
       entered = true;
       try { ensureAudioContext(); sfxArpeggioUp(); } catch(e){}
-      intro.classList.add("is-leaving");
+      var burstMs = 0;
+      try { burstMs = playEnterBurst(el["intro-enter"], reduce); } catch(e){}
       setTimeout(function(){
-        intro.hidden = true;
-        intro.classList.remove("is-leaving");
-        if (!loadSplashSeen()) saveSplashSeen();
-        startTutorial();
-      }, 500);
+        intro.classList.add("is-leaving");
+        setTimeout(function(){
+          intro.hidden = true;
+          intro.classList.remove("is-leaving");
+          if (!loadSplashSeen()) saveSplashSeen();
+          startTutorial();
+        }, 500);
+      }, burstMs);
     }
     intro.addEventListener("click", function(){ if (!ready) skipToEnd(); else enter(); });
+    if (el["intro-enter"]) el["intro-enter"].addEventListener("pointerdown", function(){ if (ready && !entered){ try { sfxStamp(); } catch(e){} } });
 
     // begin once the office image is ready (short failsafe so a slow network never stalls the sequence)
     if (office && office.complete && office.naturalWidth) start();
