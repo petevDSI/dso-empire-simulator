@@ -196,8 +196,8 @@ test("beta: real-money Legendary Pack is hidden and never calls checkout", async
     await page.evaluate(t => { const b = document.querySelector('[data-tab="' + t + '"]'); if (b) b.click(); }, tab);
     await page.waitForTimeout(150);
   }
-  const html = await page.content();
-  assert(!/id="xchg-pack-btn"|id="xchg-pack-row"/.test(html), "pack row is rendered");
+  const rendered = await page.evaluate(() => !!document.querySelector("#xchg-pack-btn, #xchg-pack-row"));
+  assert(!rendered, "pack row is rendered");
   assert(!/REAL MONEY/i.test(await page.evaluate(() => document.body.innerText)), "REAL MONEY label is visible");
   assert(calls.length === 0, "checkout was contacted: " + calls.join(", "));
   await ctx.close();
