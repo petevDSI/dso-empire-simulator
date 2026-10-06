@@ -617,13 +617,17 @@ const SFX = (()=>{
   // Absolute path on purpose: this page is served at both /smile-empire and /smile-empire/.
   const MUSIC_FILE = HW ? '/assets/music/halloween-loop.mp3' : '';
   let fileBuf=null, fileSrc=null, fileState=0, tabHidden=false; // fileState: 0 idle, 1 loading, 2 ready, 3 failed
-  const musicLevel = ()=> tabHidden ? 0 : S.settings.music*0.5;
+  // The file track is a full-band master (~-13 LUFS), far denser than the synth loop it replaces, so it runs at half the
+  // synth level; and the SFX bus gets a boost (SFX_BOOST) so the quiet synth blips aren't masked by it.
+  const musicLevel = ()=> tabHidden ? 0 : S.settings.music*(fileSrc||fileState===1||(MUSIC_FILE&&fileState!==3)?0.25:0.5);
+  const SFX_BOOST = 1.8;
+  const sfxLevel = ()=> S.settings.sfxOn ? S.settings.sfx*SFX_BOOST : 0;
   function init(){
     if(ctx) return;
     const AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
     ctx=new AC(); master=ctx.createGain(); const comp=ctx.createDynamicsCompressor();
     master.connect(comp); comp.connect(ctx.destination);
-    sfx=ctx.createGain(); sfx.gain.value=S.settings.sfxOn?S.settings.sfx:0; sfx.connect(master);
+    sfx=ctx.createGain(); sfx.gain.value=sfxLevel(); sfx.connect(master);
     music=ctx.createGain(); music.gain.value=musicLevel(); music.connect(master);
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
   }
@@ -676,7 +680,7 @@ const SFX = (()=>{
       tone(87.31,1.1,'sine',.22,.5); tone(58.27,1.3,'sine',.16,.55);
       noise(.9,.14,2000,.5); noise(.3,.12,5000,.05);
     },
-    setSfx(){ if(sfx) sfx.gain.value=S.settings.sfxOn?S.settings.sfx:0; },
+    setSfx(){ if(sfx) sfx.gain.value=sfxLevel(); },
     setMusicVol(){ if(music) music.gain.value=musicLevel(); },
     musicOn(){
       resume(); if(!ctx||mTimer||fileSrc||fileState===1) return;
@@ -1296,7 +1300,7 @@ function renderMore(){
     <h3>Settings</h3><div style="margin:6px 0">Sound effects <input class="slider" id="vS" type="range" min="0" max="1" step=".05" value="${S.settings.sfx}"></div>
     <div style="margin:6px 0">Music <input class="slider" id="vM" type="range" min="0" max="1" step=".05" value="${S.settings.music}"></div>
     <button class="mini" id="exp">Export save</button><button class="mini" id="imp">Import save</button><button class="mini" id="rst" style="color:#fca5a5">Reset game</button>
-    <div class="credit">Powered by <a href="${BRAND.url}" target="_blank" rel="noopener">${BRAND.name}</a>${THEME.id==='halloween'?' · <a href="'+DSO_HOME+'">← Play DSO Empire Simulator</a>':''}</div>`;
+    <div class="credit">Powered by <a href="${BRAND.url}" target="_blank" rel="noopener">${BRAND.name}</a>${THEME.id==='halloween'?' · <a href="'+DSO_HOME+'">← Play DSO Empire Simulator</a>':''}${THEME.id==='halloween'?'<br>Music: “Halloween” by tatamusic via Pixabay':''}</div>`;
   p.innerHTML=h;
   $$('[data-s]',p).forEach(e=>e.onclick=()=>{ if(!modalOpen) openStory(STORY.find(s=>s.id===e.dataset.s),true); });
   $('#vS').oninput=e=>{ S.settings.sfx=+e.target.value; SFX.setSfx(); SFX.click(4); };

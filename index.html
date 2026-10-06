@@ -8030,6 +8030,9 @@
   var SFX_KEY = "dso-empire-simulator-sfx-muted-v1";
   var audioCtx = null;
   var masterGain = null;
+  // The SFX are short, quiet synth blips; with a full-band music track under them they get masked, so the SFX bus
+  // runs hot (peaks ~10-15 dB above the music peaks) and the music sits lower. Measured with a tap on the output.
+  var SFX_MASTER_GAIN = 1.8;
   var sfxMuted = false;
   var lastSoftTickAt = 0;
   var SOFT_TICK_MIN_GAP_MS = 90; // throttles routine hires during Hire Max bulk buys
@@ -8050,8 +8053,12 @@
       if (!Ctx) return null;
       audioCtx = new Ctx();
       masterGain = audioCtx.createGain();
-      masterGain.gain.value = sfxMuted ? 0 : 0.5;
-      masterGain.connect(audioCtx.destination);
+      masterGain.gain.value = sfxMuted ? 0 : SFX_MASTER_GAIN;
+      // light limiter so the louder SFX bus can't clip when several stingers overlap
+      var sfxComp = audioCtx.createDynamicsCompressor();
+      sfxComp.threshold.value = -10; sfxComp.knee.value = 6; sfxComp.ratio.value = 8; sfxComp.attack.value = 0.003; sfxComp.release.value = 0.12;
+      masterGain.connect(sfxComp);
+      sfxComp.connect(audioCtx.destination);
     }
     if (audioCtx.state === "suspended") audioCtx.resume();
     return audioCtx;
@@ -8059,7 +8066,7 @@
   function setSfxMuted(muted){
     sfxMuted = muted;
     saveSfxMutedPref(muted);
-    if (masterGain) masterGain.gain.value = muted ? 0 : 0.5;
+    if (masterGain) masterGain.gain.value = muted ? 0 : SFX_MASTER_GAIN;
     updateSfxToggleUI();
   }
   function updateSfxToggleUI(){
@@ -8106,7 +8113,7 @@
   // decoded (offline, file://, old browser), the procedural 5-layer loop above is used instead. Set MUSIC_FILE_URL
   // to "" to go back to the synth loop only.
   var MUSIC_FILE_URL = "assets/music/casino-loop.mp3";
-  var MUSIC_FILE_GAIN = 0.18; // file is ~-13 LUFS; this sits it ~-28 LUFS, under the SFX stingers
+  var MUSIC_FILE_GAIN = 0.10; // file is ~-13 LUFS; this sits it ~-33 LUFS, well under the SFX stingers
   var musicMode = null;       // null (not started) | "file" | "synth"
   var musicBuf = null, musicSrc = null, musicHidden = false;
   function musicTargetGain(){ return musicHidden ? 0 : (musicMode === "file" ? MUSIC_FILE_GAIN : MUSIC_MASTER_GAIN); }
