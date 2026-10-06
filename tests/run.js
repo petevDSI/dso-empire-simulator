@@ -280,8 +280,8 @@ test("mini game (Fright Night): Halloween track loops as its background; synth f
 
 test("header shows the season counter as N / 100", async () => {
   const { page, ctx, errors } = await openGame(DEFAULT, s => { s.seasonsCompleted = 3; s.flagshipAsked = true; s.tutorialStep = 99; s.lifetimeRevenue = 1e9; });
-  await page.evaluate(() => { try { localStorage.setItem("dso-empire-simulator-ui-v1", JSON.stringify({all:true,u:{},ts:{}})); } catch (e) {} });
   const t = await page.evaluate(() => document.getElementById("stat-season").textContent);
+  assert(await page.isVisible("#tile-season"), "season tile is hidden (it must show even before the tutorial reveals other tiles)");
   assert(t === "4 / 100", "expected '4 / 100', got '" + t + "'");
   assert(errors.length === 0, "console errors: " + errors.join(" | "));
   await ctx.close();
