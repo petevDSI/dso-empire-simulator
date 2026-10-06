@@ -44,6 +44,8 @@
   }
 }
 </script>
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head><body>
 <style>
   :root{
@@ -8841,6 +8843,16 @@
     lastTickAt = Date.now();
     saveGame();
     analyticsInit();
+    /* Page view: counts everyone who loads the game, even if they never click. Sends only the page
+       address without the query string, and just the site name (not the full address) of where they
+       came from. Uses the same anonymous ID and the same Do Not Track / GPC switch as every event. */
+    track("$pageview", {
+      $current_url: location.origin + location.pathname,
+      $pathname: location.pathname,
+      $host: location.host,
+      $referring_domain: (function(){ try { return document.referrer ? new URL(document.referrer).hostname : "$direct"; } catch(e){ return "$direct"; } })(),
+      utm_source: (function(){ try { return new URLSearchParams(location.search).get("utm_source") || ""; } catch(e){ return ""; } })()
+    });
     track("session_start", {returning: hadSave, day_n_bucket: (function(d){ return d === 0 ? "d0" : d === 1 ? "d1" : d >= 7 && d < 14 ? "d7" : d >= 14 ? "d14+" : "d2-6"; })(daysSinceFirstOpen())});
     scheduleCoffeeRun();
     scheduleDeskDrop();
