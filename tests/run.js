@@ -21,7 +21,7 @@ catch (e) { ({ chromium } = require("/home/claude/.npm-global/lib/node_modules/p
 const ROOT = path.resolve(__dirname, "..");
 const SAVE_KEY = "dso-empire-simulator-save-v2";
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png",
-  ".jpg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".json": "application/json", ".txt": "text/plain" };
+  ".jpg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".json": "application/json", ".txt": "text/plain", ".mp3": "audio/mpeg" };
 
 function serve() {
   return new Promise(resolve => {
@@ -45,7 +45,7 @@ function dayStr(offsetDays) {
 let browser, base;
 
 // Opens a fresh page. `mutate(save)` edits the default save before the game's own scripts run.
-async function openGame(defaultSave, mutate, query) {
+async function openGame(defaultSave, mutate, query, pre) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   await ctx.emulateMedia?.({ colorScheme: "light" }).catch(() => {});
   const page = await ctx.newPage();
@@ -61,6 +61,7 @@ async function openGame(defaultSave, mutate, query) {
       localStorage.setItem("dso-empire-simulator-splash-seen-v1", "1");
     }, [SAVE_KEY, JSON.stringify(save)]);
   }
+  if (pre) await pre(ctx, page);
   await page.goto(base + "/index.html" + (query || ""));
   await page.waitForTimeout(1800);
   // The boot logo intro plays on every load and swallows clicks; dismiss it like a player would.
@@ -211,6 +212,70 @@ test("analytics stays silent on the network while disabled", async () => {
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   assert(sent.filter(u => !/supabase|stripe/.test(u)).length === 0, "unexpected POSTs: " + sent.join(", "));
   await ctx.close();
+});
+
+// Records what the page asks Web Audio for, so music tests can tell the file loop from the synth loop.
+const audioSpy = () => {
+  window.__aud = { loops: [], osc: 0 };
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const cbs = AC.prototype.createBufferSource, co = AC.prototype.createOscillator;
+  AC.prototype.createBufferSource = function () {
+    const n = cbs.apply(this, arguments);
+    const st = n.start; n.start = function () { window.__aud.loops.push({ loop: n.loop, dur: n.buffer && n.buffer.duration }); return st.apply(n, arguments); };
+    return n;
+  };
+  AC.prototype.createOscillator = function () { window.__aud.osc++; return co.apply(this, arguments); };
+};
+
+test("music: the casino track loops gaplessly as the main-game background", async () => {
+  const { page, ctx, errors } = await openGame(DEFAULT, s => { s.flagshipAsked = true; s.tutorialStep = 99; }, "", (c) => c.addInitScript(audioSpy));
+  await page.mouse.click(4, 4);
+  await page.waitForTimeout(3000);
+  const a = await page.evaluate(() => window.__aud);
+  const long = a.loops.filter(l => l.loop && l.dur > 70 && l.dur < 80);
+  assert(long.length === 1, "expected one looping ~74s buffer source, got " + JSON.stringify(a));
+  assert(a.osc === 0, "synth loop also started (" + a.osc + " oscillators)");
+  assert(errors.length === 0, "console errors: " + errors.join(" | "));
+  await ctx.close();
+});
+
+test("music: falls back to the synth loop if the track file is unavailable", async () => {
+  const { page, ctx } = await openGame(DEFAULT, s => { s.flagshipAsked = true; s.tutorialStep = 99; }, "",
+    async (c, p) => { await c.addInitScript(audioSpy); await p.route("**/casino-loop.mp3", r => r.abort()); });
+  await page.mouse.click(4, 4);
+  await page.waitForTimeout(3000);
+  const a = await page.evaluate(() => window.__aud);
+  assert(!a.loops.some(l => l.loop), "file loop started despite the block: " + JSON.stringify(a));
+  assert(a.osc > 0, "synth fallback never started");
+  await ctx.close();
+});
+
+test("music: toggle still mutes the file track and the pref persists", async () => {
+  const { page, ctx } = await openGame(DEFAULT, s => { s.flagshipAsked = true; s.tutorialStep = 99; }, "", (c) => c.addInitScript(audioSpy));
+  await page.mouse.click(4, 4);
+  await page.waitForTimeout(2500);
+  await page.click("#music-toggle");
+  await page.waitForTimeout(300);
+  assert(/off/i.test(await page.textContent("#music-toggle")), "toggle label did not flip to off");
+  assert(await page.evaluate(() => localStorage.getItem("dso-empire-simulator-music-muted-v1")) === "1", "mute pref not saved");
+  await ctx.close();
+});
+
+test("mini game (Fright Night): Halloween track loops as its background; synth fallback if blocked", async () => {
+  for (const block of [false, true]) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await ctx.addInitScript(audioSpy);
+    const page = await ctx.newPage();
+    if (block) await page.route("**/halloween-loop.mp3", r => r.abort());
+    await page.goto(base + "/smile-empire/index.html?theme=halloween&event=fright-night");
+    await page.waitForTimeout(1500);
+    await page.mouse.click(4, 4);
+    await page.waitForTimeout(3000);
+    const a = await page.evaluate(() => window.__aud);
+    if (!block) assert(a.loops.some(l => l.loop && l.dur > 50 && l.dur < 56), "no looping ~53s buffer: " + JSON.stringify(a));
+    else assert(!a.loops.some(l => l.loop) && a.osc > 0, "fallback did not engage: " + JSON.stringify(a));
+    await ctx.close();
+  }
 });
 
 (async () => {

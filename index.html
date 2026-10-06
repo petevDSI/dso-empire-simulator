@@ -8070,7 +8070,8 @@
   }
   function toggleSfx(){ setSfxMuted(!sfxMuted); }
 
-  /* ---------- background music: procedural, 5-layer evolving loop (Web Audio, no audio files) ----------
+  /* ---------- background music: main-game track file (see MUSIC_FILE_URL below) with the procedural 5-layer evolving loop as fallback ----------
+     (The next paragraph documents the procedural fallback loop.)
      Backlog #15. "Corporate Optimism": an upbeat, slightly-too-cheerful major-key tycoon-game loop —
      deliberately nothing dental or clinical (no drill/suction/scaler/beep textures; those stay reserved
      for the one-off SFX gag). Five instrumental layers stack in as the company grows (by season count,
@@ -8099,6 +8100,16 @@
   var musicLayerNodes = null; // [{gain: GainNode}] x5, created lazily
   var musicStep = 0, musicNextTime = 0, musicTimer = null, musicTempoMult = 1, musicRepriseUntilStep = 0, musicRepriseGainBoost = 1;
   var musicLevelNow = -1;
+  // Main-game background track (toucanmusic "Casino", Pixabay license — see assets/music/LICENSE-*.txt and credits.html).
+  // A 74s seamless loop (tail crossfaded into the head) decoded into a Web Audio buffer so it loops gaplessly and
+  // shares the Music toggle / mute pref / reprise behavior with the synth loop. If the file can't be fetched or
+  // decoded (offline, file://, old browser), the procedural 5-layer loop above is used instead. Set MUSIC_FILE_URL
+  // to "" to go back to the synth loop only.
+  var MUSIC_FILE_URL = "assets/music/casino-loop.mp3";
+  var MUSIC_FILE_GAIN = 0.18; // file is ~-13 LUFS; this sits it ~-28 LUFS, under the SFX stingers
+  var musicMode = null;       // null (not started) | "file" | "synth"
+  var musicBuf = null, musicSrc = null, musicHidden = false;
+  function musicTargetGain(){ return musicHidden ? 0 : (musicMode === "file" ? MUSIC_FILE_GAIN : MUSIC_MASTER_GAIN); }
 
   function loadMusicMuted(){
     try { return localStorage.getItem(MUSIC_KEY) === "1"; } catch(e){ return false; }
@@ -8115,7 +8126,7 @@
   function setMusicMuted(m){
     musicMuted = m;
     saveMusicMutedPref(m);
-    if (musicGain){ musicGain.gain.cancelScheduledValues(audioCtx.currentTime); musicGain.gain.linearRampToValueAtTime(m ? 0 : MUSIC_MASTER_GAIN, audioCtx.currentTime + 0.4); }
+    if (musicGain){ musicGain.gain.cancelScheduledValues(audioCtx.currentTime); musicGain.gain.linearRampToValueAtTime(m ? 0 : musicTargetGain(), audioCtx.currentTime + 0.4); }
     updateMusicToggleUI();
     if (!m) startMusicIfNeeded();
   }
@@ -8236,6 +8247,17 @@
   // fanfare stinger the caller plays alongside this), then swells back in faster and a little richer for a
   // couple of bars before easing back to normal — "Main Street returns, but faster and richer."
   function musicPlayReprise(){
+    if (musicStarted && musicMode === "file" && musicGain){
+      // File track: same idea — a quick cut under the fanfare, then it swells back a touch louder and eases down.
+      var t0 = audioCtx.currentTime, hi = MUSIC_FILE_GAIN * 1.25;
+      musicGain.gain.cancelScheduledValues(t0);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, t0);
+      musicGain.gain.linearRampToValueAtTime(0, t0 + 0.12);
+      musicGain.gain.setValueAtTime(0, t0 + 0.32);
+      musicGain.gain.linearRampToValueAtTime(musicMuted || musicHidden ? 0 : hi, t0 + 0.6);
+      musicGain.gain.linearRampToValueAtTime(musicMuted || musicHidden ? 0 : MUSIC_FILE_GAIN, t0 + 5);
+      return;
+    }
     if (!musicStarted || !musicLayerNodes) return;
     var now = audioCtx.currentTime;
     musicLayerNodes.forEach(function(g){
@@ -8335,12 +8357,57 @@
       musicGain.connect(ctx.destination);
     }
     musicStarted = true;
+    if (!MUSIC_FILE_URL){ startMusicSynth(ctx); return; }
+    loadMusicFile(ctx, function(ok){
+      if (!musicStarted) return;
+      if (ok) startMusicFile(ctx); else startMusicSynth(ctx);
+    });
+  }
+  function startMusicSynth(ctx){
+    musicMode = "synth";
     musicNextTime = ctx.currentTime + 0.05;
-    musicGain.gain.linearRampToValueAtTime(MUSIC_MASTER_GAIN, ctx.currentTime + 1.2);
+    musicGain.gain.cancelScheduledValues(ctx.currentTime);
+    musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+    musicGain.gain.linearRampToValueAtTime(musicMuted ? 0 : musicTargetGain(), ctx.currentTime + 1.2);
     updateMusicLevel();
     applyMusicLevel(musicLevelNow);
     musicTimer = setInterval(musicSchedulerTick, 60);
   }
+  function startMusicFile(ctx){
+    musicMode = "file";
+    musicSrc = ctx.createBufferSource();
+    musicSrc.buffer = musicBuf;
+    musicSrc.loop = true;
+    musicSrc.connect(musicGain);
+    musicSrc.start(0);
+    musicGain.gain.cancelScheduledValues(ctx.currentTime);
+    musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+    musicGain.gain.linearRampToValueAtTime(musicMuted ? 0 : musicTargetGain(), ctx.currentTime + 1.5);
+  }
+  // Fetch + decode once; cb(true) when musicBuf is ready, cb(false) on any failure (caller falls back to the synth loop).
+  function loadMusicFile(ctx, cb){
+    if (musicBuf) { cb(true); return; }
+    var done = false;
+    function finish(ok){ if (done) return; done = true; cb(ok); }
+    try {
+      fetch(MUSIC_FILE_URL).then(function(r){
+        if (!r.ok) throw new Error("music http " + r.status);
+        return r.arrayBuffer();
+      }).then(function(ab){
+        // callback form of decodeAudioData for older Safari, which has no promise version
+        ctx.decodeAudioData(ab, function(buf){ musicBuf = buf; finish(true); }, function(){ finish(false); });
+      }).catch(function(){ finish(false); });
+    } catch(e){ finish(false); }
+  }
+  // Don't blast the loop from a background tab: fade out when hidden, back in when the player returns.
+  document.addEventListener("visibilitychange", function(){
+    musicHidden = document.visibilityState === "hidden";
+    if (!musicGain || !musicStarted) return;
+    var t = audioCtx.currentTime;
+    musicGain.gain.cancelScheduledValues(t);
+    musicGain.gain.setValueAtTime(musicGain.gain.value, t);
+    musicGain.gain.linearRampToValueAtTime(musicMuted ? 0 : musicTargetGain(), t + (musicHidden ? 0.3 : 0.8));
+  });
 
   // low-level synthesis primitives
   function sfxTone(freq, startOffset, duration, opts){
