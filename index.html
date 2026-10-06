@@ -1267,6 +1267,14 @@
   .exit-btn:active:not(:disabled){transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hard-shadow);}
   .exit-btn:disabled{background:var(--surface-2); color:var(--ink-soft); border-color:var(--line); cursor:not-allowed; box-shadow:none;}
   .exit-btn:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px;}
+  /* "EXIT READY" sign jump: pulse the Exit / Raise a Fund buttons so the eye lands on them. Glow-ring + brightness
+     only — no transform (WebKit can drop clicks on buttons whose geometry animates; see the v74.1 notes). */
+  .exit-btn.attn-pulse{animation:exitAttn 1.1s ease-out 5;}
+  @keyframes exitAttn{
+    0%{box-shadow:4px 4px 0 var(--hard-shadow), 0 0 0 0 rgba(255,214,64,.95); filter:brightness(1.18);}
+    70%{box-shadow:4px 4px 0 var(--hard-shadow), 0 0 0 16px rgba(255,214,64,0); filter:brightness(1);}
+    100%{box-shadow:4px 4px 0 var(--hard-shadow), 0 0 0 0 rgba(255,214,64,0); filter:brightness(1);}
+  }
   /* v53: #exit-btn deliberately uses aria-disabled instead of the disabled attribute, unlike
      the other .exit-btn buttons (Raise a Fund / Ring the Bell) — a real disabled button never
      fires click at all, and the whole point here is to catch that click and clap back at it
@@ -1678,6 +1686,7 @@
     .exit-checkpoint.ready{animation:none;}
     .gift-card{animation:none;}
     .exit-ready-sign{animation:none;}
+    .exit-btn.attn-pulse{animation:none; outline:4px solid #ffd640; outline-offset:3px;}
   }
 </style>
 
@@ -1756,6 +1765,7 @@
       <div class="ticker-item" id="tile-ebitda"><span class="ticker-label">EBITDA / sec</span><span class="ticker-value num" id="stat-ebitda">$0.00</span></div>
       <div class="ticker-item" id="tile-multiple"><span class="ticker-label">Multiple</span><span class="ticker-value num" id="stat-multiple">6.0×</span></div>
       <div class="ticker-item" id="tile-streak" title="Play on consecutive days: +5% production per day, up to +35% at 7 days."><span class="ticker-label">Streak</span><span class="ticker-value num" id="stat-streak">1d</span></div>
+      <div class="ticker-item" id="tile-season" title="Every Exit, Fund Raise or IPO completes a season. The game runs 100 seasons."><span class="ticker-label">Season</span><span class="ticker-value num" id="stat-season">1 / 100</span></div>
       <div class="ticker-item" id="tile-networth"><span class="ticker-label">Net Worth</span><span class="ticker-value num" id="stat-networth">$0.00</span></div>
       <div class="ticker-item highlight ticker-item-info" id="ev-info-btn" role="button" tabindex="0" title="How is Enterprise Value calculated?"><span class="ticker-label">Enterprise Value <span aria-hidden="true">&#9432;</span></span><span class="ticker-value num" id="stat-ev">$0.00</span></div>
     </div>
@@ -3864,7 +3874,7 @@
     roster:     ["#panel-staff"],
     upgrades:   ["#panel-upgrades"],
     ebitda:     ["#tile-ebitda"],
-    ev:         ["#ev-info-btn", "#tile-multiple", "#exit-topbar", "#memo-strip", "#news", "#holiday-banner", "#fn-link"],
+    ev:         ["#ev-info-btn", "#tile-multiple", "#tile-season", "#exit-topbar", "#memo-strip", "#news", "#holiday-banner", "#fn-link"],
     milestones: ["#ms-progress-badge"],
     hiremax:    ["#hire-max-toggle"],
     streak:     ["#tile-streak"],
@@ -4427,7 +4437,7 @@
    "supply-item","supply-btn","supply-cost","supply-cooldown-note",
    "chip-supply-boost","chip-supply-boost-timer","chip-supply-debuff","chip-supply-debuff-timer",
    "holiday-banner","fn-link","holiday-play","holiday-emoji","holiday-name","holiday-blurb","holiday-bonus",
-   "stat-networth","exit-networth",
+   "stat-networth","stat-season","exit-networth",
    "logo-intro","intro-office","intro-logo","intro-sparks","intro-tag","intro-enter",
    "office-viewer","office-viewer-scroll","office-viewer-close","office-viewer-hint","office-view-btn",
    "gift-overlay","gift-icon","gift-title","gift-desc","gift-dismiss","gift-cards-row",
@@ -4772,6 +4782,7 @@
     el["stat-multiple"].textContent = multiple.toFixed(1) + "×";
     el["stat-ev"].textContent = fmt(ev);
     if (el["stat-networth"]) el["stat-networth"].textContent = fmt(state.netWorth || 0);
+    if (el["stat-season"]) el["stat-season"].textContent = Math.min(MAX_SEASONS, (state.seasonsCompleted || 0) + 1) + " / " + MAX_SEASONS;
     if (el["exit-networth"]) el["exit-networth"].textContent = fmt(state.netWorth || 0);
     el["click-hint"].textContent = "+" + fmt(clickValue(state)) + " per click";
 
@@ -6383,6 +6394,7 @@
     }
     saveGame();
   }
+  var MAX_SEASONS = 100; // the game's planned length; the header shows "current season / 100"
   function updateStreakUI(){
     el["stat-streak"].textContent = (state.streakCount || 1) + "d";
   }
@@ -7967,7 +7979,10 @@
     if (logo && lockup) logo.src = lockup.src;
     if (tag && !loadSplashSeen()) tag.hidden = false; // the old splash blurb, first run only
     var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    var started = false, ready = false, entered = false, readyTimer = null;
+    var started = false, ready = false, entered = false, readyTimer = null, cueTimers = [];
+    // Intro soundscape. Browsers keep audio locked until the first tap, so cues only fire if the page is already
+    // allowed to play sound (returning visitors); otherwise the first tap/skip and the Acquire click still sound.
+    function introCue(ms, fn){ cueTimers.push(setTimeout(function(){ try { if (introAudioOK()) fn(); } catch(e){} }, ms)); }
 
     if (sparks && !reduce){
       var colors = ["#ffd23f","#ffffff","#ff9f1c","#ffe98a"];
@@ -7983,15 +7998,20 @@
         sparks.appendChild(sp);
       }
     }
-    function setReady(){ if (ready) return; ready = true; intro.classList.add("is-ready"); }
+    function setReady(){ if (ready) return; ready = true; intro.classList.add("is-ready"); try { if (introAudioOK()) sfxIntroReady(); } catch(e){} }
     function start(){
       if (started) return;
       started = true;
       intro.classList.add("is-playing");
+      if (!reduce){
+        try { ensureAudioContext(); } catch(e){}
+        introCue(0, sfxIntroRoom); introCue(1700, sfxIntroFall); introCue(2680, sfxIntroImpact); introCue(3450, sfxIntroSettle);
+      }
       readyTimer = setTimeout(setReady, reduce ? 2200 : 4100);
     }
     function skipToEnd(){
       started = true;
+      cueTimers.forEach(clearTimeout); cueTimers = [];
       clearTimeout(readyTimer);
       intro.classList.remove("is-playing");
       intro.classList.add("is-final");
@@ -8000,7 +8020,9 @@
     function enter(){
       if (entered) return;
       entered = true;
-      try { ensureAudioContext(); sfxArpeggioUp(); } catch(e){}
+      cueTimers.forEach(clearTimeout); cueTimers = [];
+      try { ensureAudioContext(); sfxEnterGame(); } catch(e){}
+      try { musicIntroGate = true; startMusicIfNeeded(); } catch(e){} // the soundtrack begins with the player's first deliberate action
       var burstMs = 0;
       try { burstMs = playEnterBurst(el["intro-enter"], reduce); } catch(e){}
       setTimeout(function(){
@@ -8014,7 +8036,7 @@
       }, burstMs);
     }
     intro.addEventListener("click", function(){ if (!ready) skipToEnd(); else enter(); });
-    if (el["intro-enter"]) el["intro-enter"].addEventListener("pointerdown", function(){ if (ready && !entered){ try { sfxStamp(); } catch(e){} } });
+    if (el["intro-enter"]) el["intro-enter"].addEventListener("pointerdown", function(){ if (ready && !entered){ try { sfxStampHeavy(); } catch(e){} } });
 
     // begin once the office image is ready (short failsafe so a slow network never stalls the sequence)
     if (office && office.complete && office.naturalWidth) start();
@@ -8355,7 +8377,10 @@
     if (!audioCtx || musicMuted) return;
     while (musicNextTime < audioCtx.currentTime + 0.2) musicScheduleStep();
   }
+  var musicIntroGate = false; // set once the player presses Acquire; until then the title screen keeps music off
   function startMusicIfNeeded(){
+    var intro = el["logo-intro"];
+    if (!musicIntroGate && intro && intro.isConnected && !intro.hidden && intro.classList.contains("js-live")) return;
     var ctx = ensureAudioContext();
     if (!ctx || musicStarted || musicMuted) return;
     if (!musicGain){
@@ -8502,6 +8527,59 @@
     sfxTone(523.25, 0.08, 0.11, {type:"triangle", gain:0.16});
     sfxTone(659.25, 0.17, 0.11, {type:"triangle", gain:0.16});
     sfxTone(783.99, 0.26, 0.16, {type:"triangle", gain:0.18});
+  }
+  /* ---------- title-screen soundscape + the Acquire click ---------- */
+  function introAudioOK(){ return !!(audioCtx && audioCtx.state === "running" && !sfxMuted); }
+  // 0s: the office at night — low room swell, a faint two-tone phone ring, a printer-ish ticking
+  function sfxIntroRoom(){
+    sfxNoiseBurst(0, 1.7, {filterType:"lowpass", filterFreq:250, filterFreqTo:700, gain:0.05});
+    sfxTone(110, 0, 1.7, {type:"sine", gain:0.05, slideTo:165});
+    [0.45, 0.62, 1.05, 1.22].forEach(function(t){ sfxTone(1480, t, 0.1, {type:"sine", gain:0.025}); sfxTone(1760, t, 0.1, {type:"sine", gain:0.02}); });
+    for (var i = 0; i < 6; i++) sfxNoiseBurst(0.3 + i * 0.12, 0.02, {filterType:"highpass", filterFreq:3500, gain:0.03});
+  }
+  // 1.7s: the logo falls — a rising, accelerating whoosh over a growing sub-rumble
+  function sfxIntroFall(){
+    sfxNoiseBurst(0, 1.0, {filterType:"bandpass", filterFreq:300, filterFreqTo:3200, gain:0.16});
+    sfxTone(220, 0, 1.0, {type:"sawtooth", gain:0.035, slideTo:1100});
+    sfxTone(55, 0, 1.0, {type:"sine", gain:0.18, slideTo:70});
+  }
+  // 2.7s: IMPACT — deep boom, glass-crack crunch, metal ring-out, sparkle cascade
+  function sfxIntroImpact(){
+    sfxTone(95, 0, 1.0, {type:"sine", gain:0.38, slideTo:32});
+    sfxTone(58, 0, 1.4, {type:"sine", gain:0.24});
+    sfxNoiseBurst(0, 0.18, {filterType:"highpass", filterFreq:2500, gain:0.22});
+    sfxNoiseBurst(0.02, 0.55, {filterType:"bandpass", filterFreq:900, filterFreqTo:180, gain:0.2});
+    [0.07, 0.13, 0.2, 0.28].forEach(function(t){ sfxNoiseBurst(t, 0.03, {filterType:"highpass", filterFreq:5000, gain:0.14}); }); // cracking
+    sfxTone(1318.51, 0.02, 1.4, {type:"triangle", gain:0.09});
+    sfxTone(1975.53, 0.02, 1.2, {type:"triangle", gain:0.06});
+    for (var i = 0; i < 14; i++) sfxTone(2200 + Math.random() * 3600, 0.12 + i * 0.045, 0.14, {type:"sine", gain:0.05});
+  }
+  // 3.45s: the dust settles into a warm held chord (C major add-9)
+  function sfxIntroSettle(){
+    [130.81, 261.63, 329.63, 392.0, 587.33].forEach(function(f, i){ sfxTone(f, i * 0.04, 1.9, {type:i === 0 ? "sine" : "triangle", gain:i === 0 ? 0.09 : 0.045}); });
+  }
+  // 4.1s: the Acquire button pops in — a soft double chime
+  function sfxIntroReady(){
+    sfxTone(1318.51, 0, 0.22, {type:"sine", gain:0.1});
+    sfxTone(1760, 0.09, 0.3, {type:"sine", gain:0.09});
+  }
+  // pointer-down on Acquire: a heavy rubber-stamp thunk
+  function sfxStampHeavy(){
+    sfxNoiseBurst(0, 0.09, {filterType:"lowpass", filterFreq:600, gain:0.3});
+    sfxTone(120, 0, 0.2, {type:"sine", gain:0.36, slideTo:50});
+    sfxTone(1200, 0.01, 0.05, {type:"triangle", gain:0.1});
+  }
+  // the click itself: register "ka-ching" bell, a three-note brass sting, then a sparkle tail into the game
+  function sfxEnterGame(){
+    sfxNoiseBurst(0.08, 0.06, {filterType:"highpass", filterFreq:4000, gain:0.18});
+    sfxTone(2637, 0.1, 0.9, {type:"sine", gain:0.1});
+    sfxTone(3951, 0.1, 0.6, {type:"sine", gain:0.05});
+    [[523.25, 0.2, 0.14], [659.25, 0.3, 0.14], [783.99, 0.4, 0.8]].forEach(function(n){
+      sfxTone(n[0], n[1], n[2], {type:"sawtooth", gain:0.07});
+      sfxTone(n[0] * 2, n[1], n[2], {type:"triangle", gain:0.12});
+      sfxTone(n[0] / 2, n[1], n[2], {type:"sine", gain:0.12});
+    });
+    for (var i = 0; i < 12; i++) sfxTone(2800 + Math.random() * 3200, 0.55 + i * 0.05, 0.16, {type:"sine", gain:0.05});
   }
   // bright chime — rare Desk Drop
   function sfxChimeRare(){
@@ -8744,12 +8822,24 @@
   if (el["sfx-toggle"]) el["sfx-toggle"].addEventListener("click", toggleSfx);
   updateMusicToggleUI();
   if (el["music-toggle"]) el["music-toggle"].addEventListener("click", toggleMusic);
-  document.addEventListener("click", startMusicIfNeeded, {once:true});
+  document.addEventListener("click", startMusicIfNeeded); // idempotent; waits out the title screen
 
   if (el["exit-ready-sign"]) el["exit-ready-sign"].addEventListener("click", function(){
     switchTab("exit");
     var panel = document.getElementById("panel-exit");
     if (panel && panel.scrollIntoView) panel.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block:"start"});
+    // draw the eye: pulse Exit to Private Equity, and Raise a Fund too when it's available
+    ["exit-btn", "fund-btn"].forEach(function(id){
+      var b = el[id];
+      if (!b) return;
+      b.classList.remove("attn-pulse");
+      if (b.hidden || b.disabled || b.getAttribute("aria-disabled") === "true") return;
+      void b.offsetWidth; // restart the animation if the sign is clicked again
+      b.classList.add("attn-pulse");
+      var clear = function(){ b.classList.remove("attn-pulse"); b.removeEventListener("click", clear); };
+      b.addEventListener("click", clear);
+      setTimeout(clear, 6500);
+    });
   });
   initTabs();
   initLeaderboard();
